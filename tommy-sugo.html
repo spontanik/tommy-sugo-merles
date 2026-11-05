@@ -1,0 +1,1091 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body data-brand="tommy">
+<title>Tommy Sugo Website</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700&family=Oswald:wght@600;700&display=swap">
+<style>
+/* Merle's site structure in the Tommy Sugo system: festival-at-night black ground, one sauce red per view, the seal as the only curve. Menu and enquiry form sit on Paper. Deliberately single-theme. */
+:root {
+  --surface: #000000;
+  --surface-print: #1c1c1a;
+  --ink: #f2f2f2;
+  --ink-muted: #d3d2d2;
+  --shade: #d3d2d2;
+  --rule: #f2f2f2;
+  --fill: #f2f2f2;
+  --on-fill: #000000;
+  --sauce: #ec1c24;
+  --on-sauce: #000000;
+  --on-sauce-lg: #ffffff;
+  --focus: #f2f2f2;
+  --poster: Oswald, "Arial Narrow", Impact, sans-serif;
+  --sans: Archivo, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: dark;
+}
+.paper {
+  --surface: #f2f2f2;
+  --surface-print: #ffffff;
+  --ink: #000000;
+  --ink-muted: #4a4a48;
+  --rule: #000000;
+  --fill: #000000;
+  --on-fill: #f2f2f2;
+  --focus: #000000;
+  background: var(--surface);
+  color: var(--ink);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--surface); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.5; font-weight: 400; }
+h1, h2, h3 { text-wrap: balance; }
+a { color: var(--ink); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.sauce a:focus-visible, .sauce button:focus-visible { outline-color: var(--on-sauce); }
+img { max-width: 100%; }
+
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 720px) { .wrap { padding-left: max(48px, env(safe-area-inset-left, 0px)); padding-right: max(48px, env(safe-area-inset-right, 0px)); } }
+.narrow { max-width: 880px; }
+
+.sauce { background: var(--sauce); color: var(--on-sauce); }
+.bunting { background-color: #000; background-image: url("bunting-tile.svg"); background-repeat: repeat-x; background-position: top left; }
+.notice { background: var(--shade); color: #000; font-size: 13px; font-weight: 500; text-align: center; padding-block: 8px; }
+.strip { font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-align: center; padding-block: 10px; }
+
+header.site { border-bottom: 2px solid var(--rule); }
+header.site .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-block: 16px; }
+.lockup { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+.lockup img { height: 48px; width: 48px; display: block; }
+.lockup span { font-family: var(--poster); font-weight: 700; font-size: 26px; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; }
+nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
+.nav { color: var(--ink); font-weight: 700; font-size: 16px; text-decoration: none; padding: 10px 0; border-bottom: 3px solid transparent; }
+.nav:hover, .nav[aria-current="page"] { border-bottom-color: var(--sauce); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 24px; background: var(--sauce); color: var(--on-sauce); border: 2px solid var(--sauce); font-family: var(--poster); font-weight: 600; font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; cursor: pointer; }
+.btn:hover { background: var(--fill); border-color: var(--fill); color: var(--on-fill); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--rule); }
+.btn-ghost:hover { background: var(--fill); color: var(--on-fill); }
+.btn-ink { background: var(--on-sauce); color: var(--on-sauce-lg); border-color: var(--on-sauce); }
+.btn-ink:hover { background: var(--on-sauce-lg); color: var(--on-sauce); border-color: var(--on-sauce-lg); }
+.btns { display: flex; flex-wrap: wrap; gap: 12px; }
+.pill { min-height: 48px; padding: 0 20px; background: transparent; color: var(--ink); border: 2px solid var(--rule); font-family: var(--sans); font-size: 15px; font-weight: 700; cursor: pointer; }
+.pill[aria-pressed="true"] { background: var(--fill); color: var(--on-fill); }
+
+.tag { margin: 0; font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+.tag.red { color: var(--sauce); }
+.paper .tag.red { color: var(--ink); }
+.poster-xl { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(48px, 8.5vw, 104px); line-height: 1.02; letter-spacing: 0.01em; text-transform: uppercase; }
+.poster-lg { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(32px, 5vw, 44px); line-height: 1.1; letter-spacing: 0.02em; }
+.section-head { margin: 0; font-family: var(--poster); font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: 0.02em; }
+.lede { margin: 0; max-width: 620px; font-size: 20px; line-height: 1.4; font-weight: 500; }
+.muted { color: var(--ink-muted); }
+.bar { width: 96px; height: 8px; background: var(--sauce); }
+.paper .bar { background: var(--rule); }
+.center { display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+.section { padding-block: 96px; }
+.section-tight { padding-block: 64px; }
+.stack { display: flex; flex-direction: column; gap: 24px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; }
+.box { border: 2px solid var(--rule); padding: 40px 32px; display: flex; flex-direction: column; gap: 16px; }
+.box h3 { margin: 0; font-family: var(--poster); font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: 0.02em; }
+.box p { margin: 0; }
+.raised { background: var(--surface-print); }
+.ph { background: var(--surface-print); color: var(--ink-muted); display: flex; align-items: center; justify-content: center; text-align: center; padding: 16px; font-family: var(--poster); font-size: 13px; font-weight: 600; letter-spacing: 0.16em; }
+.paper .ph { background: var(--shade); color: #000; }
+
+/* Frame: solid rule, the seal breaking through the top line (no curved notches: the seal is the brand's only curve) */
+.frame { position: relative; border: 2px solid var(--rule); padding: 128px clamp(20px, 6vw, 72px) 72px; }
+.frame-seal { position: absolute; top: -88px; left: 50%; transform: translateX(-50%); padding: 0 20px; background: var(--surface); }
+.frame-seal img { height: 176px; width: 176px; display: block; }
+.frame-section { padding-top: 136px; }
+
+/* SealPanel: one per view, a flat sauce block with the seal breaking its top edge */
+.seal-panel { position: relative; background: var(--sauce); color: var(--on-sauce); padding: 96px 40px 48px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; margin-top: 64px; }
+.seal-panel .seal { position: absolute; top: -60px; left: 40px; width: 128px; height: 128px; }
+.seal-panel .poster-lg { color: var(--on-sauce-lg); }
+.seal-panel p { margin: 0; }
+
+.card { border: 2px solid var(--rule); display: flex; flex-direction: column; }
+.card .ph { height: 240px; }
+.card-body { padding: 24px; display: flex; flex-direction: column; gap: 4px; }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-family: var(--poster); font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.row h3 { margin: 0; font-size: inherit; font-weight: inherit; }
+.row.small { font-family: var(--sans); font-size: 18px; line-height: 1.35; font-weight: 500; letter-spacing: 0; }
+.row.small span:last-child { font-family: var(--poster); font-weight: 600; font-size: 20px; }
+.desc { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink-muted); }
+.item { display: flex; flex-direction: column; gap: 4px; }
+
+.slogans { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px 40px; font-family: var(--poster); font-weight: 700; font-size: clamp(26px, 3.6vw, 42px); line-height: 1.1; text-transform: uppercase; letter-spacing: 0.02em; padding-block: 88px 48px; }
+.slogans i { width: 12px; height: 12px; background: var(--sauce); display: block; }
+
+.steps { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; }
+.steps li { display: flex; flex-direction: column; gap: 8px; }
+.steps .n { font-family: var(--poster); font-weight: 700; font-size: 64px; line-height: 1; color: var(--sauce); }
+.paper .steps .n { color: var(--ink); }
+.steps h3 { margin: 0; font-family: var(--poster); font-size: 24px; font-weight: 600; letter-spacing: 0.02em; }
+.steps p { margin: 0; }
+
+/* Pizza board: large and medium, each with a collection and a delivery price */
+.pizza-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 96px; row-gap: 48px; }
+.pizza-cols > div { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.pizza-cols > div + div { position: relative; }
+.pizza-cols > div + div::before { content: ""; position: absolute; left: -49px; top: 0; bottom: 0; width: 2px; background: var(--rule); }
+.pz { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 64px); column-gap: 8px; align-items: baseline; }
+.pz.two, .pz-head.two { grid-template-columns: minmax(0, 1fr) repeat(2, 64px); }
+.pz.two .name { font-family: var(--sans); font-size: 18px; line-height: 1.35; font-weight: 500; letter-spacing: 0; }
+.pz .name { font-family: var(--poster); font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: 0.02em; }
+.pz .p { font-family: var(--poster); font-size: 20px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.pz .desc { grid-column: 1 / -1; }
+.pz-head { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 64px); column-gap: 8px; row-gap: 4px; align-items: end; border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+.pz-head .grp { grid-column: 1; grid-row: 1 / 3; font-size: 14px; }
+.pz-head.two .grp { grid-row: 1; }
+.pz-head .sz { font-size: 12px; text-align: center; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
+.pz-head .sz.l { grid-column: 2 / 4; }
+.pz-head .sz.m { grid-column: 4 / 6; }
+.pz-head .ch { font-size: 11px; letter-spacing: 0.08em; text-align: right; }
+.pz-head .ch.c1 { grid-column-start: 2; }
+@media (max-width: 600px) {
+  .pz, .pz-head { grid-template-columns: minmax(0, 1fr) repeat(4, 54px); column-gap: 6px; }
+  .pz.two, .pz-head.two { grid-template-columns: minmax(0, 1fr) repeat(2, 56px); }
+  .pz .p { font-size: 18px; }
+  .pz:not(.two) .name, .pz-head:not(.two) .grp { grid-column: 1 / -1; grid-row: auto; }
+  .pz:not(.two) .name + .p { grid-column-start: 2; }
+}
+
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 96px; row-gap: 48px; }
+.cols > .col { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.cols > .col + .col { position: relative; }
+.cols > .col + .col::before { content: ""; position: absolute; left: -49px; top: 0; bottom: 0; width: 2px; background: var(--rule); }
+.head-group { display: flex; flex-direction: column; gap: 4px; }
+.cols .gap-top { margin-top: 20px; }
+.menu-break { border: 0; border-top: 2px solid var(--rule); margin: 72px 0 64px; }
+@media (max-width: 900px) {
+  .cols, .pizza-cols { grid-template-columns: minmax(0, 1fr); }
+  .cols > .col + .col::before, .pizza-cols > div + div::before { left: 0; right: 0; top: -24px; bottom: auto; width: auto; height: 2px; }
+}
+
+.split { display: flex; flex-wrap: wrap; gap: 48px; align-items: center; }
+.split > * { flex: 1 1 400px; min-width: 0; }
+
+details { border: 2px solid var(--rule); padding: 0 24px; }
+summary { cursor: pointer; list-style: none; padding: 20px 0; font-family: var(--poster); font-size: 22px; font-weight: 600; letter-spacing: 0.02em; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: " →"; color: var(--sauce); }
+details[open] summary::after { content: ""; }
+details p { margin: 0 0 24px; color: var(--ink-muted); }
+
+.field { width: 100%; min-height: 48px; border: 2px solid var(--rule); background: var(--surface-print); color: var(--ink); padding: 10px 16px; font-family: var(--sans); font-size: 16px; font-weight: 500; border-radius: 0; }
+.field::placeholder { color: var(--ink-muted); opacity: 0.8; }
+.lbl { font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+fieldset { margin: 0; padding: 0; border: 0; }
+legend { padding: 0; margin-bottom: 12px; }
+.formbox { border: 2px solid var(--rule); background: var(--surface-print); padding: clamp(24px, 4vw, 48px); display: flex; flex-direction: column; gap: 24px; }
+
+footer.site { border-top: 8px solid var(--sauce); }
+footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: column; gap: 40px; }
+.foot-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 32px 48px; }
+.foot-col { display: flex; flex-direction: column; gap: 12px; }
+.flink { color: var(--ink); text-decoration: none; font-weight: 700; }
+.flink:hover { text-decoration: underline; text-decoration-color: var(--sauce); text-underline-offset: 4px; }
+.foot-base { border-top: 2px solid var(--rule); padding-top: 16px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 14px; color: var(--ink-muted); }
+/* Shop: product grid beside a sticky order summary */
+.shop-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 48px; align-items: start; }
+@media (max-width: 960px) { .shop-grid { grid-template-columns: minmax(0, 1fr); } }
+.products { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
+.product { border: 2px solid var(--rule); display: flex; flex-direction: column; background: var(--surface-print); }
+.product .ph { height: 168px; }
+/* Item drawings, in ink after Tommy's face on the seal */
+.ill { display: block; width: 100%; object-fit: contain; padding: 8px; box-sizing: border-box; background: #f2f2f2; }
+.card .ill { height: 240px; }
+.product .ill { height: 168px; }
+.head-group.with-ill { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 16px; row-gap: 4px; align-items: end; }
+.head-group.with-ill > * { grid-column: 1; }
+.head-group.with-ill > .sec-ill { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.head-group.with-ill > p.muted { grid-column: 1 / -1; }
+.sec-ill { display: block; width: 64px; height: 64px; }
+.sec-ill.lg { width: 80px; height: 80px; }
+.product-body { padding: 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.product-body h3 { margin: 0; font-family: var(--poster); font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: 0.02em; }
+.product-foot { margin-top: auto; padding-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.product-foot .price { font-family: var(--poster); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stepper { display: flex; align-items: center; border: 2px solid var(--rule); }
+.stepper button { width: 44px; height: 44px; background: transparent; border: 0; color: var(--ink); font-family: var(--sans); font-size: 22px; font-weight: 700; cursor: pointer; }
+.stepper button:hover { background: var(--fill); color: var(--on-fill); }
+.stepper output { min-width: 36px; text-align: center; font-family: var(--poster); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cart { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); border: 2px solid var(--rule); background: var(--surface-print); padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.cart-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cart-lines li { display: flex; justify-content: space-between; gap: 12px; font-weight: 500; }
+.cart-lines li span:last-child { font-family: var(--poster); font-weight: 600; white-space: nowrap; }
+.cart-total { display: flex; justify-content: space-between; align-items: baseline; border-top: 2px solid var(--rule); padding-top: 12px; font-family: var(--poster); font-size: 24px; font-weight: 700; }
+.shop-err { margin: 0; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="notice"><div class="wrap"><a href="index.html" style="color:#000;font-weight:700;">&larr; Both kitchens</a> · Website prototype for the Tommy Sugo team. Prices are the October 2026 till prices. Delivery areas, kitchen hours, event dates, venues, handles and photos are placeholders.</div></div>
+<div class="sauce strip"><div class="wrap">PIZZA NOW DELIVERS · ORDER ON UBER EATS &amp; MR D</div></div>
+
+<header class="site">
+  <div class="wrap">
+    <a class="lockup" href="#home" aria-label="Tommy Sugo home"><img src="tommy-mark.png" alt=""><span>Tommy Sugo</span></a>
+    <nav class="main" aria-label="Main">
+      <a class="nav" href="#menu" data-nav="menu">Menu</a>
+      <a class="nav" href="#delivery" data-nav="delivery">Delivery</a>
+      <a class="nav" href="#shop" data-nav="shop">Shop</a>
+      <a class="nav" href="#circuit" data-nav="circuit">On the Circuit</a>
+      <a class="nav" href="#catering" data-nav="catering">Catering</a>
+      <a class="nav" href="#story" data-nav="story">Our Story</a>
+    </nav>
+    <a class="btn" href="#book">Make an Enquiry</a>
+  </div>
+</header>
+
+<!-- HOME -->
+<main data-view="home">
+  <section class="frame-section section">
+    <div class="wrap">
+      <div class="frame center" style="max-width: 1040px; margin: 0 auto;">
+        <div class="frame-seal"><img src="tommy-seal.png" alt="Tommy Sugo Pizza seal: The Secret's in the Sauce"></div>
+        <p class="tag red">Pizza from a food truck</p>
+        <h1 class="poster-xl">Last night a pizza saved my life.</h1>
+        <div class="bar" aria-hidden="true"></div>
+        <p class="lede">Hand-rolled thin bases. 7-hour slow-cooked Roma tomato sauce. One truck on the festival circuit, and one dark kitchen sending pizza to your door.</p>
+        <div class="btns" style="justify-content: center;">
+          <a class="btn" href="#delivery">Order Pizza</a>
+          <a class="btn btn-ghost" href="#menu">See the Menu</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bunting" aria-label="Words to eat by">
+    <div class="wrap slogans">
+      <span>Slice, slice, baby</span><i aria-hidden="true"></i>
+      <span>You had me at mozzarella</span><i aria-hidden="true"></i>
+      <span>Hummus where the heart is</span><i aria-hidden="true"></i>
+      <span>Pasta la vista</span><i aria-hidden="true"></i>
+      <span>Sauce boss</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap stack" style="gap: 48px;">
+      <div class="center" style="gap: 16px;">
+        <p class="tag red">The heavy hitters</p>
+        <h2 class="poster-lg">Big Names. Thin Bases.</h2>
+      </div>
+      <div class="grid3">
+        <article class="card">
+          <img class="ill" src="illustrations/pizza-fab.svg" alt="FAB pizza: bacon, avo, feta" loading="lazy" decoding="async">
+          <div class="card-body">
+            <div class="row"><h3>FAB</h3><span data-price-of="FAB">R200</span></div>
+            <p class="desc">Oh so fabulous. Bacon, avo and feta.</p>
+          </div>
+        </article>
+        <article class="card">
+          <img class="ill" src="illustrations/pizza-tasty-wastie.svg" alt="Tasty Wastie pizza: chorizo, salami, ham, bacon, mushrooms" loading="lazy" decoding="async">
+          <div class="card-body">
+            <div class="row"><h3>Tasty Wastie</h3><span data-price-of="Tasty Wastie">R230</span></div>
+            <p class="desc">Chorizo, salami, ham, bacon and mushrooms. Waste not.</p>
+          </div>
+        </article>
+        <article class="card">
+          <img class="ill" src="illustrations/pizza-franschhoek.svg" alt="Franschhoek pizza: biltong, goats cheese, fig preserve" loading="lazy" decoding="async">
+          <div class="card-body">
+            <div class="row"><h3>Franschhoek</h3><span data-price-of="Franschhoek">R190</span></div>
+            <p class="desc">Biltong, goats cheese and fig preserve.</p>
+          </div>
+        </article>
+      </div>
+      <div style="display: flex; justify-content: center;"><a class="btn btn-ghost" href="#menu">See the Full Menu</a></div>
+    </div>
+  </section>
+
+  <section style="padding-bottom: 96px;">
+    <div class="wrap">
+      <div class="raised" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px 48px; padding: 48px clamp(24px, 4vw, 48px);">
+        <div class="stack" style="gap: 12px; flex: 1 1 360px; min-width: 0;">
+          <p class="tag red">New · the shop</p>
+          <h2 class="poster-lg">Take the Sauce Home.</h2>
+          <p class="muted" style="margin: 0; max-width: 560px;">Frozen pizzas, hand-rolled and topped by the crew, and jars of the 7-hour slow-cooked Roma tomato sauce. Cold slice, hot oven.</p>
+        </div>
+        <a class="btn" href="#shop">Shop Frozen &amp; Sauce</a>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-bottom: 96px;">
+    <div class="wrap">
+      <div class="stack" style="border-top: 2px solid var(--rule); padding-top: 64px; gap: 40px;">
+        <h2 class="poster-lg" style="text-align: center;">Three Steps to a Saved Life</h2>
+        <ol class="steps">
+          <li><span class="n">1</span><h3>Find us.</h3><p class="muted">At home, open Uber Eats or Mr D. At a festival, follow the smoke and the queue.</p></li>
+          <li><span class="n">2</span><h3>Pick your pie.</h3><p class="muted">The names are silly. The sauce took seven hours.</p></li>
+          <li><span class="n">3</span><h3>Fold, bite, repeat.</h3><p class="muted">Thin and hand-rolled, so it folds. You know what to do.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-bottom: 96px;">
+    <div class="wrap grid2" style="align-items: end;">
+      <div class="raised stack" style="padding: 48px 40px; gap: 16px; align-items: flex-start;">
+        <p class="tag red">Delivery</p>
+        <h2 class="poster-lg">Is Tommy Around Your Corner?</h2>
+        <p style="margin: 0;" class="muted">Pizza delivers from our dark kitchen in [AREA]. See which suburbs we reach.</p>
+        <a class="btn btn-ghost" href="#delivery">Check Your Area</a>
+      </div>
+      <div class="seal-panel">
+        <img class="seal" src="tommy-seal.png" alt="">
+        <p class="tag">Catering</p>
+        <h2 class="poster-lg">Your Event, Fed.</h2>
+        <p>Weddings, launches and festivals. We bring the truck, the team and the gear.</p>
+        <a class="btn btn-ink" href="#book">Make an Enquiry</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- MENU -->
+<main data-view="menu" hidden>
+  <section class="section-tight">
+    <div class="wrap center" style="gap: 16px;">
+      <p class="tag red">The menu</p>
+      <h1 class="poster-xl" style="font-size: clamp(42px, 7vw, 80px);">You had me at mozzarella.</h1>
+      <p class="lede">Every pizza starts the same way: a hand-rolled thin base, 7-hour slow-cooked Roma tomato sauce and 100 g of mozzarella. Then it gets interesting.</p>
+      <p class="tag red">Pizza delivers · everything else is on the truck</p>
+    </div>
+  </section>
+  <section class="paper" style="padding-top: 152px; padding-bottom: 96px;">
+    <div class="wrap">
+      <div class="frame">
+        <div class="frame-seal"><img src="tommy-seal-white.png" alt="Tommy Sugo Pizza seal" style="height: 160px; width: 160px;"></div>
+
+        <div class="head-group with-ill" style="margin-bottom: 32px;">
+          <img class="sec-ill lg" src="illustrations/section-pizza.svg" alt="" loading="lazy" decoding="async"><p class="tag">Slice, slice, baby</p>
+          <h2 class="section-head">Pizza</h2>
+          <p class="muted" style="margin: 8px 0 0;">Collect from the kitchen in [AREA], or order delivery on Uber Eats or Mr D. Deliver prices are the app prices.</p>
+        </div>
+        <div class="pizza-cols">
+          <div>
+            <div class="pz-head"><span class="tag grp">The Classics</span><span class="tag sz l">Large</span><span class="tag sz m">Medium</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span><span class="tag ch">Collect</span><span class="tag ch">Deliver</span></div>
+            <div data-menu-items="pizza-classics" style="display: contents;">
+              <div class="pz"><span class="name">Margherita</span><span class="p">R125</span><span class="p">[R000]</span><span class="p">R90</span><span class="p">[R000]</span><p class="desc">The OG. Sauce, mozzarella, olive oil. Nothing to hide behind.</p></div>
+              <div class="pz"><span class="name">Veggie</span><span class="p">R140</span><span class="p">[R000]</span><span class="p">R100</span><span class="p">[R000]</span><p class="desc">Mixed peppers, mushrooms, red onion, black olives.</p></div>
+              <div class="pz"><span class="name">Shroom</span><span class="p">R160</span><span class="p">[R000]</span><span class="p">R110</span><span class="p">[R000]</span><p class="desc">The truffle shuffle. Mixed mushrooms, parmesan, truffle oil, garlic salt.</p></div>
+              <div class="pz"><span class="name">Salami</span><span class="p">R180</span><span class="p">[R000]</span><span class="p">R125</span><span class="p">[R000]</span><p class="desc">Art-o-salami. Napoli salami, black olives, artichoke.</p></div>
+              <div class="pz"><span class="name">Chorizo</span><span class="p">R180</span><span class="p">[R000]</span><span class="p">R125</span><span class="p">[R000]</span><p class="desc">Chorizo, green olives and a hit of house schug.</p></div>
+              <div class="pz"><span class="name">Hawaiian</span><span class="p">R170</span><span class="p">[R000]</span><span class="p">R120</span><span class="p">[R000]</span><p class="desc">Hawaii-ville. Ham and pineapple. We don't judge.</p></div>
+              <div class="pz"><span class="name">Brekkie</span><span class="p">R170</span><span class="p">[R000]</span><span class="p" aria-label="No medium">–</span><span class="p" aria-label="No medium">–</span><p class="desc">Bacon and egg. Breakfast of champions, any time of day.</p></div>
+            </div>
+          </div>
+          <div>
+            <div class="pz-head"><span class="tag grp">The Signatures</span><span class="tag sz l">Large</span><span class="tag sz m">Medium</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span><span class="tag ch">Collect</span><span class="tag ch">Deliver</span></div>
+            <div data-menu-items="pizza-signatures" style="display: contents;">
+              <div class="pz"><span class="name">FAB</span><span class="p">R200</span><span class="p">[R000]</span><span class="p">R140</span><span class="p">[R000]</span><p class="desc">Oh so fabulous. Bacon, avo, feta.</p></div>
+              <div class="pz"><span class="name">Tasty Wastie</span><span class="p">R230</span><span class="p">[R000]</span><span class="p">R160</span><span class="p">[R000]</span><p class="desc">Chorizo, salami, ham, bacon, mushrooms. Waste not.</p></div>
+              <div class="pz"><span class="name">Franschhoek</span><span class="p">R190</span><span class="p">[R000]</span><span class="p">R140</span><span class="p">[R000]</span><p class="desc">Biltong, goats cheese, fig preserve. Wine country on a base.</p></div>
+              <div class="pz"><span class="name">Cha Cha Cha</span><span class="p">R180</span><span class="p">[R000]</span><span class="p">R125</span><span class="p">[R000]</span><p class="desc">Chicken breast, mixed peppers, feta. Dance with it.</p></div>
+              <div class="pz"><span class="name">POD</span><span class="p">R170</span><span class="p">[R000]</span><span class="p">R115</span><span class="p">[R000]</span><p class="desc">Baby tomatoes, pesto, rocket. Fresh as the morning after.</p></div>
+              <div class="pz"><span class="name">MexiCan</span><span class="p">R170</span><span class="p">[R000]</span><span class="p" aria-label="No medium">–</span><span class="p" aria-label="No medium">–</span><p class="desc">Yes we MexiCan. Slow-cooked bolognese, mixed peppers, onion.</p></div>
+              <div class="pz"><span class="name">California</span><span class="p">R170</span><span class="p">[R000]</span><span class="p" aria-label="No medium">–</span><span class="p" aria-label="No medium">–</span><p class="desc">[Toppings to confirm]</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="pizza-cols" style="margin-top: 56px;">
+          <div>
+            <div class="pz-head two"><span class="tag grp">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
+            <div data-menu-items="pizza-extras" style="display: contents;">
+              <div class="pz two"><span class="name">Gluten-free base</span><span class="p">R40</span><span class="p">[R000]</span></div>
+              <div class="pz two"><span class="name">Vegan cheese</span><span class="p">R40</span><span class="p">[R000]</span></div>
+              <div class="pz two"><span class="name">Extra meat, cheese or avo</span><span class="p">R30</span><span class="p">[R000]</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="pz-head two"><span class="tag grp">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
+            <div data-menu-items="pizza-extras" style="display: contents;">
+              <div class="pz two"><span class="name">Extra veg</span><span class="p">R15</span><span class="p">[R000]</span></div>
+              <div class="pz two"><span class="name">Pizza box</span><span class="p">R10</span><span class="p">[R000]</span></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="menu-break">
+
+        <div class="cols">
+          <div class="col">
+            <div class="head-group with-ill"><img class="sec-ill" src="illustrations/section-wrapped.svg" alt="" loading="lazy" decoding="async"><p class="tag">Livin' on a pita</p><h2 class="section-head">Wrapped Differently</h2></div>
+            <div data-menu-items="wrapped" style="display: contents;">
+              <div class="item"><div class="row"><span>Chicken Shawarma</span><span>R150</span></div><p class="desc">In a pita or a bowl.</p></div>
+              <div class="item"><div class="row"><span>Falafel</span><span>R150</span></div><p class="desc">Falafel in love. Five balls, pita or bowl, with tahina.</p></div>
+              <div class="item"><div class="row"><span>Sabich</span><span>R120</span></div><p class="desc">Fried brinjal and egg. Pita or bowl.</p></div>
+              <div class="item"><div class="row"><span>Shakshuka</span><span>R125</span></div><p class="desc">Eggs baked in the sugo, green pepper, cheddar. Pita on top.</p></div>
+            </div>
+            <div class="head-group with-ill gap-top"><img class="sec-ill" src="illustrations/section-pasta-potjies.svg" alt="" loading="lazy" decoding="async"><p class="tag">Pasta la vista</p><h2 class="section-head">Pasta &amp; Potjies</h2></div>
+            <div data-menu-items="pasta-potjies" style="display: contents;">
+              <div class="item"><div class="row"><span>Shroom Pasta</span><span>R120</span></div><p class="desc">Mushrooms, cream, truffle oil, parmesan.</p></div>
+              <div class="row small"><span>Arrabbiata</span><span>R100</span></div>
+              <div class="row small"><span>Napolitana</span><span>R100</span></div>
+              <div class="item"><div class="row"><span>Oxtail Potjie</span><span>R250</span></div><p class="desc">Slow-cooked oxtail, red wine, Shisanyama spice. On pap.</p></div>
+              <div class="item"><div class="row"><span>Veg Potjie</span><span>R200</span></div><p class="desc">Same pot, same patience, no meat.</p></div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="head-group with-ill"><img class="sec-ill" src="illustrations/section-breakfast.svg" alt="" loading="lazy" decoding="async"><p class="tag">Rise and dine</p><h2 class="section-head">Breakfast</h2></div>
+            <div data-menu-items="breakfast" style="display: contents;">
+              <div class="item"><div class="row"><span>Breakfast Roll</span><span>R100</span></div><p class="desc">Egg, streaky bacon, cheddar, rocket.</p></div>
+              <div class="item"><div class="row"><span>Veggie Roll</span><span>R100</span></div><p class="desc">Peppers, onion, mushrooms, cheddar.</p></div>
+              <div class="item"><div class="row"><span>Breakfast Bowl</span><span>R90</span></div><p class="desc">Yoghurt, muesli, fruit, honey, mint.</p></div>
+              <div class="row small"><span>Cheesy Toasty</span><span>R60</span></div>
+            </div>
+            <div class="head-group with-ill gap-top"><img class="sec-ill" src="illustrations/section-sweet-stuff.svg" alt="" loading="lazy" decoding="async"><p class="tag">Panna-cotta have it</p><h2 class="section-head">Sweet Stuff</h2></div>
+            <div data-menu-items="sweet-stuff" style="display: contents;">
+              <div class="item"><div class="row"><span>Panacotta</span><span>R60</span></div><p class="desc">Vanilla pod, fruit coulis, blueberries.</p></div>
+              <div class="row small"><span>Brownie</span><span>R40</span></div>
+              <div class="row small"><span>Cupcake</span><span>R30</span></div>
+              <div class="row small"><span>Cake truffles, 5</span><span>R100</span></div>
+              <div class="row small"><span>Wylde Chocolate</span><span>R150</span></div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="head-group with-ill"><img class="sec-ill" src="illustrations/section-coffee.svg" alt="" loading="lazy" decoding="async"><p class="tag">Thanks a latte</p><h2 class="section-head">Coffee</h2></div>
+            <div data-menu-items="coffee" style="display: contents;">
+              <div class="row small"><span>Espresso</span><span>R30</span></div>
+              <div class="row small"><span>Americano</span><span>R35</span></div>
+              <div class="row small"><span>Cortado</span><span>R40</span></div>
+              <div class="row small"><span>Flat white</span><span>R45</span></div>
+              <div class="row small"><span>Latte or chai latte</span><span>R50</span></div>
+              <div class="row small"><span>Mocha or dirty chai</span><span>R55</span></div>
+              <div class="row small"><span>Hot choc</span><span>R50</span></div>
+              <div class="row small"><span>Tea, 5 Roses or rooibos</span><span>R30</span></div>
+              <div class="row small"><span>Oat, almond or macadamia</span><span>R15</span></div>
+            </div>
+            <div class="head-group with-ill gap-top"><img class="sec-ill" src="illustrations/section-cold-drinks.svg" alt="" loading="lazy" decoding="async"><p class="tag">Stay cool</p><h2 class="section-head">Cold Drinks</h2></div>
+            <div data-menu-items="cold-drinks" style="display: contents;">
+              <div class="row small"><span>Coke, Coke Zero, Fanta, Creme Soda</span><span>R25</span></div>
+              <div class="row small"><span>Still or sparkling water</span><span>R20</span></div>
+              <div class="row small"><span>Kombucha or ALKMY tea</span><span>R50</span></div>
+              <div class="row small"><span>Energy drink</span><span>R25</span></div>
+            </div>
+            <div class="shade-note" style="margin-top: 16px; padding: 24px; font-size: 14px; line-height: 1.4; background: var(--shade); color: #000;">Only the pizzas deliver, from our dark kitchen. Everything else is served from the truck, and the truck menu changes with the event.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="sauce">
+    <div class="wrap" style="padding-block: 72px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px;">
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <p class="tag">Hungry yet</p>
+        <h2 class="poster-lg" style="color: var(--on-sauce-lg);">Pizza My Heart.</h2>
+      </div>
+      <div class="btns">
+        <a class="btn btn-ink" href="#delivery">Order Pizza</a>
+        <a class="btn btn-ink" href="#circuit">See Our Events</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- DELIVERY -->
+<main data-view="delivery" hidden>
+  <section style="padding-block: 80px 64px;">
+    <div class="wrap split">
+      <div class="stack" style="gap: 20px; align-items: flex-start;">
+        <img src="tommy-seal.png" alt="Tommy Sugo Pizza seal" style="height: 128px; width: 128px; display: block;">
+        <p class="tag red">Delivery · pizza only</p>
+        <h1 class="poster-xl" style="font-size: clamp(48px, 7.5vw, 92px);">Pizza to your door.</h1>
+        <div class="bar" aria-hidden="true"></div>
+        <p class="lede" style="max-width: 520px;">Our pizzas deliver from a dark kitchen in [AREA]. No counter, no queue, same sauce. If Tommy Sugo shows up in your Uber Eats or Mr D app, you're in range.</p>
+        <div class="btns">
+          <a class="btn" href="https://www.ubereats.com" target="_blank" rel="noopener">Order on Uber Eats</a>
+          <a class="btn btn-ghost" href="https://www.mrd.com" target="_blank" rel="noopener">Order on Mr D</a>
+        </div>
+      </div>
+      <div class="ph" role="img" aria-label="Map placeholder: Tommy Sugo delivery zone" style="min-height: 420px; border: 2px solid var(--rule);">DELIVERY ZONE MAP</div>
+    </div>
+  </section>
+  <section style="padding-bottom: 96px;">
+    <div class="wrap stack" style="gap: 32px;">
+      <h2 class="poster-lg">Where We Deliver</h2>
+      <div class="grid3">
+        <article class="box">
+          <p class="tag red">Dark kitchen</p>
+          <h3>Tommy Sugo at [AREA]</h3>
+          <div class="item"><span class="lbl">Delivers to</span><p class="desc">[Suburb], [Suburb], [Suburb], [Suburb], [Suburb].</p></div>
+          <div class="item"><span class="lbl">Kitchen hours</span><p class="desc">[Mon–Sun, 11:00–21:00]</p></div>
+          <div class="btns" style="margin-top: auto; padding-top: 8px;">
+            <a class="btn" href="https://www.ubereats.com" target="_blank" rel="noopener">Uber Eats</a>
+            <a class="btn btn-ghost" href="https://www.mrd.com" target="_blank" rel="noopener">Mr D</a>
+          </div>
+        </article>
+        <article class="box">
+          <p class="tag red">What delivers</p>
+          <h3>Pizza. Only pizza.</h3>
+          <p class="muted">The full pizza board, large or medium, with gluten-free bases and vegan cheese. Falafel, shawarma, pasta, potjies and coffee stay on the truck.</p>
+          <a href="#menu" style="font-weight: 700; margin-top: auto; padding-top: 8px;">Pizza menu →</a>
+        </article>
+        <article class="box raised" style="justify-content: center;">
+          <p class="tag red">Coming soon</p>
+          <h3>Pizza at your place?</h3>
+          <p class="muted">New kitchens open where the hunger is. Tell us your suburb below.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+  <section style="padding-bottom: 96px;">
+    <div class="wrap">
+      <div class="stack" style="border-top: 2px solid var(--rule); padding-top: 64px; gap: 40px;">
+        <h2 class="poster-lg" style="text-align: center;">Three Taps to a Saved Life</h2>
+        <ol class="steps">
+          <li><span class="n">1</span><h3>Open your app.</h3><p class="muted">Search "Tommy Sugo" on Uber Eats or Mr D.</p></li>
+          <li><span class="n">2</span><h3>Pick your pie.</h3><p class="muted">Large or medium. Add a gluten-free base or vegan cheese.</p></li>
+          <li><span class="n">3</span><h3>Open the box.</h3><p class="muted">Seven hours of sauce, delivered in thirty minutes or so.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+  <section class="bunting">
+    <div class="wrap center" style="padding-block: 120px 80px; max-width: 856px; gap: 24px;">
+      <p class="tag red">Out of range</p>
+      <h2 class="poster-xl" style="font-size: clamp(36px, 5vw, 56px); line-height: 1.05;">No delivery near you? What a crust-astrophe.</h2>
+      <form id="dvote-form" style="width: 100%; display: flex; flex-direction: column; gap: 16px; text-align: left;">
+        <p style="margin: 0; text-align: center;" class="muted">Tell us your suburb. Enough votes and we open a kitchen nearby.</p>
+        <div class="fgrid">
+          <div class="fld"><label class="lbl" for="dvote-suburb">Your suburb</label><input id="dvote-suburb" class="field" type="text" placeholder="e.g. Observatory" required></div>
+          <div class="fld"><label class="lbl" for="dvote-email">Email</label><input id="dvote-email" class="field" type="email" placeholder="you@example.com" required></div>
+        </div>
+        <button class="btn" type="submit" style="align-self: center;">Vote for Pizza</button>
+      </form>
+      <div id="dvote-done" role="status" hidden style="width: 100%; border: 2px solid var(--rule); padding: 32px; display: flex; flex-direction: column; gap: 8px;">
+        <p style="margin: 0; font-family: var(--poster); font-size: 28px; font-weight: 700;">Vote counted.</p>
+        <p style="margin: 0;" class="muted">In the live site this would email you the day Tommy Sugo delivers to your suburb.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- SHOP -->
+<main data-view="shop" hidden>
+  <section style="padding-block: 80px 64px;">
+    <div class="wrap split">
+      <div class="stack" style="gap: 20px; align-items: flex-start;">
+        <p class="tag red">The shop · frozen pizza &amp; sauce</p>
+        <h1 class="poster-xl" style="font-size: clamp(48px, 7.5vw, 92px);">Chill out. Literally.</h1>
+        <div class="bar" aria-hidden="true"></div>
+        <p class="lede" style="max-width: 540px;">Last night a pizza saved your life. Tonight there's one in the freezer. Same hand-rolled thin bases, same sauce, frozen the day we make them.</p>
+      </div>
+      <div class="ph" role="img" aria-label="Photo placeholder: frozen pizzas and jars of sauce on the truck counter" style="min-height: 380px; border: 2px solid var(--rule);">PHOTO · FROZEN PIZZAS &amp; JARS ON THE COUNTER</div>
+    </div>
+  </section>
+
+  <section class="paper" style="padding-block: 80px 96px;">
+    <div class="wrap">
+      <form id="shop-form" class="shop-grid" novalidate>
+        <div class="stack" style="gap: 48px; min-width: 0;">
+          <div class="stack" style="gap: 20px;">
+            <div class="head-group"><p class="tag">Freeze, please</p><h2 class="section-head">Frozen Pizzas</h2></div>
+            <p class="muted" style="margin: 0;">[Size to confirm]. Bake from frozen. No thawing, no waiting, no judgement.</p>
+            <div class="products" data-shop-items="frozen-pizzas">
+              <article class="product" data-product="Margherita, frozen">
+                <img class="ill" src="illustrations/pizza-margherita.svg" alt="Frozen Margherita pizza: sauce, mozzarella, olive oil" loading="lazy" decoding="async">
+                <div class="product-body"><h3>Margherita</h3><p class="desc">The OG. Sauce, mozzarella, olive oil.</p>
+                  <div class="product-foot"><span class="price">[R000]</span><div class="stepper"><button type="button" data-step="-1" aria-label="One less Margherita">−</button><output aria-live="polite">0</output><button type="button" data-step="1" aria-label="One more Margherita">+</button></div></div></div>
+              </article>
+              <article class="product" data-product="Veggie, frozen">
+                <img class="ill" src="illustrations/pizza-veggie.svg" alt="Frozen Veggie pizza: peppers, mushrooms, red onion, olives" loading="lazy" decoding="async">
+                <div class="product-body"><h3>Veggie</h3><p class="desc">Peppers, mushrooms, red onion, black olives.</p>
+                  <div class="product-foot"><span class="price">[R000]</span><div class="stepper"><button type="button" data-step="-1" aria-label="One less Veggie">−</button><output aria-live="polite">0</output><button type="button" data-step="1" aria-label="One more Veggie">+</button></div></div></div>
+              </article>
+              <article class="product" data-product="Shroom, frozen">
+                <img class="ill" src="illustrations/pizza-shroom.svg" alt="Frozen Shroom pizza: mushrooms, parmesan, truffle oil" loading="lazy" decoding="async">
+                <div class="product-body"><h3>Shroom</h3><p class="desc">Mixed mushrooms, parmesan, truffle oil.</p>
+                  <div class="product-foot"><span class="price">[R000]</span><div class="stepper"><button type="button" data-step="-1" aria-label="One less Shroom">−</button><output aria-live="polite">0</output><button type="button" data-step="1" aria-label="One more Shroom">+</button></div></div></div>
+              </article>
+              <article class="product" data-product="Salami, frozen">
+                <img class="ill" src="illustrations/pizza-salami.svg" alt="Frozen Salami pizza: salami, black olives, artichoke" loading="lazy" decoding="async">
+                <div class="product-body"><h3>Salami</h3><p class="desc">Napoli salami, black olives, artichoke.</p>
+                  <div class="product-foot"><span class="price">[R000]</span><div class="stepper"><button type="button" data-step="-1" aria-label="One less Salami">−</button><output aria-live="polite">0</output><button type="button" data-step="1" aria-label="One more Salami">+</button></div></div></div>
+              </article>
+              <article class="product" data-product="Tasty Wastie, frozen">
+                <img class="ill" src="illustrations/pizza-tasty-wastie.svg" alt="Frozen Tasty Wastie pizza: chorizo, salami, ham, bacon, mushrooms" loading="lazy" decoding="async">
+                <div class="product-body"><h3>Tasty Wastie</h3><p class="desc">Chorizo, salami, ham, bacon, mushrooms.</p>
+                  <div class="product-foot"><span class="price">[R000]</span><div class="stepper"><button type="button" data-step="-1" aria-label="One less Tasty Wastie">−</button><output aria-live="polite">0</output><button type="button" data-step="1" aria-label="One more Tasty Wastie">+</button></div></div></div>
+              </article>
+              <article class="product" data-product="Franschhoek, frozen">
+                <img class="ill" src="illustrations/pizza-franschhoek.svg" alt="Frozen Franschhoek pizza: biltong, goats cheese, fig preserve" loading="lazy" decoding="async">
+                <div class="product-body"><h3>Franschhoek</h3><p class="desc">Biltong, goats cheese, fig preserve.</p>
+                  <div class="product-foot"><span class="price">[R000]</span><div class="stepper"><button type="button" data-step="-1" aria-label="One less Franschhoek">−</button><output aria-live="polite">0</output><button type="button" data-step="1" aria-label="One more Franschhoek">+</button></div></div></div>
+              </article>
+            </div>
+          </div>
+
+          <div class="stack" style="gap: 20px;">
+            <div class="head-group"><p class="tag">Sauce boss</p><h2 class="section-head">The Sauce</h2></div>
+            <p class="muted" style="margin: 0;">7-hour slow-cooked Roma tomato sauce, with confit garlic and a spice blend years in the perfecting. The one on every pizza, in the shakshuka and in the bolognese.</p>
+            <div class="products" data-shop-items="the-sauce">
+              <article class="product" data-product="The Sauce, jar">
+                <img class="ill" src="illustrations/sauce-jar.svg" alt="A jar of Tommy Sugo sauce" loading="lazy" decoding="async">
+                <div class="product-body"><h3>The Sauce</h3><p class="desc">One jar, [500 ml]. Pizza night, pasta night, any night.</p>
+                  <div class="product-foot"><span class="price">[R000]</span><div class="stepper"><button type="button" data-step="-1" aria-label="One less jar of The Sauce">−</button><output aria-live="polite">0</output><button type="button" data-step="1" aria-label="One more jar of The Sauce">+</button></div></div></div>
+              </article>
+              <article class="product" data-product="Sauce Boss 3-pack">
+                <img class="ill" src="illustrations/sauce-3-pack.svg" alt="Three jars of Tommy Sugo sauce" loading="lazy" decoding="async">
+                <div class="product-body"><h3>Sauce Boss 3-Pack</h3><p class="desc">Three jars. One for now, one for later, one you won't share.</p>
+                  <div class="product-foot"><span class="price">[R000]</span><div class="stepper"><button type="button" data-step="-1" aria-label="One less Sauce Boss 3-pack">−</button><output aria-live="polite">0</output><button type="button" data-step="1" aria-label="One more Sauce Boss 3-pack">+</button></div></div></div>
+              </article>
+              <article class="product" data-product="Pizza Night Box">
+                <img class="ill" src="illustrations/pizza-night-box.svg" alt="The Pizza Night Box: a box of frozen pizzas and a jar of sauce" loading="lazy" decoding="async">
+                <div class="product-body"><h3>Pizza Night Box</h3><p class="desc">Four frozen pizzas, two Margherita and two Tasty Wastie, plus a jar of the sauce.</p>
+                  <div class="product-foot"><span class="price">[R000]</span><div class="stepper"><button type="button" data-step="-1" aria-label="One less Pizza Night Box">−</button><output aria-live="polite">0</output><button type="button" data-step="1" aria-label="One more Pizza Night Box">+</button></div></div></div>
+              </article>
+            </div>
+          </div>
+
+          <ol class="steps" style="border-top: 2px solid var(--rule); padding-top: 40px;">
+            <li><span class="n">1</span><h3>Freeze it.</h3><p class="muted">Straight into the freezer when it arrives. [Keeps for X months].</p></li>
+            <li><span class="n">2</span><h3>Oven it.</h3><p class="muted">From frozen, [220 °C for 10–12 minutes, to confirm].</p></li>
+            <li><span class="n">3</span><h3>Fold it.</h3><p class="muted">Thin and hand-rolled, so it folds. You know the drill.</p></li>
+          </ol>
+        </div>
+
+        <aside class="cart" aria-labelledby="cart-h">
+          <div id="shop-order" class="stack" style="gap: 16px;">
+            <h2 id="cart-h" class="section-head" style="font-size: 28px;">Your Order</h2>
+            <p id="cart-empty" class="muted" style="margin: 0;">Your freezer is empty. Add a pizza or a jar.</p>
+            <ul id="cart-lines" class="cart-lines" hidden></ul>
+            <div class="cart-total"><span id="cart-count">0 items</span><span id="cart-total">[R000]</span></div>
+            <fieldset>
+              <legend class="lbl">How do you want it</legend>
+              <div class="btns">
+                <button type="button" class="pill" data-get="delivery" aria-pressed="true">Delivery</button>
+                <button type="button" class="pill" data-get="collect" aria-pressed="false">Collect</button>
+              </div>
+            </fieldset>
+            <div class="fld" id="get-delivery"><label class="lbl" for="shop-address">Delivery address</label><input id="shop-address" class="field" type="text" placeholder="Street, suburb" autocomplete="street-address"><p class="desc" style="font-size: 14px;">Frozen orders deliver to [areas], packed cold. Delivery fee [R000].</p></div>
+            <div class="fld" id="get-collect" hidden><label class="lbl" for="shop-collect">Collect from</label><select id="shop-collect" class="field"><option>The truck at [next event]</option><option>The dark kitchen, [AREA]</option></select></div>
+            <div class="fld"><label class="lbl" for="shop-name">Your name</label><input id="shop-name" class="field" type="text" autocomplete="name"></div>
+            <div class="fld"><label class="lbl" for="shop-email">Email</label><input id="shop-email" class="field" type="email" autocomplete="email"></div>
+            <div class="fld"><label class="lbl" for="shop-phone">Phone</label><input id="shop-phone" class="field" type="tel" autocomplete="tel"></div>
+            <p id="shop-err" class="shop-err" role="alert" hidden></p>
+            <button class="btn" type="submit">Checkout with PayFast</button>
+            <p class="desc" style="font-size: 14px; margin: 0;">Prices, sizes, delivery areas and fees are placeholders.</p>
+          </div>
+          <div id="shop-done" class="stack" role="status" hidden style="gap: 12px;">
+            <p class="tag">Order placed · prototype</p>
+            <h2 class="poster-lg" style="font-size: 36px;">Freeze, Please. It's Coming.</h2>
+            <p class="muted" style="margin: 0;">In the live site this would take you to PayFast to pay, then email your order to <span id="shop-done-email">you</span>.</p>
+            <button class="btn btn-ghost" type="button" id="shop-again">Start a New Order</button>
+          </div>
+        </aside>
+      </form>
+    </div>
+  </section>
+</main>
+
+<!-- ON THE CIRCUIT -->
+<main data-view="circuit" hidden>
+  <section style="padding-block: 80px 64px;">
+    <div class="wrap split">
+      <div class="stack" style="gap: 20px; align-items: flex-start;">
+        <img src="tommy-seal.png" alt="Tommy Sugo Pizza seal" style="height: 128px; width: 128px; display: block;">
+        <p class="tag red">On the circuit</p>
+        <h1 class="poster-xl" style="font-size: clamp(48px, 7.5vw, 92px);">Have truck, will travel.</h1>
+        <div class="bar" aria-hidden="true"></div>
+        <p class="lede" style="max-width: 520px;">From September to April the truck follows the festival season, with the full menu on board. If you can hear the music, you're close. At home, the pizza delivers.</p>
+      </div>
+      <div class="ph" role="img" aria-label="Photo placeholder: the Tommy Sugo truck in the Karoo landscape" style="min-height: 420px; border: 2px solid var(--rule);">PHOTO · THE TRUCK IN THE KAROO</div>
+    </div>
+  </section>
+  <section style="padding-bottom: 96px;">
+    <div class="wrap stack" style="gap: 32px;">
+      <h2 class="poster-lg">Coming Up</h2>
+      <div class="grid3">
+        <article class="box">
+          <p class="tag red">12–15 Nov</p>
+          <h3>The Gathering</h3>
+          <div class="item"><span class="lbl">Where</span><p class="desc">POD Place of Dreams, Karoo</p></div>
+          <div class="item"><span class="lbl">Serving</span><p class="desc">Pizza all day. Shakshuka and Brekkie pizza from sunrise.</p></div>
+        </article>
+        <article class="box">
+          <p class="tag red">[Dates]</p>
+          <h3>[Festival name]</h3>
+          <div class="item"><span class="lbl">Where</span><p class="desc">[Venue], [Town]</p></div>
+          <div class="item"><span class="lbl">Serving</span><p class="desc">[Pizza, falafel, shawarma]</p></div>
+        </article>
+        <article class="box raised" style="justify-content: center;">
+          <p class="tag red">Every season</p>
+          <h3>More dates drop weekly.</h3>
+          <p class="muted">Check our socials for confirmed lineups each season. We post the truck's next stop the moment it's booked.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+  <section class="bunting">
+    <div class="wrap center" style="padding-block: 120px 80px; max-width: 856px; gap: 24px;">
+      <p class="tag red">Out of range</p>
+      <h2 class="poster-xl" style="font-size: clamp(36px, 5vw, 56px); line-height: 1.05;">No truck near you? What a crust-astrophe.</h2>
+      <form id="vote-form" style="width: 100%; display: flex; flex-direction: column; gap: 16px; text-align: left;">
+        <p style="margin: 0; text-align: center;" class="muted">Tell us your town. Enough votes and the truck pays you a visit.</p>
+        <div class="fgrid">
+          <div class="fld"><label class="lbl" for="vote-town">Your town</label><input id="vote-town" class="field" type="text" placeholder="e.g. Prince Albert" required></div>
+          <div class="fld"><label class="lbl" for="vote-email">Email</label><input id="vote-email" class="field" type="email" placeholder="you@example.com" required></div>
+        </div>
+        <button class="btn" type="submit" style="align-self: center;">Call the Truck</button>
+      </form>
+      <div id="vote-done" role="status" hidden style="width: 100%; border: 2px solid var(--rule); padding: 32px; display: flex; flex-direction: column; gap: 8px;">
+        <p style="margin: 0; font-family: var(--poster); font-size: 28px; font-weight: 700;">Vote counted.</p>
+        <p style="margin: 0;" class="muted">In the live site this would email you when the truck is headed your way.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- CATERING -->
+<main data-view="catering" hidden>
+  <section class="bunting">
+    <div class="wrap center" style="padding-block: 120px 96px; gap: 24px;">
+      <img src="tommy-seal-catering.png" alt="Tommy Sugo Catering seal: The Secret's in the Sauce" style="height: 160px; width: 160px; display: block;">
+      <p class="tag red">Catering</p>
+      <h1 class="poster-xl">Your event,<br>fed.</h1>
+      <div class="bar" aria-hidden="true"></div>
+      <p class="tag" style="font-size: 20px;">Sweet dreams are made of cheese</p>
+      <p class="lede muted">Weddings, launches, festivals and long Saturdays. We bring everything: the truck, the team, the gear. You bring the people.</p>
+      <a class="btn" href="#book" data-scroll="book">Make an Enquiry</a>
+    </div>
+  </section>
+  <section class="section">
+    <div class="wrap stack" style="gap: 48px;">
+      <h2 class="poster-lg" style="text-align: center;">Pick Your Size of Pie</h2>
+      <div class="grid3">
+        <article class="box">
+          <p class="tag red">20–60 guests</p>
+          <h3>The Small Slice</h3>
+          <p class="muted">The truck, pizza on rotation and a crew of three. Birthdays, office days, garden parties.</p>
+          <p style="margin-top: auto; padding-top: 16px; border-top: 2px solid var(--rule); font-family: var(--poster); font-size: 22px; font-weight: 600;">From [R000] per head</p>
+        </article>
+        <article class="box">
+          <p class="tag red">60–150 guests</p>
+          <h3>The Big Cheese</h3>
+          <p class="muted">Pizza plus falafel and shawarma, with Greek, green, potato or coleslaw salads on the side.</p>
+          <p style="margin-top: auto; padding-top: 16px; border-top: 2px solid var(--rule); font-family: var(--poster); font-size: 22px; font-weight: 600;">From [R000] per head</p>
+        </article>
+        <article class="box raised">
+          <p class="tag red">150+ guests or a weekend</p>
+          <h3>The Whole Pie</h3>
+          <p class="muted">Full board. Breakfast shakshuka, pizza by day, a braai or potjie by night. Built with you, served in waves so nobody waits.</p>
+          <p style="margin-top: auto; padding-top: 16px; border-top: 2px solid var(--rule); font-family: var(--poster); font-size: 22px; font-weight: 600;">Quoted per event</p>
+        </article>
+      </div>
+    </div>
+  </section>
+  <section style="padding-bottom: 96px;">
+    <div class="wrap">
+      <ol class="steps raised" style="padding: 48px clamp(24px, 4vw, 48px);">
+        <li><span class="n">1</span><h3>Send the details.</h3><p class="muted">Date, headcount, where to park the truck.</p></li>
+        <li><span class="n">2</span><h3>Tommy sends a quote.</h3><p class="muted">A menu and a price for your crowd.</p></li>
+        <li><span class="n">3</span><h3>The truck rolls in.</h3><p class="muted">Hot, on time, sauce ready.</p></li>
+      </ol>
+    </div>
+  </section>
+  <section id="book" class="paper" style="padding-block: 96px 112px;">
+    <div class="wrap narrow stack" style="gap: 32px;">
+      <div class="center" style="gap: 12px;">
+        <p class="tag">Make an enquiry</p>
+        <h2 class="poster-lg">Let's Get Saucy, Together.</h2>
+      </div>
+      <form id="book-form" class="formbox">
+        <fieldset>
+          <legend class="lbl">What's the occasion</legend>
+          <div class="btns" id="kinds">
+            <button type="button" class="pill" data-kind="festival" aria-pressed="true">Festival</button>
+            <button type="button" class="pill" data-kind="wedding" aria-pressed="false">Wedding</button>
+            <button type="button" class="pill" data-kind="corporate" aria-pressed="false">Corporate</button>
+            <button type="button" class="pill" data-kind="party" aria-pressed="false">Party</button>
+            <button type="button" class="pill" data-kind="event" aria-pressed="false">Something else</button>
+          </div>
+        </fieldset>
+        <div class="fgrid">
+          <div class="fld"><label class="lbl" for="ev-date">Date</label><input id="ev-date" class="field" type="date" required></div>
+          <div class="fld"><label class="lbl" for="ev-guests">Headcount</label><input id="ev-guests" class="field" type="number" min="20" placeholder="e.g. 80" required></div>
+          <div class="fld"><label class="lbl" for="ev-time">Serve at</label>
+            <select id="ev-time" class="field"><option>Breakfast</option><option selected>Lunch</option><option>Dinner</option><option>Late night</option><option>All weekend</option></select></div>
+        </div>
+        <div class="fld"><label class="lbl" for="ev-venue">Venue</label><input id="ev-venue" class="field" type="text" placeholder="Venue, town" required></div>
+        <div class="fgrid">
+          <div class="fld"><label class="lbl" for="ev-name">Your name</label><input id="ev-name" class="field" type="text" autocomplete="name" required></div>
+          <div class="fld"><label class="lbl" for="ev-email">Email</label><input id="ev-email" class="field" type="email" autocomplete="email" required></div>
+          <div class="fld"><label class="lbl" for="ev-phone">Phone</label><input id="ev-phone" class="field" type="tel" autocomplete="tel"></div>
+        </div>
+        <div class="fld"><label class="lbl" for="ev-notes">Anything else</label><textarea id="ev-notes" class="field" rows="4" placeholder="Dietary needs, vegan and gluten-free counts, the bride's favourite pizza."></textarea></div>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
+          <p style="margin: 0; font-size: 14px; line-height: 1.4;" class="muted">Tommy replies with a quote. Nothing is booked until you confirm.</p>
+          <button class="btn" type="submit">Send Enquiry</button>
+        </div>
+      </form>
+      <div id="book-done" class="formbox center" role="status" hidden style="padding-block: 56px; gap: 16px;">
+        <p class="tag">Enquiry sent · prototype</p>
+        <h3 class="poster-xl" style="font-size: clamp(36px, 6vw, 56px); line-height: 1.05;">Slice, slice, baby. It's happening.</h3>
+        <p class="muted" style="margin: 0; max-width: 480px;">Tommy has your <span id="book-kind">festival</span> enquiry and will be in touch with a menu and quote.</p>
+        <button class="btn btn-ghost" type="button" id="book-again">Send Another</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- OUR STORY -->
+<main data-view="story" hidden>
+  <section style="padding-block: 80px 64px;">
+    <div class="wrap split">
+      <div class="stack" style="gap: 20px; align-items: flex-start;">
+        <p class="tag red">Our story</p>
+        <h1 class="poster-xl" style="font-size: clamp(48px, 7.5vw, 92px);">The Secret's in the Sauce.</h1>
+        <div class="bar" aria-hidden="true"></div>
+        <p class="lede">Tommy Sugo started with one pot of sauce and a stubborn idea: if the sauce is right, the rest follows.</p>
+        <p style="margin: 0; max-width: 600px;" class="muted">Roma tomatoes, confit garlic and a spice blend years in the perfecting, slow-cooked for seven hours. It goes on hand-rolled thin bases, into the shakshuka and into the bolognese. Falafel and shawarma are the same obsession, just wrapped differently.</p>
+      </div>
+      <div class="ph" role="img" aria-label="Photo placeholder: the crew working the pizza oven" style="min-height: 420px; border: 2px solid var(--rule);">PHOTO · THE CREW AT THE OVEN</div>
+    </div>
+  </section>
+  <section style="padding-bottom: 80px;">
+    <div class="wrap">
+      <div class="stack" style="border-top: 2px solid var(--rule); padding-top: 64px; gap: 40px;">
+        <h2 class="poster-lg" style="text-align: center;">Seven Hours. One Pot. No Shortcuts.</h2>
+        <ol class="steps">
+          <li><span class="n">1</span><h3>Roma tomatoes go in.</h3><p class="muted">With confit garlic and the spice blend.</p></li>
+          <li><span class="n">2</span><h3>Seven hours pass.</h3><p class="muted">Low heat. Lots of stirring. Zero rushing.</p></li>
+          <li><span class="n">3</span><h3>Onto the base.</h3><p class="muted">Hand-rolled, thin, 100 g of mozzarella on top.</p></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+  <section style="padding-bottom: 80px;">
+    <div class="wrap" style="display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-end;">
+      <div class="stack" style="flex: 1 1 360px; min-width: 0;">
+        <h2 class="section-head">Most Ordered</h2>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="row" style="border-bottom: 2px solid var(--rule); padding-bottom: 16px;"><span>FAB</span><span>R200</span></div>
+          <div class="row" style="border-bottom: 2px solid var(--rule); padding-bottom: 16px;"><span>Margherita</span><span>R125</span></div>
+          <div class="row" style="border-bottom: 2px solid var(--rule); padding-bottom: 16px;"><span>Tasty Wastie</span><span>R230</span></div>
+          <div class="row" style="border-bottom: 2px solid var(--rule); padding-bottom: 16px;"><span>Chicken Shawarma</span><span>R150</span></div>
+        </div>
+        <a href="#menu" style="font-weight: 700; padding: 12px 0;">Menu →</a>
+      </div>
+      <div style="flex: 1 1 360px; min-width: 0;">
+        <div class="seal-panel" style="margin-top: 72px;">
+          <img class="seal" src="tommy-seal.png" alt="">
+          <p class="tag">Catering</p>
+          <h2 class="poster-lg">Last Night a Pizza Saved My Life.</h2>
+          <p>Tonight it could save your party. Tell us the date and we'll bring the truck.</p>
+          <a class="btn btn-ink" href="#book">Make an Enquiry</a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section style="padding-bottom: 96px;">
+    <div class="wrap stack">
+      <h2 class="section-head">Good to Know</h2>
+      <details><summary>Do you deliver?</summary><p>Pizza, yes. It comes from our dark kitchen in [AREA] through Uber Eats and Mr D. <a href="#delivery" style="font-weight: 700;">See where we deliver</a>. Falafel, shawarma, pasta and the rest are on the truck only.</p></details>
+      <details><summary>Can I collect from the kitchen?</summary><p>Yes, pizzas from the dark kitchen in [AREA], at the menu's Collect prices. [How to order for collection to confirm.]</p></details>
+      <details><summary>Can I buy the sauce?</summary><p>Yes. Jars of the sauce and frozen pizzas are in the <a href="#shop" style="font-weight: 700;">Shop</a>, for delivery or to collect at the truck.</p></details>
+      <details><summary>Who sets the delivery fee?</summary><p>Your app does. Fees and app prices may differ from this site.</p></details>
+      <details><summary>Gluten-free or vegan?</summary><p>Any pizza on a gluten-free base, R40 extra. Vegan cheese on any pizza, R40 extra. The falafel is vegan as it comes.</p></details>
+      <details><summary>Where are you this weekend?</summary><p>See On the Circuit, and check our socials for confirmed lineups each season.</p></details>
+      <details><summary>Can we book the whole truck?</summary><p>Yes. Weddings, launches and private parties from 20 guests. We bring everything: the truck, the team, the gear.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-col" style="gap: 16px;">
+        <img src="tommy-seal.png" alt="Tommy Sugo" style="height: 144px; width: 144px; display: block;">
+        <p class="tag red">Last night a pizza saved my life</p>
+      </div>
+      <nav class="foot-col" aria-label="Footer">
+        <a class="flink" href="#menu">Menu</a>
+        <a class="flink" href="#delivery">Delivery</a>
+        <a class="flink" href="#shop">Shop</a>
+        <a class="flink" href="#circuit">On the Circuit</a>
+        <a class="flink" href="#catering">Catering</a>
+        <a class="flink" href="#story">Our Story</a>
+      </nav>
+      <div class="foot-col">
+        <span class="tag">Order pizza on</span>
+        <a class="flink" href="https://www.ubereats.com" target="_blank" rel="noopener">Uber Eats</a>
+        <a class="flink" href="https://www.mrd.com" target="_blank" rel="noopener">Mr D</a>
+      </div>
+      <div class="foot-col">
+        <span class="tag">Follow</span>
+        <span style="font-weight: 700;">Instagram @[HANDLE]</span>
+        <span style="font-weight: 700;">Facebook Tommy Sugo</span>
+      </div>
+    </div>
+    <div class="foot-base">
+      <span>© 2026 Tommy Sugo</span>
+      <span>Pizza delivers from our dark kitchen. The full menu is on the truck.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/supabase-config.js"></script>
+<script src="js/catalog-config.js"></script>
+<script src="js/catalog.js"></script>
+<script>
+(function () {
+  var views = ["home", "menu", "delivery", "shop", "circuit", "catering", "story"];
+
+  function show(name, keepScroll) {
+    if (views.indexOf(name) < 0) name = "home";
+    document.querySelectorAll("main[data-view]").forEach(function (m) {
+      m.hidden = m.getAttribute("data-view") !== name;
+    });
+    document.querySelectorAll("[data-nav]").forEach(function (a) {
+      if (a.getAttribute("data-nav") === name) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    if (!keepScroll) window.scrollTo(0, 0);
+  }
+
+  function goBook(smooth) {
+    show("catering", true);
+    document.getElementById("book").scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+  }
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute("href").slice(1);
+    if (id === "book") {
+      e.preventDefault();
+      goBook(true);
+      return;
+    }
+    if (views.indexOf(id) >= 0) {
+      e.preventDefault();
+      try { history.replaceState(null, "", "#" + id); } catch (err) {}
+      show(id);
+    }
+  });
+
+  window.addEventListener("hashchange", function () { show(location.hash.slice(1)); });
+  var start = location.hash.slice(1);
+  if (start === "book") goBook(false);
+  else show(start);
+
+  // Shop: quantities, order summary, delivery or collect, checkout
+  var shopForm = document.getElementById("shop-form");
+  var PRICE_TBC = "[R000]";
+  function products() { return Array.prototype.slice.call(document.querySelectorAll("[data-product]")); }
+  function qtyOf(p) { var o = p.querySelector("output"); return o ? parseInt(o.textContent, 10) || 0 : 0; }
+  function rand(n) { return "R" + (n % 1 ? n.toFixed(2) : n); }
+  function renderCart() {
+    var lines = document.getElementById("cart-lines");
+    lines.innerHTML = "";
+    var count = 0, total = 0, allPriced = true;
+    var priced = products().some(function (p) { return p.hasAttribute("data-price"); });
+    products().forEach(function (p) {
+      var q = qtyOf(p);
+      if (!q) return;
+      count += q;
+      var each = p.getAttribute("data-price");
+      if (each === null) allPriced = false; else total += q * Number(each);
+      var li = document.createElement("li");
+      var name = document.createElement("span");
+      name.textContent = q + " × " + p.getAttribute("data-product");
+      var price = document.createElement("span");
+      price.textContent = each === null ? PRICE_TBC : rand(q * Number(each));
+      li.appendChild(name); li.appendChild(price); lines.appendChild(li);
+    });
+    lines.hidden = count === 0;
+    document.getElementById("cart-empty").hidden = count > 0;
+    document.getElementById("cart-count").textContent = count + (count === 1 ? " item" : " items");
+    document.getElementById("cart-total").textContent = priced && allPriced ? rand(total) : PRICE_TBC;
+    if (count > 0) document.getElementById("shop-err").hidden = true;
+    return count;
+  }
+  shopForm.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-step]");
+    if (!b) return;
+    var p = b.closest("[data-product]");
+    var out = p.querySelector("output");
+    out.textContent = String(Math.max(0, Math.min(20, qtyOf(p) + parseInt(b.getAttribute("data-step"), 10))));
+    renderCart();
+  });
+  document.addEventListener("catalog:rendered", renderCart);
+  var getMode = "delivery";
+  document.querySelectorAll("[data-get]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      getMode = b.getAttribute("data-get");
+      document.querySelectorAll("[data-get]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      document.getElementById("get-delivery").hidden = getMode !== "delivery";
+      document.getElementById("get-collect").hidden = getMode !== "collect";
+    });
+  });
+  shopForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var err = document.getElementById("shop-err");
+    var email = document.getElementById("shop-email");
+    var problem = "";
+    if (!renderCart()) problem = "Add at least one pizza or jar to your order.";
+    else if (getMode === "delivery" && !document.getElementById("shop-address").value.trim()) problem = "Add a delivery address, or choose Collect.";
+    else if (!document.getElementById("shop-name").value.trim()) problem = "Add your name so we know whose order it is.";
+    else if (!email.value.trim() || !email.checkValidity()) problem = "Add an email address so we can send your confirmation.";
+    if (problem) { err.textContent = problem; err.hidden = false; return; }
+    document.getElementById("shop-done-email").textContent = email.value.trim();
+    document.getElementById("shop-order").hidden = true;
+    document.getElementById("shop-done").hidden = false;
+  });
+  document.getElementById("shop-again").addEventListener("click", function () {
+    shopForm.reset();
+    products().forEach(function (p) { var o = p.querySelector("output"); if (o) o.textContent = "0"; });
+    renderCart();
+    document.getElementById("shop-done").hidden = true;
+    document.getElementById("shop-order").hidden = false;
+  });
+
+  // Delivery: suburb vote
+  document.getElementById("dvote-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    this.hidden = true;
+    document.getElementById("dvote-done").hidden = false;
+  });
+
+  // On the Circuit: town vote
+  document.getElementById("vote-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    this.hidden = true;
+    document.getElementById("vote-done").hidden = false;
+  });
+
+  // Catering: occasion + enquiry
+  var kind = "festival";
+  document.querySelectorAll("[data-kind]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      kind = b.getAttribute("data-kind");
+      document.querySelectorAll("[data-kind]").forEach(function (x) {
+        x.setAttribute("aria-pressed", String(x === b));
+      });
+    });
+  });
+  var bookForm = document.getElementById("book-form");
+  var bookDone = document.getElementById("book-done");
+  bookForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    document.getElementById("book-kind").textContent = kind;
+    bookForm.hidden = true;
+    bookDone.hidden = false;
+  });
+  document.getElementById("book-again").addEventListener("click", function () {
+    bookForm.reset();
+    bookDone.hidden = true;
+    bookForm.hidden = false;
+  });
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Kitchen Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700&family=Oswald:wght@600;700&display=swap">
+<style>
+:root {
+  --bg: #f2f2f2;
+  --panel: #ffffff;
+  --ink: #111111;
+  --muted: #5c5c5a;
+  --line: #d3d2d2;
+  --accent: #ec1c24;
+  --accent-ink: #ffffff;
+  --ok: #1f7a3a;
+  --warn-bg: #fff4d6;
+  --chip: #ececec;
+  --poster: Oswald, "Arial Narrow", Impact, sans-serif;
+  --sans: Archivo, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d0d0d; --panel: #181818; --ink: #f2f2f2; --muted: #a8a8a6; --line: #333333;
+    --chip: #262626; --warn-bg: #3a3112; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d0d0d; --panel: #181818; --ink: #f2f2f2; --muted: #a8a8a6; --line: #333333;
+  --chip: #262626; --warn-bg: #3a3112; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 var(--sans); }
+button, input, select, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+h1, h2, h3 { font-family: var(--poster); font-weight: 700; text-transform: uppercase; letter-spacing: .02em; margin: 0; line-height: 1.1; }
+
+/* Top bar */
+.bar { background: #000; color: #f2f2f2; border-bottom: 4px solid var(--accent); }
+.bar .wrap { display: flex; align-items: center; gap: 16px; min-height: 64px; flex-wrap: wrap; padding-block: 8px; }
+.bar h1 { font-size: 22px; }
+.bar .who { margin-left: auto; font-size: 14px; color: #d3d2d2; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 16px; border: 2px solid var(--ink); background: var(--ink); color: var(--bg); font-weight: 700; cursor: pointer; text-decoration: none; border-radius: 4px; }
+.btn:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn.ghost:hover { background: var(--chip); color: var(--ink); border-color: var(--ink); }
+.btn.danger { background: transparent; color: var(--accent); border-color: var(--accent); }
+.btn.danger:hover { background: var(--accent); color: var(--accent-ink); }
+.btn.small { min-height: 32px; padding: 0 10px; font-size: 14px; }
+.btn:disabled { opacity: .45; cursor: default; }
+.bar .btn.ghost { color: #f2f2f2; border-color: #f2f2f2; }
+.bar .btn.ghost:hover { background: #f2f2f2; color: #000; }
+.icon-btn { width: 32px; min-height: 32px; padding: 0; }
+
+/* Login */
+.login { max-width: 400px; margin: 72px auto; background: var(--panel); border: 1px solid var(--line); padding: 32px 24px; border-radius: 8px; display: flex; flex-direction: column; gap: 16px; }
+.login h2 { font-size: 28px; }
+.fld { display: flex; flex-direction: column; gap: 6px; }
+.fld label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.fld .hint { font-size: 13px; color: var(--muted); margin: 0; }
+.input { width: 100%; min-height: 44px; padding: 8px 12px; border: 2px solid var(--line); background: var(--panel); border-radius: 4px; }
+.input:focus { border-color: var(--ink); outline: none; }
+textarea.input { min-height: 88px; resize: vertical; }
+.msg { margin: 0; font-size: 14px; }
+.msg.err { color: var(--accent); font-weight: 700; }
+.linkish { background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; font-size: 14px; color: var(--muted); align-self: flex-start; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin: 24px 0 0; border-bottom: 2px solid var(--line); }
+.tab { border: 0; background: none; padding: 12px 16px; font-weight: 700; cursor: pointer; border-bottom: 4px solid transparent; margin-bottom: -2px; color: var(--muted); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab small { display: block; font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+
+.toolbar { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 20px 0; }
+.toolbar p { margin: 0; color: var(--muted); font-size: 14px; }
+
+/* Sections and rows */
+.section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 24px; overflow: hidden; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.section-head h2 { font-size: 22px; }
+.section-head .count { font-family: var(--sans); font-size: 13px; color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 8px; }
+.rows { list-style: none; margin: 0; padding: 0; }
+.row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto auto; gap: 16px; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row.is-hidden .main, .row.is-hidden .thumb { opacity: .5; }
+.thumb { width: 56px; height: 56px; border-radius: 4px; background: var(--chip); object-fit: contain; display: block; }
+.thumb.empty { display: grid; place-items: center; color: var(--muted); font-size: 11px; }
+.main { min-width: 0; }
+.main .name { font-weight: 700; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.main .desc { margin: 2px 0 0; color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 2px 6px; border-radius: 3px; background: var(--chip); color: var(--muted); }
+.badge.red { background: var(--accent); color: var(--accent-ink); }
+.prices { display: flex; gap: 12px; font-variant-numeric: tabular-nums; font-size: 14px; text-align: right; }
+.prices div { display: flex; flex-direction: column; min-width: 56px; }
+.prices span:first-child { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.prices strong { font-family: var(--poster); font-size: 18px; font-weight: 600; }
+.actions { display: flex; gap: 6px; }
+.empty-row { padding: 20px; color: var(--muted); font-size: 14px; }
+@media (max-width: 720px) {
+  .row { grid-template-columns: 48px minmax(0, 1fr) auto; }
+  .thumb { width: 48px; height: 48px; }
+  .prices { grid-column: 2 / -1; grid-row: 2; justify-content: flex-start; text-align: left; }
+  .actions { grid-column: 3; grid-row: 1; }
+}
+
+/* Edit dialog */
+dialog { border: 0; padding: 0; border-radius: 8px; width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: var(--panel); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+dialog::backdrop { background: rgba(0,0,0,.55); }
+.dlg { display: flex; flex-direction: column; max-height: calc(100vh - 32px); }
+.dlg header { padding: 20px 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dlg header h2 { font-size: 24px; }
+.dlg .body { padding: 20px 24px; overflow: auto; display: flex; flex-direction: column; gap: 16px; }
+.dlg footer { padding: 16px 24px; border-top: 1px solid var(--line); display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.dlg footer .right { display: flex; gap: 12px; margin-left: auto; }
+.price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; align-items: end; }
+.money { position: relative; }
+.money::before { content: "R"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--muted); }
+.money .input { padding-left: 28px; }
+.img-edit { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 16px; align-items: start; }
+.img-edit .preview { width: 160px; height: 120px; border-radius: 4px; background: var(--chip); object-fit: contain; display: block; }
+.img-edit .noimg { width: 160px; height: 120px; border-radius: 4px; background: var(--chip); display: grid; place-items: center; color: var(--muted); font-size: 13px; }
+.img-edit .ctrls { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+@media (max-width: 520px) { .img-edit { grid-template-columns: minmax(0, 1fr); } }
+.check { display: flex; gap: 10px; align-items: flex-start; }
+.check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); }
+.check span small { display: block; color: var(--muted); font-size: 13px; }
+
+.notice { background: var(--warn-bg); border: 1px solid var(--line); padding: 12px 16px; border-radius: 6px; font-size: 14px; margin-top: 24px; }
+
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #000; color: #fff; padding: 12px 20px; border-radius: 6px; font-weight: 700; z-index: 10; max-width: calc(100vw - 32px); }
+.toast.err { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <h1>Kitchen Admin</h1>
+    <div class="who" id="who" hidden>
+      <span id="who-email"></span>
+      <button class="btn ghost small" type="button" id="sign-out">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <p class="notice" id="not-configured" hidden>Supabase isn't connected yet. Add the project URL and publishable key to <code>js/supabase-config.js</code>.</p>
+
+  <!-- Sign in -->
+  <form class="login" id="login" hidden novalidate>
+    <h2>Sign in</h2>
+    <p class="msg">For the Tommy Sugo and Merle's teams. Edit the menus and shop items.</p>
+    <div class="fld"><label for="email">Email</label><input class="input" id="email" type="email" autocomplete="username" required></div>
+    <div class="fld"><label for="password">Password</label><input class="input" id="password" type="password" autocomplete="current-password" required></div>
+    <p class="msg err" id="login-err" role="alert" hidden></p>
+    <button class="btn" type="submit" id="login-btn">Sign in</button>
+    <button class="linkish" type="button" id="forgot">Forgot your password?</button>
+  </form>
+
+  <!-- Set password (after an invite or reset link) -->
+  <form class="login" id="set-pw" hidden novalidate>
+    <h2>Choose a password</h2>
+    <p class="msg">You'll use this with your email to sign in from now on.</p>
+    <div class="fld"><label for="new-pw">New password</label><input class="input" id="new-pw" type="password" autocomplete="new-password" minlength="8" required><p class="hint">At least 8 characters.</p></div>
+    <p class="msg err" id="set-pw-err" role="alert" hidden></p>
+    <button class="btn" type="submit">Save password</button>
+  </form>
+
+  <!-- Signed in but not an admin -->
+  <div class="login" id="no-access" hidden>
+    <h2>No access yet</h2>
+    <p class="msg">You're signed in as <strong id="no-access-email"></strong>, but this account isn't set up as an admin. Ask the site owner to add you.</p>
+  </div>
+
+  <!-- Editor -->
+  <section id="app" hidden>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="toolbar">
+      <p id="tab-note"></p>
+      <a class="btn ghost small" id="view-page" target="_blank" rel="noopener">View on the site ↗</a>
+    </div>
+    <div id="sections"></div>
+  </section>
+</div>
+
+<dialog id="dlg">
+  <form class="dlg" id="edit-form" method="dialog" novalidate>
+    <header><h2 id="dlg-title">Edit item</h2><button class="btn ghost small" type="button" id="dlg-close" aria-label="Close">✕</button></header>
+    <div class="body">
+      <div class="fld"><label for="f-name">Name</label><input class="input" id="f-name" required></div>
+      <div class="fld"><label for="f-desc">Description</label><textarea class="input" id="f-desc"></textarea><p class="hint" id="f-desc-hint"></p></div>
+      <div class="fld"><label>Prices</label><div class="price-grid" id="f-prices"></div><p class="hint">Leave a price blank to show “–” (or “TBC” in the shop).</p></div>
+      <div class="fld">
+        <label>Image</label>
+        <div class="img-edit">
+          <div id="f-img-box"></div>
+          <div class="ctrls">
+            <input type="file" id="f-file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" hidden>
+            <button class="btn ghost small" type="button" id="f-upload">Upload new image</button>
+            <button class="btn ghost small" type="button" id="f-img-remove">Remove image</button>
+            <p class="hint">PNG, JPG, WebP or SVG, up to 5 MB.</p>
+          </div>
+        </div>
+      </div>
+      <div class="fld" data-shop-only><label for="f-alt">Image description</label><input class="input" id="f-alt"><p class="hint">For screen readers, e.g. “A jar of Tommy Sugo sauce”.</p></div>
+      <div class="fld" data-shop-only><label for="f-cart">Name in cart (optional)</label><input class="input" id="f-cart"><p class="hint">How it reads in the order, e.g. “Margherita, frozen”. Blank uses the name.</p></div>
+      <div class="fld"><label for="f-section">Section</label><select class="input" id="f-section"></select></div>
+      <label class="check"><input type="checkbox" id="f-hidden"><span>Hide from the site<small>Keeps the item here so you can bring it back later.</small></span></label>
+      <label class="check" data-shop-only><input type="checkbox" id="f-sold"><span>Sold out<small>Still shown in the shop, but can't be added to an order.</small></span></label>
+      <p class="msg err" id="f-err" role="alert" hidden></p>
+    </div>
+    <footer>
+      <button class="btn danger" type="button" id="f-delete">Delete</button>
+      <div class="right">
+        <button class="btn ghost" type="button" id="f-cancel">Cancel</button>
+        <button class="btn" type="submit" id="f-save">Save</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="../js/supabase-config.js"></script>
+<script src="../js/catalog-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function () {
+  var CFG = window.CATALOG_CONFIG;
+  var conf = window.SITE_SUPABASE || {};
+  var $ = function (id) { return document.getElementById(id); };
+
+  if (!conf.url || !conf.key || /YOUR-/.test(conf.url + conf.key)) {
+    $("not-configured").hidden = false;
+    return;
+  }
+
+  // Invite and reset emails land here with the link type in the URL hash.
+  var linkType = (location.hash.match(/type=([a-z]+)/) || [])[1];
+  var db = window.supabase.createClient(conf.url, conf.key);
+
+  var TABS = [
+    { brand: "tommy", kind: "menu" }, { brand: "tommy", kind: "shop" },
+    { brand: "merles", kind: "menu" }, { brand: "merles", kind: "shop" }
+  ];
+  var state = { tab: 0, rows: [], editing: null, image: undefined };
+  try { var saved = parseInt(localStorage.getItem("admin-tab"), 10); if (saved >= 0 && saved < 4) state.tab = saved; } catch (e) {}
+
+  function h(tag, attrs, kids) {
+    var e = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === "class") e.className = attrs[k];
+      else if (k === "text") e.textContent = attrs[k];
+      else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] !== false && attrs[k] != null) e.setAttribute(k, attrs[k] === true ? "" : attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return e;
+  }
+
+  var toastTimer;
+  function toast(text, isErr) {
+    var t = $("toast");
+    t.textContent = text;
+    t.className = "toast" + (isErr ? " err" : "");
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.hidden = true; }, isErr ? 6000 : 2500);
+  }
+
+  function money(v) {
+    if (v === null || v === undefined || v === "") return "–";
+    var n = Number(v);
+    return "R" + (n % 1 ? n.toFixed(2) : n);
+  }
+  // Site images are stored as paths relative to the site root; uploads are full URLs.
+  function src(u) { return /^(https?:|data:)/.test(u) ? u : "../" + u; }
+
+  function show(view) {
+    ["login", "set-pw", "no-access", "app"].forEach(function (id) { $(id).hidden = id !== view; });
+  }
+
+  // ---------- Auth ----------
+  async function route(session) {
+    if (!session) { $("who").hidden = true; show("login"); return; }
+    $("who").hidden = false;
+    $("who-email").textContent = session.user.email;
+    if (linkType === "invite" || linkType === "recovery") { show("set-pw"); return; }
+    var res = await db.from("admins").select("user_id").eq("user_id", session.user.id).maybeSingle();
+    if (res.error || !res.data) {
+      $("no-access-email").textContent = session.user.email;
+      show("no-access");
+      return;
+    }
+    show("app");
+    drawTabs();
+    load();
+  }
+
+  db.auth.onAuthStateChange(function (event, session) {
+    if (event === "PASSWORD_RECOVERY") linkType = "recovery";
+    if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "PASSWORD_RECOVERY") {
+      setTimeout(function () { route(session); }, 0);
+    }
+  });
+
+  $("login").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var err = $("login-err");
+    err.hidden = true;
+    var email = $("email").value.trim(), pw = $("password").value;
+    if (!email || !pw) { err.textContent = "Enter your email and password."; err.hidden = false; return; }
+    $("login-btn").disabled = true;
+    var res = await db.auth.signInWithPassword({ email: email, password: pw });
+    $("login-btn").disabled = false;
+    if (res.error) { err.textContent = res.error.message === "Invalid login credentials" ? "That email and password don't match." : res.error.message; err.hidden = false; }
+  });
+
+  $("forgot").addEventListener("click", async function () {
+    var err = $("login-err");
+    var email = $("email").value.trim();
+    if (!email) { err.textContent = "Type your email above first, then tap “Forgot your password?”."; err.hidden = false; return; }
+    var res = await db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    if (res.error) { err.textContent = res.error.message; err.hidden = false; return; }
+    err.hidden = true;
+    toast("Check your email for a link to reset your password.");
+  });
+
+  $("set-pw").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var err = $("set-pw-err");
+    var pw = $("new-pw").value;
+    if (pw.length < 8) { err.textContent = "Use at least 8 characters."; err.hidden = false; return; }
+    var res = await db.auth.updateUser({ password: pw });
+    if (res.error) { err.textContent = res.error.message; err.hidden = false; return; }
+    linkType = null;
+    history.replaceState(null, "", location.pathname);
+    toast("Password saved.");
+    var s = await db.auth.getSession();
+    route(s.data.session);
+  });
+
+  $("sign-out").addEventListener("click", function () { db.auth.signOut(); });
+
+  // ---------- Tabs ----------
+  function tabInfo() {
+    var t = TABS[state.tab];
+    var b = CFG.brands[t.brand];
+    return { brand: t.brand, kind: t.kind, label: b.label, sections: b[t.kind], page: b.page, table: t.kind === "menu" ? "menu_items" : "shop_items" };
+  }
+
+  function drawTabs() {
+    var wrap = $("tabs");
+    wrap.textContent = "";
+    TABS.forEach(function (t, i) {
+      var b = CFG.brands[t.brand];
+      wrap.appendChild(h("button", {
+        class: "tab", type: "button", role: "tab", "aria-selected": String(i === state.tab),
+        onclick: function () { state.tab = i; try { localStorage.setItem("admin-tab", i); } catch (e) {} drawTabs(); load(); }
+      }, [h("small", { text: b.label }), t.kind === "menu" ? "Menu" : "Shop"]));
+    });
+  }
+
+  async function load() {
+    var info = tabInfo();
+    $("view-page").href = "../" + info.page + "#" + info.kind;
+    $("tab-note").textContent = info.kind === "menu"
+      ? "Changes go live on the " + info.label + " menu as soon as you save."
+      : "Changes go live in the " + info.label + " shop as soon as you save.";
+    $("sections").textContent = "Loading…";
+    var res = await db.from(info.table).select("*").eq("brand", info.brand).order("sort_order").order("name");
+    if (res.error) { $("sections").textContent = ""; toast("Couldn't load items: " + res.error.message, true); return; }
+    state.rows = res.data;
+    draw();
+  }
+
+  function priceCols(info, sec) {
+    if (info.kind === "shop") return [["price", "Price"]];
+    return CFG.priceLabels[sec.prices];
+  }
+
+  function draw() {
+    var info = tabInfo();
+    var box = $("sections");
+    box.textContent = "";
+    info.sections.forEach(function (sec) {
+      var items = state.rows.filter(function (r) { return r.section === sec.key; });
+      var list = h("ul", { class: "rows" });
+      if (!items.length) list.appendChild(h("li", { class: "empty-row", text: "Nothing in this section yet." }));
+      items.forEach(function (r, i) {
+        var thumb = r.image_url ? h("img", { class: "thumb", src: src(r.image_url), alt: "" }) : h("div", { class: "thumb empty", text: "No image" });
+        var name = h("div", { class: "name" }, [r.name,
+          r.is_hidden ? h("span", { class: "badge", text: "Hidden" }) : null,
+          r.is_sold_out ? h("span", { class: "badge red", text: "Sold out" }) : null]);
+        var prices = h("div", { class: "prices" }, priceCols(info, sec).map(function (c) {
+          return h("div", {}, [h("span", { text: c[1].replace(" · ", " ") }), h("strong", { text: money(r[c[0]]) })]);
+        }));
+        var actions = h("div", { class: "actions" }, [
+          h("button", { class: "btn ghost small icon-btn", type: "button", "aria-label": "Move " + r.name + " up", disabled: i === 0, onclick: function () { move(sec.key, i, -1); } }, ["↑"]),
+          h("button", { class: "btn ghost small icon-btn", type: "button", "aria-label": "Move " + r.name + " down", disabled: i === items.length - 1, onclick: function () { move(sec.key, i, 1); } }, ["↓"]),
+          h("button", { class: "btn small", type: "button", onclick: function () { openEdit(r, sec.key); } }, ["Edit"])
+        ]);
+        list.appendChild(h("li", { class: "row" + (r.is_hidden ? " is-hidden" : "") }, [thumb,
+          h("div", { class: "main" }, [name, r.description ? h("p", { class: "desc", text: r.description }) : null]),
+          prices, actions]));
+      });
+      box.appendChild(h("section", { class: "section" }, [
+        h("div", { class: "section-head" }, [
+          h("h2", {}, [sec.title, h("span", { class: "count", text: items.length + (items.length === 1 ? " item" : " items") })]),
+          h("button", { class: "btn small", type: "button", onclick: function () { openEdit(null, sec.key); } }, ["+ Add item"])
+        ]),
+        list
+      ]));
+    });
+  }
+
+  async function move(sectionKey, index, dir) {
+    var info = tabInfo();
+    var items = state.rows.filter(function (r) { return r.section === sectionKey; });
+    var j = index + dir;
+    if (j < 0 || j >= items.length) return;
+    var tmp = items[index]; items[index] = items[j]; items[j] = tmp;
+    // Renumber the section 10, 20, 30… and save only what changed.
+    var changes = [];
+    items.forEach(function (r, k) { var want = (k + 1) * 10; if (r.sort_order !== want) { r.sort_order = want; changes.push(r); } });
+    state.rows.sort(function (a, b) { return a.sort_order - b.sort_order || a.name.localeCompare(b.name); });
+    draw();
+    var results = await Promise.all(changes.map(function (r) {
+      return db.from(info.table).update({ sort_order: r.sort_order }).eq("id", r.id);
+    }));
+    var bad = results.filter(function (x) { return x.error; })[0];
+    if (bad) { toast("Couldn't save the new order: " + bad.error.message, true); load(); }
+  }
+
+  // ---------- Edit dialog ----------
+  var dlg = $("dlg");
+
+  function drawImage() {
+    var box = $("f-img-box");
+    box.textContent = "";
+    var url = state.image;
+    box.appendChild(url ? h("img", { class: "preview", src: src(url), alt: "" }) : h("div", { class: "noimg", text: "No image" }));
+    $("f-img-remove").hidden = !url;
+  }
+
+  function openEdit(row, sectionKey) {
+    var info = tabInfo();
+    var isShop = info.kind === "shop";
+    state.editing = row;
+    state.image = row ? row.image_url : null;
+    $("dlg-title").textContent = row ? "Edit " + row.name : "New item";
+    $("f-name").value = row ? row.name : "";
+    $("f-desc").value = row ? row.description : "";
+    $("f-desc-hint").textContent = isShop || info.brand === "merles" ? "" : "Items without a description show as a smaller line on the menu.";
+    $("f-alt").value = row ? row.image_alt || "" : "";
+    $("f-cart").value = row ? row.cart_name || "" : "";
+    $("f-hidden").checked = row ? row.is_hidden : false;
+    $("f-sold").checked = row ? !!row.is_sold_out : false;
+    $("f-delete").hidden = !row;
+    $("f-err").hidden = true;
+    document.querySelectorAll("[data-shop-only]").forEach(function (n) { n.hidden = !isShop; });
+
+    var sel = $("f-section");
+    sel.textContent = "";
+    info.sections.forEach(function (s) { sel.appendChild(h("option", { value: s.key, text: s.title, selected: s.key === sectionKey })); });
+    sel.onchange = function () { drawPrices(sel.value); };
+    $("f-prices").textContent = ""; // don't carry prices over from the last item opened
+    drawPrices(sectionKey);
+    drawImage();
+    dlg.showModal();
+    $("f-name").focus();
+  }
+
+  function drawPrices(sectionKey) {
+    var info = tabInfo();
+    var sec = info.sections.filter(function (s) { return s.key === sectionKey; })[0];
+    var row = state.editing;
+    // Keep what was typed when switching section.
+    var typed = {};
+    $("f-prices").querySelectorAll("input").forEach(function (i) { typed[i.name] = i.value; });
+    var grid = $("f-prices");
+    grid.textContent = "";
+    priceCols(info, sec).forEach(function (c) {
+      var id = "f-" + c[0];
+      var val = c[0] in typed ? typed[c[0]] : (row && row[c[0]] != null ? Number(row[c[0]]) : "");
+      grid.appendChild(h("div", { class: "fld" }, [
+        h("label", { for: id, text: c[1] }),
+        h("div", { class: "money" }, [h("input", { class: "input", id: id, name: c[0], type: "number", inputmode: "decimal", min: "0", step: "0.01", value: val })])
+      ]));
+    });
+  }
+
+  $("f-upload").addEventListener("click", function () { $("f-file").click(); });
+  $("f-img-remove").addEventListener("click", function () { state.image = null; drawImage(); });
+  $("f-file").addEventListener("change", async function () {
+    var file = this.files[0];
+    this.value = "";
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast("That image is over 5 MB. Try a smaller one.", true); return; }
+    var info = tabInfo();
+    var safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+    var path = info.brand + "/" + Date.now() + "-" + safe;
+    $("f-upload").disabled = true;
+    $("f-upload").textContent = "Uploading…";
+    var res = await db.storage.from("item-images").upload(path, file, { cacheControl: "31536000", contentType: file.type });
+    $("f-upload").disabled = false;
+    $("f-upload").textContent = "Upload new image";
+    if (res.error) { toast("Upload failed: " + res.error.message, true); return; }
+    state.image = db.storage.from("item-images").getPublicUrl(path).data.publicUrl;
+    drawImage();
+  });
+
+  function closeDlg() { dlg.close(); }
+  $("dlg-close").addEventListener("click", closeDlg);
+  $("f-cancel").addEventListener("click", closeDlg);
+
+  $("edit-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var info = tabInfo();
+    var err = $("f-err");
+    var name = $("f-name").value.trim();
+    if (!name) { err.textContent = "Give the item a name."; err.hidden = false; return; }
+    var data = {
+      brand: info.brand,
+      section: $("f-section").value,
+      name: name,
+      description: $("f-desc").value.trim(),
+      image_url: state.image || null,
+      is_hidden: $("f-hidden").checked
+    };
+    var badPrice = false;
+    $("f-prices").querySelectorAll("input").forEach(function (i) {
+      var v = i.value.trim();
+      if (v !== "" && (isNaN(Number(v)) || Number(v) < 0)) badPrice = true;
+      data[i.name] = v === "" ? null : Number(v);
+    });
+    if (badPrice) { err.textContent = "Prices need to be numbers, like 125 or 12.50."; err.hidden = false; return; }
+    if (info.kind === "shop") {
+      data.image_alt = $("f-alt").value.trim();
+      data.cart_name = $("f-cart").value.trim() || null;
+      data.is_sold_out = $("f-sold").checked;
+    } else {
+      // Clear price columns that the chosen section doesn't use.
+      var sec = info.sections.filter(function (s) { return s.key === data.section; })[0];
+      var used = CFG.priceLabels[sec.prices].map(function (c) { return c[0]; });
+      ["price", "price_deliver", "price_medium", "price_medium_deliver"].forEach(function (k) { if (used.indexOf(k) < 0) data[k] = null; });
+    }
+    var row = state.editing;
+    if (!row || row.section !== data.section) {
+      var inSection = state.rows.filter(function (r) { return r.section === data.section; });
+      data.sort_order = inSection.reduce(function (m, r) { return Math.max(m, r.sort_order); }, 0) + 10;
+    }
+    $("f-save").disabled = true;
+    var res = row
+      ? await db.from(info.table).update(data).eq("id", row.id).select().single()
+      : await db.from(info.table).insert(data).select().single();
+    $("f-save").disabled = false;
+    if (res.error) { err.textContent = "Couldn't save: " + res.error.message; err.hidden = false; return; }
+    closeDlg();
+    toast(row ? "Saved " + name + "." : "Added " + name + ".");
+    load();
+  });
+
+  $("f-delete").addEventListener("click", async function () {
+    var row = state.editing;
+    if (!row) return;
+    if (!confirm("Delete “" + row.name + "” for good? To take it off the site for now, tick “Hide from the site” instead.")) return;
+    var res = await db.from(tabInfo().table).delete().eq("id", row.id);
+    if (res.error) { toast("Couldn't delete: " + res.error.message, true); return; }
+    closeDlg();
+    toast("Deleted " + row.name + ".");
+    load();
+  });
+})();
+</script>
+</body>
+</html>
