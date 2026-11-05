@@ -22,8 +22,12 @@ the page if Supabase isn't configured or can't be reached.
 2. Put the project URL and publishable key in `js/supabase-config.js`.
 3. **Authentication → Sign In / Providers**: turn off "Allow new users to sign up". (Even if left on, only people in
    the `admins` table can change anything.)
-4. **Authentication → URL Configuration**: set the Site URL to the admin page, e.g. `https://example.com/admin/`, so
-   invite and password-reset emails land there.
+4. **Authentication → URL Configuration**: set the Site URL to the admin page,
+   `https://spontanik.github.io/tommy-sugo-merles/admin/` (change it if the site moves to its own domain), so invite and
+   password-reset emails land there.
+
+The live project is `tommy-sugo-merles` (ref `awazfdglfhmkejrctnkz`) in the Housemates Supabase organisation. The site
+is published by GitHub Pages from `main` of `spontanik/tommy-sugo-merles`: push to `main` and it redeploys.
 
 ## Adding someone to the admin
 
