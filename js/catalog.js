@@ -16,7 +16,12 @@
     ".item-thumb{display:block;width:100%;max-height:200px;object-fit:cover;margin-bottom:8px}" +
     ".pz .item-thumb{grid-column:1/-1}" +
     ".product.sold-out .ill{opacity:.45}" +
-    ".product .sold{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px}";
+    ".product .sold{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px}" +
+    ".order-opts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}" +
+    ".order-opt{display:flex;align-items:center;gap:8px}" +
+    ".pill.order-add{min-height:44px;padding:0 14px;font-size:14px}" +
+    ".order-size{font-weight:700;font-size:14px}" +
+    ".order-opt.has-qty .order-add,.order-opt:not(.has-qty) .order-size,.order-opt:not(.has-qty) .stepper{display:none}";
   document.head.appendChild(style);
 
   function get(table) {
@@ -57,7 +62,45 @@
     return s;
   }
 
+  function stepper(label) {
+    var st = el("div", "stepper");
+    var minus = el("button", null, "−");
+    minus.type = "button"; minus.setAttribute("data-step", "-1"); minus.setAttribute("aria-label", "One less " + label);
+    var out = el("output", null, "0"); out.setAttribute("aria-live", "polite");
+    var plus = el("button", null, "+");
+    plus.type = "button"; plus.setAttribute("data-step", "1"); plus.setAttribute("aria-label", "One more " + label);
+    st.appendChild(minus); st.appendChild(out); st.appendChild(plus);
+    return st;
+  }
+
+  // Add buttons for a menu item the team has marked orderable: one per size that has a Collect price.
+  function orderControls(it, kind) {
+    if (!it.is_orderable) return null;
+    var choices = kind === "pizza"
+      ? [{ size: "Large", cart: it.name + ", large", price: it.price }, { size: "Medium", cart: it.name + ", medium", price: it.price_medium }]
+      : [{ size: "", cart: it.name, price: it.price }];
+    choices = choices.filter(function (c) { return money(c.price); });
+    if (!choices.length) return null;
+    var wrap = el("div", "order-opts");
+    choices.forEach(function (c) {
+      var opt = el("div", "order-opt");
+      opt.setAttribute("data-product", c.cart);
+      opt.setAttribute("data-price", String(Number(c.price)));
+      opt.setAttribute("data-food", "");
+      var add = el("button", "pill order-add", c.size ? "+ " + c.size + " " + money(c.price) : "+ Add");
+      add.type = "button";
+      add.setAttribute("data-step", "1");
+      add.setAttribute("aria-label", "Add " + c.cart + " to your order, " + money(c.price));
+      opt.appendChild(add);
+      if (c.size) opt.appendChild(el("span", "order-size", c.size));
+      opt.appendChild(stepper(c.cart));
+      wrap.appendChild(opt);
+    });
+    return wrap;
+  }
+
   function menuItem(it, kind) {
+    var order = orderControls(it, kind);
     var hasDesc = !!(it.description && it.description.trim());
     var desc = hasDesc ? el("p", "desc", it.description) : null;
     var thumb = it.image_url ? img(it.image_url, "item-thumb", it.name) : null;
@@ -69,6 +112,7 @@
       var cols = kind === "cd" ? ["price", "price_deliver"] : ["price", "price_deliver", "price_medium", "price_medium_deliver"];
       cols.forEach(function (c) { pz.appendChild(priceSpan("p", it[c])); });
       if (desc) pz.appendChild(desc);
+      if (order) pz.appendChild(order);
       return pz;
     }
 
@@ -76,11 +120,12 @@
     row.appendChild(el("span", null, it.name));
     row.appendChild(priceSpan(null, it.price));
     if (kind === "cd") row.appendChild(priceSpan(null, it.price_deliver));
-    if (!hasDesc && !thumb) return row;
+    if (!hasDesc && !thumb && !order) return row;
     var item = el("div", "item");
     if (thumb) item.appendChild(thumb);
     item.appendChild(row);
     if (desc) item.appendChild(desc);
+    if (order) item.appendChild(order);
     return item;
   }
 
@@ -98,14 +143,7 @@
     if (it.is_sold_out) {
       foot.appendChild(el("span", "sold", "Sold out"));
     } else {
-      var st = el("div", "stepper");
-      var minus = el("button", null, "−");
-      minus.type = "button"; minus.setAttribute("data-step", "-1"); minus.setAttribute("aria-label", "One less " + it.name);
-      var out = el("output", null, "0"); out.setAttribute("aria-live", "polite");
-      var plus = el("button", null, "+");
-      plus.type = "button"; plus.setAttribute("data-step", "1"); plus.setAttribute("aria-label", "One more " + it.name);
-      st.appendChild(minus); st.appendChild(out); st.appendChild(plus);
-      foot.appendChild(st);
+      foot.appendChild(stepper(it.name));
     }
     body.appendChild(foot);
     a.appendChild(body);

@@ -11,9 +11,11 @@ the page if Supabase isn't configured or can't be reached.
 | `admin/index.html` | The admin: sign in, then edit, add, hide, reorder and delete items, upload images, mark shop items sold out |
 | `js/supabase-config.js` | Supabase project URL and publishable key (safe to publish) |
 | `js/catalog-config.js` | The sections each brand has and which price columns each one uses (shared by the site and the admin) |
-| `js/catalog.js` | Loads live items into the public pages |
+| `js/catalog.js` | Loads live items into the public pages, with Add buttons on orderable menu items |
+| `js/order.js` | The cart and checkout rules on both brand pages (`window.ORDER_COPY` in each page holds its wording) |
 | `supabase/migrations/…_menu_and_shop.sql` | Tables, row-level security, the `item-images` storage bucket |
 | `supabase/migrations/…_private_is_admin_and_anon_reads.sql` | Fix-up: lets visitors read visible items, moves the admin check to a private schema |
+| `supabase/migrations/…_menu_items_orderable.sql` | Adds `menu_items.is_orderable` and turns it on for all of Merle's |
 | `supabase/seed.sql` | The items that were hard-coded in the pages on 2026-11-05 |
 
 ## Setting up Supabase
@@ -51,6 +53,17 @@ To remove someone: `delete from public.admins where user_id = (select id from au
   has a price.
 - Section headings, intros and the sections themselves are still in the HTML. To add a section, add it to
   `js/catalog-config.js` and add a matching `data-menu-items` / `data-shop-items` slot in the page.
+
+## Ordering
+
+One cart per brand page, holding menu items and shop items:
+
+- Tick **Order online for collection** on a menu item in the admin to give it an Add button. Merle's items are on by default; Tommy Sugo's are off until ticked. An item with no Collect price gets no button, and a pizza gets one button per size.
+- Menu items are collection only. Any food in the cart makes the whole order a collection from the kitchen, and shop items in that order are collected with it.
+- Delivery is only offered when the cart holds nothing but shop items. Those orders can also choose Collect.
+- Sold-out shop items can't be added. Add buttons only appear with live data, so the static fallback can't take food orders.
+
+Checkout is still a prototype: it validates the form and shows a confirmation, but saves nothing and takes no payment.
 
 ## Running locally
 

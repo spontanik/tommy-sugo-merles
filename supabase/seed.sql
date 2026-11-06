@@ -92,3 +92,6 @@ insert into public.shop_items (brand, section, name, cart_name, description, ima
   ('merles', 'sauces', 'MMMbop Sauce', null, 'You''ll be humming it by the second schnitz.', 'illustrations/merles-shop-mmmbop.svg', 'A bottle of MMMbop Sauce', 20),
   ('merles', 'sauces', 'Mushroom Sauce', null, 'The sauce from Night at the Roxbury.', 'illustrations/merles-shop-mushroom.svg', 'A jar of Mushroom Sauce beside a mushroom', 30),
   ('merles', 'sauces', 'Destiny''s Child', 'Destiny''s Child sauce trio', 'All three sauces. Say my name.', 'illustrations/merles-shop-destinys-child.svg', 'Peri-mayo, MMMbop Sauce and Mushroom Sauce together', 40);
+
+-- Merle's whole menu can be ordered for collection; Tommy Sugo's items are ticked one by one in /admin.
+update public.menu_items set is_orderable = true where brand = 'merles';

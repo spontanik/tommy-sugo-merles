@@ -217,6 +217,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       <div class="fld" data-shop-only><label for="f-cart">Name in cart (optional)</label><input class="input" id="f-cart"><p class="hint">How it reads in the order, e.g. “Margherita, frozen”. Blank uses the name.</p></div>
       <div class="fld"><label for="f-section">Section</label><select class="input" id="f-section"></select></div>
       <label class="check"><input type="checkbox" id="f-hidden"><span>Hide from the site<small>Keeps the item here so you can bring it back later.</small></span></label>
+      <label class="check" data-menu-only><input type="checkbox" id="f-orderable"><span>Order online for collection<small>Shows an Add button on the menu. The item needs a Collect price.</small></span></label>
       <label class="check" data-shop-only><input type="checkbox" id="f-sold"><span>Sold out<small>Still shown in the shop, but can't be added to an order.</small></span></label>
       <p class="msg err" id="f-err" role="alert" hidden></p>
     </div>
@@ -402,7 +403,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
         var thumb = r.image_url ? h("img", { class: "thumb", src: src(r.image_url), alt: "" }) : h("div", { class: "thumb empty", text: "No image" });
         var name = h("div", { class: "name" }, [r.name,
           r.is_hidden ? h("span", { class: "badge", text: "Hidden" }) : null,
-          r.is_sold_out ? h("span", { class: "badge red", text: "Sold out" }) : null]);
+          r.is_sold_out ? h("span", { class: "badge red", text: "Sold out" }) : null,
+          r.is_orderable ? h("span", { class: "badge", text: "Order online" }) : null]);
         var prices = h("div", { class: "prices" }, priceCols(info, sec).map(function (c) {
           return h("div", {}, [h("span", { text: c[1].replace(" · ", " ") }), h("strong", { text: money(r[c[0]]) })]);
         }));
@@ -467,9 +469,12 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     $("f-cart").value = row ? row.cart_name || "" : "";
     $("f-hidden").checked = row ? row.is_hidden : false;
     $("f-sold").checked = row ? !!row.is_sold_out : false;
+    // Merle's offers its whole menu for collection; Tommy Sugo's items are ticked one by one.
+    $("f-orderable").checked = row ? !!row.is_orderable : info.brand === "merles";
     $("f-delete").hidden = !row;
     $("f-err").hidden = true;
     document.querySelectorAll("[data-shop-only]").forEach(function (n) { n.hidden = !isShop; });
+    document.querySelectorAll("[data-menu-only]").forEach(function (n) { n.hidden = isShop; });
 
     var sel = $("f-section");
     sel.textContent = "";
@@ -551,6 +556,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       data.cart_name = $("f-cart").value.trim() || null;
       data.is_sold_out = $("f-sold").checked;
     } else {
+      data.is_orderable = $("f-orderable").checked;
       // Clear price columns that the chosen section doesn't use.
       var sec = info.sections.filter(function (s) { return s.key === data.section; })[0];
       var used = CFG.priceLabels[sec.prices].map(function (c) { return c[0]; });

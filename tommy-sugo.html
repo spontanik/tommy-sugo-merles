@@ -368,6 +368,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
           <img class="sec-ill lg" src="illustrations/section-pizza.svg" alt="" loading="lazy" decoding="async"><p class="tag">Slice, slice, baby</p>
           <h2 class="section-head">Pizza</h2>
           <p class="muted" style="margin: 8px 0 0;">Collect from the kitchen in [AREA], or order delivery on Uber Eats or Mr D. Deliver prices are the app prices.</p>
+          <p class="muted" data-order-note hidden style="margin: 8px 0 0;">See an Add button? You can order that item right here and collect it from the kitchen.</p>
         </div>
         <div class="pizza-cols">
           <div>
@@ -655,9 +656,10 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
         <aside class="cart" aria-labelledby="cart-h">
           <div id="shop-order" class="stack" style="gap: 16px;">
             <h2 id="cart-h" class="section-head" style="font-size: 28px;">Your Order</h2>
-            <p id="cart-empty" class="muted" style="margin: 0;">Your freezer is empty. Add a pizza or a jar.</p>
+            <p id="cart-empty" class="muted" style="margin: 0;">Nothing here yet. Add a pizza or a jar.</p>
             <ul id="cart-lines" class="cart-lines" hidden></ul>
             <div class="cart-total"><span id="cart-count">0 items</span><span id="cart-total">TBC</span></div>
+            <a href="#menu" data-order-note hidden style="font-weight: 700;">Add food from the menu, for collection</a>
             <fieldset>
               <legend class="lbl">How do you want it</legend>
               <div class="btns">
@@ -666,7 +668,8 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
               </div>
             </fieldset>
             <div class="fld" id="get-delivery"><label class="lbl" for="shop-address">Delivery address</label><input id="shop-address" class="field" type="text" placeholder="Street, suburb" autocomplete="street-address"><p class="desc" style="font-size: 14px;">Frozen orders deliver to [areas], packed cold. Delivery fee [R000].</p></div>
-            <div class="fld" id="get-collect" hidden><label class="lbl" for="shop-collect">Collect from</label><select id="shop-collect" class="field"><option>The truck at [next event]</option><option>The dark kitchen, [AREA]</option></select></div>
+            <div class="fld" id="get-collect" hidden><label class="lbl" for="shop-collect">Collect from</label><select id="shop-collect" class="field"><option>The truck at [next event]</option><option data-kitchen>The dark kitchen, [AREA]</option></select></div>
+            <p id="get-note" class="desc" style="font-size: 14px;" hidden></p>
             <div class="fld"><label class="lbl" for="shop-name">Your name</label><input id="shop-name" class="field" type="text" autocomplete="name"></div>
             <div class="fld"><label class="lbl" for="shop-email">Email</label><input id="shop-email" class="field" type="email" autocomplete="email"></div>
             <div class="fld"><label class="lbl" for="shop-phone">Phone</label><input id="shop-phone" class="field" type="tel" autocomplete="tel"></div>
@@ -676,7 +679,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
           </div>
           <div id="shop-done" class="stack" role="status" hidden style="gap: 12px;">
             <p class="tag">Order placed · prototype</p>
-            <h2 class="poster-lg" style="font-size: 36px;">Freeze, Please. It's Coming.</h2>
+            <h2 id="shop-done-title" class="poster-lg" style="font-size: 36px;">Freeze, Please. It's Coming.</h2>
             <p class="muted" style="margin: 0;">In the live site this would take you to PayFast to pay, then email your order to <span id="shop-done-email">you</span>.</p>
             <button class="btn btn-ghost" type="button" id="shop-again">Start a New Order</button>
           </div>
@@ -889,7 +892,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
     <div class="wrap stack">
       <h2 class="section-head">Good to Know</h2>
       <details><summary>Do you deliver?</summary><p>Pizza, yes. It comes from our dark kitchen in [AREA] through Uber Eats and Mr D. <a href="#delivery" style="font-weight: 700;">See where we deliver</a>. Falafel, shawarma, pasta and the rest are on the truck only.</p></details>
-      <details><summary>Can I collect from the kitchen?</summary><p>Yes, pizzas from the dark kitchen in [AREA], at the menu's Collect prices. [How to order for collection to confirm.]</p></details>
+      <details><summary>Can I collect from the kitchen?</summary><p>Yes, pizzas from the dark kitchen in [AREA], at the menu's Collect prices. Items with an Add button on the menu can be ordered right here.</p></details>
       <details><summary>Can I buy the sauce?</summary><p>Yes. Jars of the sauce and frozen pizzas are in the <a href="#shop" style="font-weight: 700;">Shop</a>, for delivery or to collect at the truck.</p></details>
       <details><summary>Who sets the delivery fee?</summary><p>Your app does. Fees and app prices may differ from this site.</p></details>
       <details><summary>Gluten-free or vegan?</summary><p>Any pizza on a gluten-free base, R40 extra. Vegan cheese on any pizza, R40 extra. The falafel is vegan as it comes.</p></details>
@@ -936,6 +939,18 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 <script src="js/catalog-config.js"></script>
 <script src="js/catalog.js"></script>
 <script>
+window.ORDER_COPY = {
+  noteFood: "Menu items are collection only, from the kitchen in [AREA]. Ready in about [X] minutes.",
+  noteMixed: "Menu items are collection only, so your shop items come with them, from the kitchen in [AREA]. Ready in about [X] minutes. Want the shop items delivered? Place them as a separate order.",
+  errEmpty: "Add something from the menu or the shop to your order.",
+  errAddress: "Add a delivery address, or choose Collect.",
+  errName: "Add your name so we know whose order it is.",
+  doneDelivery: "Freeze, Please. It's Coming.",
+  doneCollect: "Order In. Come and Get It."
+};
+</script>
+<script src="js/order.js"></script>
+<script>
 (function () {
   var views = ["home", "menu", "delivery", "shop", "circuit", "catering", "story"];
 
@@ -976,77 +991,6 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
   var start = location.hash.slice(1);
   if (start === "book") goBook(false);
   else show(start);
-
-  // Shop: quantities, order summary, delivery or collect, checkout
-  var shopForm = document.getElementById("shop-form");
-  var PRICE_TBC = "TBC";
-  function products() { return Array.prototype.slice.call(document.querySelectorAll("[data-product]")); }
-  function qtyOf(p) { var o = p.querySelector("output"); return o ? parseInt(o.textContent, 10) || 0 : 0; }
-  function rand(n) { return "R" + (n % 1 ? n.toFixed(2) : n); }
-  function renderCart() {
-    var lines = document.getElementById("cart-lines");
-    lines.innerHTML = "";
-    var count = 0, total = 0, allPriced = true;
-    var priced = products().some(function (p) { return p.hasAttribute("data-price"); });
-    products().forEach(function (p) {
-      var q = qtyOf(p);
-      if (!q) return;
-      count += q;
-      var each = p.getAttribute("data-price");
-      if (each === null) allPriced = false; else total += q * Number(each);
-      var li = document.createElement("li");
-      var name = document.createElement("span");
-      name.textContent = q + " × " + p.getAttribute("data-product");
-      var price = document.createElement("span");
-      price.textContent = each === null ? PRICE_TBC : rand(q * Number(each));
-      li.appendChild(name); li.appendChild(price); lines.appendChild(li);
-    });
-    lines.hidden = count === 0;
-    document.getElementById("cart-empty").hidden = count > 0;
-    document.getElementById("cart-count").textContent = count + (count === 1 ? " item" : " items");
-    document.getElementById("cart-total").textContent = priced && allPriced ? rand(total) : PRICE_TBC;
-    if (count > 0) document.getElementById("shop-err").hidden = true;
-    return count;
-  }
-  shopForm.addEventListener("click", function (e) {
-    var b = e.target.closest("[data-step]");
-    if (!b) return;
-    var p = b.closest("[data-product]");
-    var out = p.querySelector("output");
-    out.textContent = String(Math.max(0, Math.min(20, qtyOf(p) + parseInt(b.getAttribute("data-step"), 10))));
-    renderCart();
-  });
-  document.addEventListener("catalog:rendered", renderCart);
-  var getMode = "delivery";
-  document.querySelectorAll("[data-get]").forEach(function (b) {
-    b.addEventListener("click", function () {
-      getMode = b.getAttribute("data-get");
-      document.querySelectorAll("[data-get]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
-      document.getElementById("get-delivery").hidden = getMode !== "delivery";
-      document.getElementById("get-collect").hidden = getMode !== "collect";
-    });
-  });
-  shopForm.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var err = document.getElementById("shop-err");
-    var email = document.getElementById("shop-email");
-    var problem = "";
-    if (!renderCart()) problem = "Add at least one pizza or jar to your order.";
-    else if (getMode === "delivery" && !document.getElementById("shop-address").value.trim()) problem = "Add a delivery address, or choose Collect.";
-    else if (!document.getElementById("shop-name").value.trim()) problem = "Add your name so we know whose order it is.";
-    else if (!email.value.trim() || !email.checkValidity()) problem = "Add an email address so we can send your confirmation.";
-    if (problem) { err.textContent = problem; err.hidden = false; return; }
-    document.getElementById("shop-done-email").textContent = email.value.trim();
-    document.getElementById("shop-order").hidden = true;
-    document.getElementById("shop-done").hidden = false;
-  });
-  document.getElementById("shop-again").addEventListener("click", function () {
-    shopForm.reset();
-    products().forEach(function (p) { var o = p.querySelector("output"); if (o) o.textContent = "0"; });
-    renderCart();
-    document.getElementById("shop-done").hidden = true;
-    document.getElementById("shop-order").hidden = false;
-  });
 
   // Delivery: suburb vote
   document.getElementById("dvote-form").addEventListener("submit", function (e) {

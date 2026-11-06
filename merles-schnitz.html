@@ -311,6 +311,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
       <h1 class="display">Holy schnitz, that's a menu.</h1>
       <p class="lede">Everything here is on Uber Eats and Mr D. Pick a name you know and get schnitzfaced.</p>
       <p class="muted" style="margin: 0;">Collect from the kitchen in [AREA], or order delivery on Uber Eats or Mr D. Deliver prices are the app prices.</p>
+      <p class="muted" data-order-note hidden style="margin: 0;">Or order right here and collect it yourself: tap Add on anything you like.</p>
     </div>
   </section>
   <section style="padding-top: 104px; padding-bottom: 96px;">
@@ -454,6 +455,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
       <p class="tag">ORDER ONLINE</p>
       <h1 class="display">Schnitz to your door.<br>Pick your app.</h1>
       <p class="lede">Merle's delivers through Uber Eats and Mr D. Same schnitz, same names. Use whichever app you already have.</p>
+      <a class="btn" href="#menu" data-order-note hidden>Order here for collection</a>
     </div>
   </section>
   <section style="padding-bottom: 80px;">
@@ -500,7 +502,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
   <section style="padding-bottom: 96px;">
     <div class="wrap stack">
       <h2 class="section-head">GOOD TO KNOW</h2>
-      <details><summary>Can I collect from the kitchen?</summary><p>Yes, from the kitchen in [AREA], at the menu's Collect prices. [How to order for collection to confirm.]</p></details>
+      <details><summary>Can I collect from the kitchen?</summary><p>Yes, from the kitchen in [AREA], at the menu's Collect prices. Tap Add on the menu to order right here.</p></details>
       <details><summary>Who sets the delivery fee?</summary><p>Your app does. It's added on top of the menu's Deliver price.</p></details>
       <details><summary>Something wrong with my order?</summary><p>Report it in the app first so they can refund you. Then tell Merle at [EMAIL ADDRESS].</p></details>
       <details><summary>Can I buy the sauces?</summary><p>Yes. Peri-mayo, MMMbop and Mushroom Sauce are in the <a href="#shop" style="font-weight: 700;">shop</a>, with frozen schnitz for the freezer.</p></details>
@@ -584,10 +586,20 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
         <aside class="cart" aria-labelledby="cart-h">
           <div id="shop-order" class="stack" style="gap: 16px;">
             <h2 id="cart-h" class="section-head" style="font-size: 28px;">YOUR ORDER</h2>
-            <p id="cart-empty" class="muted" style="margin: 0;">Nothing in the freezer yet. Add some schnitz or a sauce.</p>
+            <p id="cart-empty" class="muted" style="margin: 0;">Nothing here yet. Add some schnitz or a sauce.</p>
             <ul id="cart-lines" class="cart-lines" hidden></ul>
             <div class="cart-total"><span id="cart-count">0 items</span><span id="cart-total">TBC</span></div>
-            <div class="fld"><label class="lbl" for="shop-address">DELIVERY ADDRESS</label><input id="shop-address" class="field" type="text" placeholder="Street, suburb" autocomplete="street-address"><p class="desc" style="font-size: 14px;">Frozen orders deliver to [suburbs], packed cold. Delivery fee [R—].</p></div>
+            <a href="#menu" data-order-note hidden style="font-weight: 700;">Add food from the menu, for collection</a>
+            <fieldset>
+              <legend class="lbl">HOW DO YOU WANT IT</legend>
+              <div class="btns">
+                <button type="button" class="pill" data-get="delivery" aria-pressed="true">DELIVERY</button>
+                <button type="button" class="pill" data-get="collect" aria-pressed="false">COLLECT</button>
+              </div>
+            </fieldset>
+            <div class="fld" id="get-delivery"><label class="lbl" for="shop-address">DELIVERY ADDRESS</label><input id="shop-address" class="field" type="text" placeholder="Street, suburb" autocomplete="street-address"><p class="desc" style="font-size: 14px;">Frozen orders deliver to [suburbs], packed cold. Delivery fee [R—].</p></div>
+            <div class="fld" id="get-collect" hidden><span class="lbl">COLLECT FROM</span><p class="desc" style="font-size: 16px;">The kitchen, [AREA]</p></div>
+            <p id="get-note" class="desc" style="font-size: 14px;" hidden></p>
             <div class="fld"><label class="lbl" for="shop-name">YOUR NAME</label><input id="shop-name" class="field" type="text" autocomplete="name"></div>
             <div class="fld"><label class="lbl" for="shop-email">EMAIL</label><input id="shop-email" class="field" type="email" autocomplete="email"></div>
             <div class="fld"><label class="lbl" for="shop-phone">PHONE</label><input id="shop-phone" class="field" type="tel" autocomplete="tel"></div>
@@ -597,7 +609,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
           </div>
           <div id="shop-done" class="stack" role="status" hidden style="gap: 12px;">
             <p class="tag">ORDER PLACED · PROTOTYPE</p>
-            <h2 class="poster-lg">You've been schnitzed.</h2>
+            <h2 id="shop-done-title" class="poster-lg">You've been schnitzed.</h2>
             <p class="muted" style="margin: 0;">In the live site this would take you to PayFast to pay, then email your order to <span id="shop-done-email">you</span>.</p>
             <button class="btn btn-ghost" type="button" id="shop-again">Start a new order</button>
           </div>
@@ -735,6 +747,18 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 <script src="js/catalog-config.js"></script>
 <script src="js/catalog.js"></script>
 <script>
+window.ORDER_COPY = {
+  noteFood: "Menu items are collection only, from the kitchen in [AREA]. Ready in about [X] minutes.",
+  noteMixed: "Menu items are collection only, so your shop items come with them, from the kitchen in [AREA]. Ready in about [X] minutes. Want the shop items delivered? Place them as a separate order.",
+  errEmpty: "Add something from the menu or the shop to your order.",
+  errAddress: "Add a delivery address, or choose Collect.",
+  errName: "Add your name so we know whose schnitz it is.",
+  doneDelivery: "You've been schnitzed.",
+  doneCollect: "You've been schnitzed."
+};
+</script>
+<script src="js/order.js"></script>
+<script>
 (function () {
   var views = ["home", "menu", "delivery", "order", "shop", "functions"];
 
@@ -809,68 +833,6 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
     b.addEventListener("click", function () { setApp(b.getAttribute("data-app")); });
   });
   setApp("uber");
-
-  // Shop: quantities, order summary, checkout
-  var shopForm = document.getElementById("shop-form");
-  var PRICE_TBC = "TBC";
-  function products() { return Array.prototype.slice.call(document.querySelectorAll("[data-product]")); }
-  function qtyOf(p) { var o = p.querySelector("output"); return o ? parseInt(o.textContent, 10) || 0 : 0; }
-  function rand(n) { return "R" + (n % 1 ? n.toFixed(2) : n); }
-  function renderCart() {
-    var lines = document.getElementById("cart-lines");
-    lines.innerHTML = "";
-    var count = 0, total = 0, allPriced = true;
-    var priced = products().some(function (p) { return p.hasAttribute("data-price"); });
-    products().forEach(function (p) {
-      var q = qtyOf(p);
-      if (!q) return;
-      count += q;
-      var each = p.getAttribute("data-price");
-      if (each === null) allPriced = false; else total += q * Number(each);
-      var li = document.createElement("li");
-      var name = document.createElement("span");
-      name.textContent = q + " × " + p.getAttribute("data-product");
-      var price = document.createElement("span");
-      price.textContent = each === null ? PRICE_TBC : rand(q * Number(each));
-      li.appendChild(name); li.appendChild(price); lines.appendChild(li);
-    });
-    lines.hidden = count === 0;
-    document.getElementById("cart-empty").hidden = count > 0;
-    document.getElementById("cart-count").textContent = count + (count === 1 ? " item" : " items");
-    document.getElementById("cart-total").textContent = priced && allPriced ? rand(total) : PRICE_TBC;
-    if (count > 0) document.getElementById("shop-err").hidden = true;
-    return count;
-  }
-  shopForm.addEventListener("click", function (e) {
-    var b = e.target.closest("[data-step]");
-    if (!b) return;
-    var p = b.closest("[data-product]");
-    var out = p.querySelector("output");
-    out.textContent = String(Math.max(0, Math.min(20, qtyOf(p) + parseInt(b.getAttribute("data-step"), 10))));
-    renderCart();
-  });
-  document.addEventListener("catalog:rendered", renderCart);
-  shopForm.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var err = document.getElementById("shop-err");
-    var email = document.getElementById("shop-email");
-    var problem = "";
-    if (!renderCart()) problem = "Add some schnitz or a sauce to your order.";
-    else if (!document.getElementById("shop-address").value.trim()) problem = "Add a delivery address.";
-    else if (!document.getElementById("shop-name").value.trim()) problem = "Add your name so we know whose schnitz it is.";
-    else if (!email.value.trim() || !email.checkValidity()) problem = "Add an email address so we can send your confirmation.";
-    if (problem) { err.textContent = problem; err.hidden = false; return; }
-    document.getElementById("shop-done-email").textContent = email.value.trim();
-    document.getElementById("shop-order").hidden = true;
-    document.getElementById("shop-done").hidden = false;
-  });
-  document.getElementById("shop-again").addEventListener("click", function () {
-    shopForm.reset();
-    products().forEach(function (p) { var o = p.querySelector("output"); if (o) o.textContent = "0"; });
-    renderCart();
-    document.getElementById("shop-done").hidden = true;
-    document.getElementById("shop-order").hidden = false;
-  });
 
   // Delivery: suburb vote
   document.getElementById("vote-form").addEventListener("submit", function (e) {
