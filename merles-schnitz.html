@@ -586,7 +586,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             <h2 id="cart-h" class="section-head" style="font-size: 28px;">YOUR ORDER</h2>
             <p id="cart-empty" class="muted" style="margin: 0;">Nothing in the freezer yet. Add some schnitz or a sauce.</p>
             <ul id="cart-lines" class="cart-lines" hidden></ul>
-            <div class="cart-total"><span id="cart-count">0 items</span><span id="cart-total">[R—]</span></div>
+            <div class="cart-total"><span id="cart-count">0 items</span><span id="cart-total">TBC</span></div>
             <div class="fld"><label class="lbl" for="shop-address">DELIVERY ADDRESS</label><input id="shop-address" class="field" type="text" placeholder="Street, suburb" autocomplete="street-address"><p class="desc" style="font-size: 14px;">Frozen orders deliver to [suburbs], packed cold. Delivery fee [R—].</p></div>
             <div class="fld"><label class="lbl" for="shop-name">YOUR NAME</label><input id="shop-name" class="field" type="text" autocomplete="name"></div>
             <div class="fld"><label class="lbl" for="shop-email">EMAIL</label><input id="shop-email" class="field" type="email" autocomplete="email"></div>
@@ -812,7 +812,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
   // Shop: quantities, order summary, checkout
   var shopForm = document.getElementById("shop-form");
-  var PRICE_TBC = "[R—]";
+  var PRICE_TBC = "TBC";
   function products() { return Array.prototype.slice.call(document.querySelectorAll("[data-product]")); }
   function qtyOf(p) { var o = p.querySelector("output"); return o ? parseInt(o.textContent, 10) || 0 : 0; }
   function rand(n) { return "R" + (n % 1 ? n.toFixed(2) : n); }

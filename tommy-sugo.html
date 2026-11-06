@@ -657,7 +657,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             <h2 id="cart-h" class="section-head" style="font-size: 28px;">Your Order</h2>
             <p id="cart-empty" class="muted" style="margin: 0;">Your freezer is empty. Add a pizza or a jar.</p>
             <ul id="cart-lines" class="cart-lines" hidden></ul>
-            <div class="cart-total"><span id="cart-count">0 items</span><span id="cart-total">[R000]</span></div>
+            <div class="cart-total"><span id="cart-count">0 items</span><span id="cart-total">TBC</span></div>
             <fieldset>
               <legend class="lbl">How do you want it</legend>
               <div class="btns">
@@ -979,7 +979,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
   // Shop: quantities, order summary, delivery or collect, checkout
   var shopForm = document.getElementById("shop-form");
-  var PRICE_TBC = "[R000]";
+  var PRICE_TBC = "TBC";
   function products() { return Array.prototype.slice.call(document.querySelectorAll("[data-product]")); }
   function qtyOf(p) { var o = p.querySelector("output"); return o ? parseInt(o.textContent, 10) || 0 : 0; }
   function rand(n) { return "R" + (n % 1 ? n.toFixed(2) : n); }
