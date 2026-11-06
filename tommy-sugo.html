@@ -364,15 +364,15 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
       <div class="frame">
         <div class="frame-seal"><img src="tommy-seal-white.png" alt="Tommy Sugo Pizza seal" style="height: 160px; width: 160px;"></div>
 
-        <div class="head-group with-ill" style="margin-bottom: 32px;">
+        <div class="head-group with-ill" style="margin-bottom: 32px;" data-section="pizza-classics pizza-signatures pizza-extras">
           <img class="sec-ill lg" src="illustrations/section-pizza.svg" alt="" loading="lazy" decoding="async"><p class="tag">Slice, slice, baby</p>
           <h2 class="section-head">Pizza</h2>
           <p class="muted" style="margin: 8px 0 0;">Collect from the kitchen in [AREA], or order delivery on Uber Eats or Mr D. Deliver prices are the app prices.</p>
           <p class="muted" data-order-note hidden style="margin: 8px 0 0;">See an Add button? You can order that item right here and collect it from the kitchen.</p>
         </div>
         <div class="pizza-cols">
-          <div>
-            <div class="pz-head"><span class="tag grp">The Classics</span><span class="tag sz l">Large</span><span class="tag sz m">Medium</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span><span class="tag ch">Collect</span><span class="tag ch">Deliver</span></div>
+          <div data-section="pizza-classics">
+            <div class="pz-head"><span class="tag grp" data-section-title="pizza-classics">The Classics</span><span class="tag sz l">Large</span><span class="tag sz m">Medium</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span><span class="tag ch">Collect</span><span class="tag ch">Deliver</span></div>
             <div data-menu-items="pizza-classics" style="display: contents;">
               <div class="pz"><span class="name">Margherita</span><span class="p">R125</span><span class="p">[R000]</span><span class="p">R90</span><span class="p">[R000]</span><p class="desc">The OG. Sauce, mozzarella, olive oil. Nothing to hide behind.</p></div>
               <div class="pz"><span class="name">Veggie</span><span class="p">R140</span><span class="p">[R000]</span><span class="p">R100</span><span class="p">[R000]</span><p class="desc">Mixed peppers, mushrooms, red onion, black olives.</p></div>
@@ -383,8 +383,8 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
               <div class="pz"><span class="name">Brekkie</span><span class="p">R170</span><span class="p">[R000]</span><span class="p" aria-label="No medium">–</span><span class="p" aria-label="No medium">–</span><p class="desc">Bacon and egg. Breakfast of champions, any time of day.</p></div>
             </div>
           </div>
-          <div>
-            <div class="pz-head"><span class="tag grp">The Signatures</span><span class="tag sz l">Large</span><span class="tag sz m">Medium</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span><span class="tag ch">Collect</span><span class="tag ch">Deliver</span></div>
+          <div data-section="pizza-signatures">
+            <div class="pz-head"><span class="tag grp" data-section-title="pizza-signatures">The Signatures</span><span class="tag sz l">Large</span><span class="tag sz m">Medium</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span><span class="tag ch">Collect</span><span class="tag ch">Deliver</span></div>
             <div data-menu-items="pizza-signatures" style="display: contents;">
               <div class="pz"><span class="name">FAB</span><span class="p">R200</span><span class="p">[R000]</span><span class="p">R140</span><span class="p">[R000]</span><p class="desc">Oh so fabulous. Bacon, avo, feta.</p></div>
               <div class="pz"><span class="name">Tasty Wastie</span><span class="p">R230</span><span class="p">[R000]</span><span class="p">R160</span><span class="p">[R000]</span><p class="desc">Chorizo, salami, ham, bacon, mushrooms. Waste not.</p></div>
@@ -396,9 +396,9 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             </div>
           </div>
         </div>
-        <div class="pizza-cols" style="margin-top: 56px;">
+        <div class="pizza-cols" style="margin-top: 56px;" data-section="pizza-extras">
           <div>
-            <div class="pz-head two"><span class="tag grp">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
+            <div class="pz-head two"><span class="tag grp" data-section-title="pizza-extras">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
             <div data-menu-items="pizza-extras" style="display: contents;">
               <div class="pz two"><span class="name">Gluten-free base</span><span class="p">R40</span><span class="p">[R000]</span></div>
               <div class="pz two"><span class="name">Vegan cheese</span><span class="p">R40</span><span class="p">[R000]</span></div>
@@ -406,7 +406,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             </div>
           </div>
           <div>
-            <div class="pz-head two"><span class="tag grp">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
+            <div class="pz-head two"><span class="tag grp" data-section-title="pizza-extras">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
             <div data-menu-items="pizza-extras" style="display: contents;">
               <div class="pz two"><span class="name">Extra veg</span><span class="p">R15</span><span class="p">[R000]</span></div>
               <div class="pz two"><span class="name">Pizza box</span><span class="p">R10</span><span class="p">[R000]</span></div>
@@ -418,14 +418,14 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
         <div class="cols">
           <div class="col">
-            <div class="head-group with-ill"><img class="sec-ill" src="illustrations/section-wrapped.svg" alt="" loading="lazy" decoding="async"><p class="tag">Livin' on a pita</p><h2 class="section-head">Wrapped Differently</h2></div>
+            <div data-section="wrapped" class="head-group with-ill"><img class="sec-ill" src="illustrations/section-wrapped.svg" alt="" loading="lazy" decoding="async"><p class="tag">Livin' on a pita</p><h2 class="section-head" data-section-title="wrapped">Wrapped Differently</h2></div>
             <div data-menu-items="wrapped" style="display: contents;">
               <div class="item"><div class="row"><span>Chicken Shawarma</span><span>R150</span></div><p class="desc">In a pita or a bowl.</p></div>
               <div class="item"><div class="row"><span>Falafel</span><span>R150</span></div><p class="desc">Falafel in love. Five balls, pita or bowl, with tahina.</p></div>
               <div class="item"><div class="row"><span>Sabich</span><span>R120</span></div><p class="desc">Fried brinjal and egg. Pita or bowl.</p></div>
               <div class="item"><div class="row"><span>Shakshuka</span><span>R125</span></div><p class="desc">Eggs baked in the sugo, green pepper, cheddar. Pita on top.</p></div>
             </div>
-            <div class="head-group with-ill gap-top"><img class="sec-ill" src="illustrations/section-pasta-potjies.svg" alt="" loading="lazy" decoding="async"><p class="tag">Pasta la vista</p><h2 class="section-head">Pasta &amp; Potjies</h2></div>
+            <div data-section="pasta-potjies" class="head-group with-ill gap-top"><img class="sec-ill" src="illustrations/section-pasta-potjies.svg" alt="" loading="lazy" decoding="async"><p class="tag">Pasta la vista</p><h2 class="section-head" data-section-title="pasta-potjies">Pasta &amp; Potjies</h2></div>
             <div data-menu-items="pasta-potjies" style="display: contents;">
               <div class="item"><div class="row"><span>Shroom Pasta</span><span>R120</span></div><p class="desc">Mushrooms, cream, truffle oil, parmesan.</p></div>
               <div class="row small"><span>Arrabbiata</span><span>R100</span></div>
@@ -435,14 +435,14 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             </div>
           </div>
           <div class="col">
-            <div class="head-group with-ill"><img class="sec-ill" src="illustrations/section-breakfast.svg" alt="" loading="lazy" decoding="async"><p class="tag">Rise and dine</p><h2 class="section-head">Breakfast</h2></div>
+            <div data-section="breakfast" class="head-group with-ill"><img class="sec-ill" src="illustrations/section-breakfast.svg" alt="" loading="lazy" decoding="async"><p class="tag">Rise and dine</p><h2 class="section-head" data-section-title="breakfast">Breakfast</h2></div>
             <div data-menu-items="breakfast" style="display: contents;">
               <div class="item"><div class="row"><span>Breakfast Roll</span><span>R100</span></div><p class="desc">Egg, streaky bacon, cheddar, rocket.</p></div>
               <div class="item"><div class="row"><span>Veggie Roll</span><span>R100</span></div><p class="desc">Peppers, onion, mushrooms, cheddar.</p></div>
               <div class="item"><div class="row"><span>Breakfast Bowl</span><span>R90</span></div><p class="desc">Yoghurt, muesli, fruit, honey, mint.</p></div>
               <div class="row small"><span>Cheesy Toasty</span><span>R60</span></div>
             </div>
-            <div class="head-group with-ill gap-top"><img class="sec-ill" src="illustrations/section-sweet-stuff.svg" alt="" loading="lazy" decoding="async"><p class="tag">Panna-cotta have it</p><h2 class="section-head">Sweet Stuff</h2></div>
+            <div data-section="sweet-stuff" class="head-group with-ill gap-top"><img class="sec-ill" src="illustrations/section-sweet-stuff.svg" alt="" loading="lazy" decoding="async"><p class="tag">Panna-cotta have it</p><h2 class="section-head" data-section-title="sweet-stuff">Sweet Stuff</h2></div>
             <div data-menu-items="sweet-stuff" style="display: contents;">
               <div class="item"><div class="row"><span>Panacotta</span><span>R60</span></div><p class="desc">Vanilla pod, fruit coulis, blueberries.</p></div>
               <div class="row small"><span>Brownie</span><span>R40</span></div>
@@ -452,7 +452,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             </div>
           </div>
           <div class="col">
-            <div class="head-group with-ill"><img class="sec-ill" src="illustrations/section-coffee.svg" alt="" loading="lazy" decoding="async"><p class="tag">Thanks a latte</p><h2 class="section-head">Coffee</h2></div>
+            <div data-section="coffee" class="head-group with-ill"><img class="sec-ill" src="illustrations/section-coffee.svg" alt="" loading="lazy" decoding="async"><p class="tag">Thanks a latte</p><h2 class="section-head" data-section-title="coffee">Coffee</h2></div>
             <div data-menu-items="coffee" style="display: contents;">
               <div class="row small"><span>Espresso</span><span>R30</span></div>
               <div class="row small"><span>Americano</span><span>R35</span></div>
@@ -464,7 +464,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
               <div class="row small"><span>Tea, 5 Roses or rooibos</span><span>R30</span></div>
               <div class="row small"><span>Oat, almond or macadamia</span><span>R15</span></div>
             </div>
-            <div class="head-group with-ill gap-top"><img class="sec-ill" src="illustrations/section-cold-drinks.svg" alt="" loading="lazy" decoding="async"><p class="tag">Stay cool</p><h2 class="section-head">Cold Drinks</h2></div>
+            <div data-section="cold-drinks" class="head-group with-ill gap-top"><img class="sec-ill" src="illustrations/section-cold-drinks.svg" alt="" loading="lazy" decoding="async"><p class="tag">Stay cool</p><h2 class="section-head" data-section-title="cold-drinks">Cold Drinks</h2></div>
             <div data-menu-items="cold-drinks" style="display: contents;">
               <div class="row small"><span>Coke, Coke Zero, Fanta, Creme Soda</span><span>R25</span></div>
               <div class="row small"><span>Still or sparkling water</span><span>R20</span></div>
@@ -587,8 +587,8 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
     <div class="wrap">
       <form id="shop-form" class="shop-grid" novalidate>
         <div class="stack" style="gap: 48px; min-width: 0;">
-          <div class="stack" style="gap: 20px;">
-            <div class="head-group"><p class="tag">Freeze, please</p><h2 class="section-head">Frozen Pizzas</h2></div>
+          <div class="stack" style="gap: 20px;" data-section="frozen-pizzas">
+            <div class="head-group"><p class="tag">Freeze, please</p><h2 class="section-head" data-section-title="frozen-pizzas">Frozen Pizzas</h2></div>
             <p class="muted" style="margin: 0;">[Size to confirm]. Bake from frozen. No thawing, no waiting, no judgement.</p>
             <div class="products" data-shop-items="frozen-pizzas">
               <article class="product" data-product="Margherita, frozen">
@@ -624,8 +624,8 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             </div>
           </div>
 
-          <div class="stack" style="gap: 20px;">
-            <div class="head-group"><p class="tag">Sauce boss</p><h2 class="section-head">The Sauce</h2></div>
+          <div class="stack" style="gap: 20px;" data-section="the-sauce">
+            <div class="head-group"><p class="tag">Sauce boss</p><h2 class="section-head" data-section-title="the-sauce">The Sauce</h2></div>
             <p class="muted" style="margin: 0;">7-hour slow-cooked Roma tomato sauce, with confit garlic and a spice blend years in the perfecting. The one on every pizza, in the shakshuka and in the bolognese.</p>
             <div class="products" data-shop-items="the-sauce">
               <article class="product" data-product="The Sauce, jar">

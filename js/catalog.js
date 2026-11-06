@@ -3,16 +3,23 @@
    Hooks in the page:
      [data-menu-items="section-key"]  (optional data-part="1" / "2" to split a section over two columns)
      [data-shop-items="section-key"]  the .products grid for that shop section
-     [data-price-of="Item name"]      a price elsewhere on the page (e.g. featured cards) kept in sync with the menu */
+     [data-price-of="Item name"]      a price elsewhere on the page (e.g. featured cards) kept in sync with the menu
+     [data-section-title="key"]       a section's heading, swapped for the title set in the admin
+     [data-section="key other-key"]   hidden with the section, or once all the sections listed are hidden
+   Section titles and price columns come from the brands and sections tables, falling back to catalog-config.js.
+   New sections and section order don't reach the page: each slot and its illustration is drawn by hand. */
 (function () {
   var conf = window.SITE_SUPABASE || {};
   var brand = document.body.getAttribute("data-brand");
   if (!brand || !conf.url || !conf.key || /YOUR-/.test(conf.url + conf.key)) return;
 
   var cfg = window.CATALOG_CONFIG.brands[brand];
+  var sections = { menu: cfg.menu, shop: cfg.shop };
+  var gone = {}; // section keys that are hidden or deleted
 
   var style = document.createElement("style");
   style.textContent =
+    "[data-section][hidden]{display:none!important}" +
     ".item-thumb{display:block;width:100%;max-height:200px;object-fit:cover;margin-bottom:8px}" +
     ".pz .item-thumb{grid-column:1/-1}" +
     ".product.sold-out .ill{opacity:.45}" +
@@ -31,6 +38,14 @@
       if (!r.ok) throw new Error(table + " " + r.status);
       return r.json();
     });
+  }
+
+  // Brands and sections are extras: if they can't be read, the page carries on with catalog-config.js.
+  function getOptional(path) {
+    var q = conf.url.replace(/\/$/, "") + "/rest/v1/" + path;
+    return fetch(q, { headers: { apikey: conf.key, Authorization: "Bearer " + conf.key } }).then(function (r) {
+      return r.ok ? r.json() : null;
+    }).catch(function () { return null; });
   }
 
   function money(v) {
@@ -156,9 +171,85 @@
     return map;
   }
 
+  // Visitors only get visible sections back, so a section the page knows but the table left out is hidden or deleted.
+  // The brand row says the tables are in place and seeded; without it, nothing here changes.
+  function applySections(brandRows, sectionRows) {
+    if (!brandRows || !brandRows.length || !sectionRows) return;
+    ["menu", "shop"].forEach(function (kind) {
+      var fromConfig = cfg[kind];
+      var live = sectionRows.filter(function (s) { return s.kind === kind; }).map(function (s) {
+        // Merle's page has no large and medium layout.
+        return { key: s.key, title: s.title, prices: brand === "merles" && s.prices === "pizza" ? "cd" : s.prices };
+      });
+      var keys = live.map(function (s) { return s.key; });
+      fromConfig.forEach(function (s) {
+        if (keys.indexOf(s.key) < 0) gone[s.key] = true;
+      });
+      live.forEach(function (s) {
+        drawTitle(s);
+        if (kind === "menu") drawColumns(s, fromConfig.filter(function (c) { return c.key === s.key; })[0]);
+      });
+      sections[kind] = live;
+    });
+    document.querySelectorAll("[data-section]").forEach(function (box) {
+      box.hidden = box.getAttribute("data-section").split(" ").every(function (k) { return gone[k]; });
+    });
+    Object.keys(gone).forEach(function (key) {
+      // Emptied as well as hidden, so nothing in a hidden section can stay in the cart.
+      document.querySelectorAll('[data-menu-items="' + key + '"],[data-shop-items="' + key + '"]').forEach(function (slot) { slot.textContent = ""; });
+    });
+  }
+
+  function drawTitle(sec) {
+    document.querySelectorAll('[data-section-title="' + sec.key + '"]').forEach(function (head) {
+      // Merle's headings are set in capitals. Tommy Sugo's pizza groups sit under "Pizza", so they drop the prefix.
+      var text = brand === "merles" ? sec.title.toUpperCase() : sec.title;
+      if (head.classList.contains("grp")) text = text.split(" · ").pop();
+      if (head.textContent.replace(/\s+/g, " ").trim() === text) return;
+      var ill = head.querySelector(".sec-ill");
+      head.textContent = "";
+      if (!ill) { head.textContent = text; return; }
+      // Keep the illustration on the same line as the last word.
+      var words = text.split(" ");
+      var end = el("span", "head-end", words.pop());
+      end.appendChild(ill);
+      if (words.length) head.appendChild(document.createTextNode(words.join(" ") + " "));
+      head.appendChild(end);
+    });
+  }
+
+  // The column labels in the page are written for the section's usual prices. Redraw them only if that has changed.
+  function drawColumns(sec, usual) {
+    if (!usual || usual.prices === sec.prices) return;
+    document.querySelectorAll('[data-menu-items="' + sec.key + '"]').forEach(function (slot) {
+      var head = slot.previousElementSibling;
+      if (brand === "merles") {
+        if (head) head.querySelectorAll(".ch").forEach(function (c) { c.hidden = sec.prices !== "cd"; });
+        return;
+      }
+      var old = head && head.classList.contains("pz-head") ? head : null;
+      if (sec.prices === "single" && !old) return;
+      var fresh = tommyColumns(sec, old && old.querySelector(".grp"));
+      if (old) old.replaceWith(fresh); else slot.parentNode.insertBefore(fresh, slot);
+    });
+  }
+
+  function tommyColumns(sec, group) {
+    var head = el("div", sec.prices === "pizza" ? "pz-head" : "pz-head two");
+    head.appendChild(group || el("span", "tag grp"));
+    if (sec.prices === "pizza") {
+      head.appendChild(el("span", "tag sz l", "Large"));
+      head.appendChild(el("span", "tag sz m", "Medium"));
+      ["Collect", "Deliver", "Collect", "Deliver"].forEach(function (t, i) { head.appendChild(el("span", i ? "tag ch" : "tag ch c1", t)); });
+    } else if (sec.prices === "cd") {
+      ["Collect", "Deliver"].forEach(function (t, i) { head.appendChild(el("span", i ? "tag ch" : "tag ch c1", t)); });
+    }
+    return head;
+  }
+
   function drawMenu(rows) {
     var map = bySection(rows);
-    cfg.menu.forEach(function (sec) {
+    sections.menu.forEach(function (sec) {
       var slots = document.querySelectorAll('[data-menu-items="' + sec.key + '"]');
       if (!slots.length) return;
       var items = map[sec.key] || [];
@@ -184,7 +275,7 @@
       if (o && o.textContent !== "0") qty[p.getAttribute("data-product")] = o.textContent;
     });
     var map = bySection(rows);
-    cfg.shop.forEach(function (sec) {
+    sections.shop.forEach(function (sec) {
       var grid = document.querySelector('[data-shop-items="' + sec.key + '"]');
       if (!grid) return;
       grid.textContent = "";
@@ -197,7 +288,13 @@
     });
   }
 
-  Promise.all([get("menu_items"), get("shop_items")]).then(function (res) {
+  Promise.all([
+    get("menu_items"),
+    get("shop_items"),
+    getOptional("brands?select=*&key=eq." + brand),
+    getOptional("sections?select=*&brand=eq." + brand + "&order=sort_order.asc")
+  ]).then(function (res) {
+    applySections(res[2], res[3]);
     drawMenu(res[0]);
     drawShop(res[1]);
     document.dispatchEvent(new CustomEvent("catalog:rendered"));

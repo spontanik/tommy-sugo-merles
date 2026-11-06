@@ -1,4 +1,6 @@
 /* Shared by the public pages and /admin: which sections each brand has, and which price columns each section uses.
+   The brands and sections tables hold the live version (edited in Settings). This is the fallback if they can't be read.
+   priceLabels is the one part that isn't in the database.
    prices: "pizza"  -> Large collect / Large deliver / Medium collect / Medium deliver
            "cd"     -> Collect / Deliver
            "single" -> one price */
