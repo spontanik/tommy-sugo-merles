@@ -4,155 +4,196 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Kitchen Admin</title>
+<title>Housemates</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700&family=Oswald:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=Montserrat:wght@700&family=Oswald:wght@600;700&display=swap">
 <style>
 :root {
-  --bg: #f2f2f2;
-  --panel: #ffffff;
-  --ink: #111111;
-  --muted: #5c5c5a;
-  --line: #d3d2d2;
-  --accent: #ec1c24;
-  --accent-ink: #ffffff;
-  --ok: #1f7a3a;
-  --warn-bg: #fff4d6;
-  --chip: #ececec;
-  --poster: Oswald, "Arial Narrow", Impact, sans-serif;
+  --ground: #f2f2f2;
+  --ink: #000;
+  --muted: #4a4a48;
+  --shade: #d3d2d2;
+  --raised: #fff;
   --sans: Archivo, "Helvetica Neue", Arial, sans-serif;
+  --poster: Oswald, "Arial Narrow", Impact, sans-serif;
+  /* Set per brand below: item names and prices, and the primary Save. */
+  --item-font: var(--sans);
+  --item-weight: 700;
+  --item-track: 0;
+  --save-bg: #000;
+  --save-ink: #f2f2f2;
+  --save-hover-bg: #f2f2f2;
+  --save-hover-ink: #000;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0d0d0d; --panel: #181818; --ink: #f2f2f2; --muted: #a8a8a6; --line: #333333;
-    --chip: #262626; --warn-bg: #3a3112; color-scheme: dark;
-  }
+html[data-brand="tommy"] {
+  --item-font: var(--poster);
+  --item-weight: 600;
+  --item-track: .02em;
+  --save-bg: #ec1c24;
+  --save-ink: #000;
+  --save-hover-bg: #000;
+  --save-hover-ink: #f2f2f2;
 }
-:root[data-theme="dark"] {
-  --bg: #0d0d0d; --panel: #181818; --ink: #f2f2f2; --muted: #a8a8a6; --line: #333333;
-  --chip: #262626; --warn-bg: #3a3112; color-scheme: dark;
+html[data-brand="merles"] {
+  --item-font: Montserrat, "Helvetica Neue", Arial, sans-serif;
+  --item-weight: 700;
+  --item-track: 0;
 }
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.45 var(--sans); }
+* { box-sizing: border-box; border-radius: 0; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 400 16px/1.45 var(--sans); }
+body.auth { background: #000; }
 button, input, select, textarea { font: inherit; color: inherit; }
 [hidden] { display: none !important; }
 a { color: inherit; }
-:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 3px solid #000; outline-offset: 2px; }
+.bar :focus-visible { outline-color: #f2f2f2; }
 
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
-h1, h2, h3 { font-family: var(--poster); font-weight: 700; text-transform: uppercase; letter-spacing: .02em; margin: 0; line-height: 1.1; }
+h1, h2, h3 { margin: 0; line-height: 1.1; font-weight: 800; }
+
+/* The Housemates wordmark: text for now. Swap these two elements for an image when there's a logo. */
+.wordmark { font-family: var(--sans); font-weight: 800; }
+.auth-mark { color: #f2f2f2; font-size: 48px; line-height: 1; text-align: center; margin: 56px 0 24px; overflow-wrap: anywhere; }
 
 /* Top bar */
-.bar { background: #000; color: #f2f2f2; border-bottom: 4px solid var(--accent); }
-.bar .wrap { display: flex; align-items: center; gap: 16px; min-height: 64px; flex-wrap: wrap; padding-block: 8px; }
-.bar h1 { font-size: 22px; }
-.bar .who { margin-left: auto; font-size: 14px; color: #d3d2d2; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.bar { background: #000; color: #f2f2f2; }
+.bar .wrap { display: flex; align-items: center; gap: 12px 24px; min-height: 64px; flex-wrap: wrap; padding-block: 10px; }
+.bar .wordmark { font-size: 24px; }
+.switch { display: inline-flex; border: 2px solid #f2f2f2; max-width: 100%; }
+.switch button { min-height: 44px; padding: 0 14px; border: 0; background: transparent; color: #f2f2f2; font-weight: 700; cursor: pointer; position: relative; }
+.switch button:hover { text-decoration: underline; }
+.switch button[aria-pressed="true"] { background: #f2f2f2; color: #000; }
+.switch button:focus-visible { z-index: 1; }
+.who { margin-left: auto; font-size: 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.who span { overflow-wrap: anywhere; min-width: 0; }
 
 /* Buttons */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 16px; border: 2px solid var(--ink); background: var(--ink); color: var(--bg); font-weight: 700; cursor: pointer; text-decoration: none; border-radius: 4px; }
-.btn:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.btn.ghost { background: transparent; color: var(--ink); }
-.btn.ghost:hover { background: var(--chip); color: var(--ink); border-color: var(--ink); }
-.btn.danger { background: transparent; color: var(--accent); border-color: var(--accent); }
-.btn.danger:hover { background: var(--accent); color: var(--accent-ink); }
-.btn.small { min-height: 32px; padding: 0 10px; font-size: 14px; }
-.btn:disabled { opacity: .45; cursor: default; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 2px solid #000; background: #000; color: #f2f2f2; font-weight: 700; cursor: pointer; text-decoration: none; }
+.btn:not(:disabled):hover { background: #f2f2f2; color: #000; }
+.btn.ghost { background: transparent; color: #000; }
+.btn.ghost:not(:disabled):hover { background: #000; color: #f2f2f2; }
+.btn.save { background: var(--save-bg); color: var(--save-ink); }
+.btn.save:not(:disabled):hover { background: var(--save-hover-bg); color: var(--save-hover-ink); }
+.btn:disabled { opacity: .4; cursor: default; }
 .bar .btn.ghost { color: #f2f2f2; border-color: #f2f2f2; }
 .bar .btn.ghost:hover { background: #f2f2f2; color: #000; }
-.icon-btn { width: 32px; min-height: 32px; padding: 0; }
+.icon-btn { width: 44px; padding: 0; }
 
-/* Login */
-.login { max-width: 400px; margin: 72px auto; background: var(--panel); border: 1px solid var(--line); padding: 32px 24px; border-radius: 8px; display: flex; flex-direction: column; gap: 16px; }
+/* Auth screens */
+.login { max-width: 420px; margin: 0 auto 48px; background: var(--ground); padding: 32px 24px; display: flex; flex-direction: column; gap: 16px; }
 .login h2 { font-size: 28px; }
-.fld { display: flex; flex-direction: column; gap: 6px; }
-.fld label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
-.fld .hint { font-size: 13px; color: var(--muted); margin: 0; }
-.input { width: 100%; min-height: 44px; padding: 8px 12px; border: 2px solid var(--line); background: var(--panel); border-radius: 4px; }
-.input:focus { border-color: var(--ink); outline: none; }
+.fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fld label, .fld .lbl { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.fld .hint, .hint { font-size: 13px; color: var(--muted); margin: 0; }
+.input { width: 100%; min-height: 44px; padding: 8px 12px; border: 2px solid #000; background: var(--raised); }
+.input:disabled { background: var(--shade); }
 textarea.input { min-height: 88px; resize: vertical; }
 .msg { margin: 0; font-size: 14px; }
-.msg.err { color: var(--accent); font-weight: 700; }
-.linkish { background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; font-size: 14px; color: var(--muted); align-self: flex-start; }
+.msg.err, .msg.warn { font-weight: 700; border-left: 8px solid #000; padding-left: 8px; }
+.linkish { background: none; border: 0; padding: 0; min-height: 44px; text-decoration: underline; cursor: pointer; font-size: 14px; color: var(--muted); align-self: flex-start; }
+.notice { background: var(--raised); border: 2px solid #000; padding: 12px 16px; font-size: 14px; margin: 24px 0 0; }
+
+/* Brand header */
+.brand-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 24px 0; }
+.brand-id { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.brand-id img { display: block; }
+.brand-id .mark { width: 64px; height: 64px; }
+.brand-id .logo { width: 120px; height: auto; }
+.brand-id .name { font: 700 44px/1.05 var(--poster); overflow-wrap: anywhere; }
 
 /* Tabs */
-.tabs { display: flex; gap: 4px; flex-wrap: wrap; margin: 24px 0 0; border-bottom: 2px solid var(--line); }
-.tab { border: 0; background: none; padding: 12px 16px; font-weight: 700; cursor: pointer; border-bottom: 4px solid transparent; margin-bottom: -2px; color: var(--muted); }
-.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
-.tab small { display: block; font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 2px solid #000; }
+.tab { min-height: 44px; border: 0; background: none; padding: 10px 16px; font-weight: 700; cursor: pointer; border-bottom: 8px solid transparent; margin-bottom: -2px; color: var(--muted); }
+.tab:hover { color: #000; }
+.tab[aria-selected="true"] { color: #000; border-bottom-color: #000; }
 
-.toolbar { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin: 20px 0; }
-.toolbar p { margin: 0; color: var(--muted); font-size: 14px; }
+#panel { padding-bottom: 64px; }
 
 /* Sections and rows */
-.section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 24px; overflow: hidden; }
-.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
-.section-head h2 { font-size: 22px; }
-.section-head .count { font-family: var(--sans); font-size: 13px; color: var(--muted); text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 8px; }
-.rows { list-style: none; margin: 0; padding: 0; }
-.row { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto auto; gap: 16px; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); }
-.row:first-child { border-top: 0; }
-.row.is-hidden .main, .row.is-hidden .thumb { opacity: .5; }
-.thumb { width: 56px; height: 56px; border-radius: 4px; background: var(--chip); object-fit: contain; display: block; }
-.thumb.empty { display: grid; place-items: center; color: var(--muted); font-size: 11px; }
+.section { margin-top: 40px; }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 2px solid #000; }
+.section-head h2 { font-size: 28px; font-family: var(--sans); font-weight: 800; display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap; }
+.section-head .count { font-size: 14px; color: var(--muted); font-weight: 500; }
+.section-note { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
+.rows { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto auto; gap: 16px; align-items: center; padding: 12px; background: var(--raised); }
+.row.sec-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+.row.is-hidden .thumb { opacity: .5; }
+.thumb { width: 64px; height: 64px; background: #fff; object-fit: contain; display: block; }
+.thumb.empty { display: grid; place-items: center; background: var(--shade); color: #000; font-size: 11px; font-weight: 500; text-align: center; line-height: 1.2; }
 .main { min-width: 0; }
-.main .name { font-weight: 700; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.main .name { display: flex; gap: 4px 8px; align-items: center; flex-wrap: wrap; font-family: var(--item-font); font-weight: var(--item-weight); letter-spacing: var(--item-track); font-size: 18px; line-height: 1.25; }
+.main .sec-name { display: flex; gap: 4px 8px; align-items: center; flex-wrap: wrap; font-weight: 700; }
 .main .desc { margin: 2px 0 0; color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.badge { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: 2px 6px; border-radius: 3px; background: var(--chip); color: var(--muted); }
-.badge.red { background: var(--accent); color: var(--accent-ink); }
-.prices { display: flex; gap: 12px; font-variant-numeric: tabular-nums; font-size: 14px; text-align: right; }
+.main .sub { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+.count-cell { font-size: 14px; color: var(--muted); white-space: nowrap; }
+.tag { font-family: var(--sans); font-size: 11px; font-weight: 700; line-height: 1.4; text-transform: uppercase; letter-spacing: .1em; padding: 2px 6px; background: var(--shade); color: #000; white-space: nowrap; }
+.tag.sold { background: #000; color: #f2f2f2; }
+.prices { display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 14px; text-align: right; }
 .prices div { display: flex; flex-direction: column; min-width: 56px; }
-.prices span:first-child { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-.prices strong { font-family: var(--poster); font-size: 18px; font-weight: 600; }
-.actions { display: flex; gap: 6px; }
-.empty-row { padding: 20px; color: var(--muted); font-size: 14px; }
+.prices span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.prices strong { font-family: var(--item-font); font-weight: var(--item-weight); letter-spacing: var(--item-track); font-size: 18px; font-variant-numeric: tabular-nums; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.empty-row { padding: 16px 0 0; color: var(--muted); font-size: 14px; }
 @media (max-width: 720px) {
-  .row { grid-template-columns: 48px minmax(0, 1fr) auto; }
-  .thumb { width: 48px; height: 48px; }
-  .prices { grid-column: 2 / -1; grid-row: 2; justify-content: flex-start; text-align: left; }
-  .actions { grid-column: 3; grid-row: 1; }
+  .row { grid-template-columns: 64px minmax(0, 1fr); }
+  .prices { grid-column: 1 / -1; text-align: left; }
+  .actions { grid-column: 1 / -1; }
+  .row.sec-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .brand-id .name { font-size: 36px; }
 }
 
-/* Edit dialog */
-dialog { border: 0; padding: 0; border-radius: 8px; width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: var(--panel); color: var(--ink); box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+/* Settings */
+.brand-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+.set-foot { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; }
+.set-foot .status { margin-right: auto; font-size: 14px; font-weight: 700; }
+.set-foot .msg.err { flex-basis: 100%; }
+
+/* Dialogs */
+dialog { border: 2px solid #000; padding: 0; width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: var(--ground); color: var(--ink); }
+dialog.narrow { width: min(460px, calc(100vw - 32px)); }
 dialog::backdrop { background: rgba(0,0,0,.55); }
-.dlg { display: flex; flex-direction: column; max-height: calc(100vh - 32px); }
-.dlg header { padding: 20px 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.dlg header h2 { font-size: 24px; }
+.dlg { display: flex; flex-direction: column; max-height: calc(100vh - 36px); }
+.dlg header { padding: 16px 24px; border-bottom: 2px solid #000; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.dlg header h2 { font-size: 24px; overflow-wrap: anywhere; min-width: 0; }
 .dlg .body { padding: 20px 24px; overflow: auto; display: flex; flex-direction: column; gap: 16px; }
-.dlg footer { padding: 16px 24px; border-top: 1px solid var(--line); display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
+.dlg footer { padding: 16px 24px; border-top: 2px solid #000; display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
 .dlg footer .right { display: flex; gap: 12px; margin-left: auto; }
 .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; align-items: end; }
 .money { position: relative; }
 .money::before { content: "R"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--muted); }
-.money .input { padding-left: 28px; }
+.money .input { padding-left: 28px; font-family: var(--item-font); font-weight: var(--item-weight); letter-spacing: var(--item-track); }
 .img-edit { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 16px; align-items: start; }
-.img-edit .preview { width: 160px; height: 120px; border-radius: 4px; background: var(--chip); object-fit: contain; display: block; }
-.img-edit .noimg { width: 160px; height: 120px; border-radius: 4px; background: var(--chip); display: grid; place-items: center; color: var(--muted); font-size: 13px; }
+.img-edit .preview { width: 160px; height: 120px; background: #fff; object-fit: contain; display: block; }
+.img-edit .noimg { width: 160px; height: 120px; background: var(--shade); display: grid; place-items: center; font-size: 13px; }
 .img-edit .ctrls { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 @media (max-width: 520px) { .img-edit { grid-template-columns: minmax(0, 1fr); } }
-.check { display: flex; gap: 10px; align-items: flex-start; }
-.check input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); }
+.check { display: flex; gap: 10px; align-items: flex-start; min-height: 44px; cursor: pointer; }
+.check input { width: 24px; height: 24px; margin: 0; flex: none; accent-color: #000; }
 .check span small { display: block; color: var(--muted); font-size: 13px; }
 
-.notice { background: var(--warn-bg); border: 1px solid var(--line); padding: 12px 16px; border-radius: 6px; font-size: 14px; margin-top: 24px; }
-
-.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #000; color: #fff; padding: 12px 20px; border-radius: 6px; font-weight: 700; z-index: 10; max-width: calc(100vw - 32px); }
-.toast.err { background: var(--accent); }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #000; color: #f2f2f2; border: 2px solid #f2f2f2; padding: 12px 20px; font-weight: 700; z-index: 10; max-width: calc(100vw - 32px); }
 </style>
 </head>
-<body>
+<body class="auth">
 
-<header class="bar">
+<header class="bar" id="bar" hidden>
   <div class="wrap">
-    <h1>Kitchen Admin</h1>
-    <div class="who" id="who" hidden>
+    <h1 class="wordmark">Housemates</h1>
+    <div class="switch" role="group" aria-label="Brand">
+      <button type="button" id="switch-tommy" data-brand-btn="tommy" aria-pressed="false">Tommy Sugo</button>
+      <button type="button" id="switch-merles" data-brand-btn="merles" aria-pressed="false">Merle's Schnitz</button>
+    </div>
+    <div class="who">
       <span id="who-email"></span>
-      <button class="btn ghost small" type="button" id="sign-out">Sign out</button>
+      <button class="btn ghost" type="button" data-sign-out>Sign out</button>
     </div>
   </div>
 </header>
+
+<div class="wordmark auth-mark" id="auth-mark">Housemates</div>
 
 <div class="wrap">
   <p class="notice" id="not-configured" hidden>Supabase isn't connected yet. Add the project URL and publishable key to <code>js/supabase-config.js</code>.</p>
@@ -175,40 +216,46 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     <div class="fld"><label for="new-pw">New password</label><input class="input" id="new-pw" type="password" autocomplete="new-password" minlength="8" required><p class="hint">At least 8 characters.</p></div>
     <p class="msg err" id="set-pw-err" role="alert" hidden></p>
     <button class="btn" type="submit">Save password</button>
+    <button class="linkish" type="button" data-sign-out>Sign out</button>
   </form>
 
   <!-- Signed in but not an admin -->
   <div class="login" id="no-access" hidden>
     <h2>No access yet</h2>
     <p class="msg">You're signed in as <strong id="no-access-email"></strong>, but this account isn't set up as an admin. Ask the site owner to add you.</p>
+    <button class="linkish" type="button" data-sign-out>Sign out</button>
   </div>
 
   <!-- Editor -->
   <section id="app" hidden>
-    <div class="tabs" role="tablist" id="tabs"></div>
-    <div class="toolbar">
-      <p id="tab-note"></p>
-      <a class="btn ghost small" id="view-page" target="_blank" rel="noopener">View on the site ↗</a>
+    <div class="brand-head">
+      <div class="brand-id" id="brand-id"></div>
+      <a class="btn ghost" id="view-site" target="_blank" rel="noopener">View site ↗</a>
     </div>
-    <div id="sections"></div>
+    <div class="tabs" role="tablist" aria-label="Sections of the admin">
+      <button class="tab" type="button" role="tab" id="tab-menu" data-view-btn="menu" aria-controls="panel" aria-selected="false">Menu</button>
+      <button class="tab" type="button" role="tab" id="tab-shop" data-view-btn="shop" aria-controls="panel" aria-selected="false">Shop</button>
+      <button class="tab" type="button" role="tab" id="tab-settings" data-view-btn="settings" aria-controls="panel" aria-selected="false">Settings</button>
+    </div>
+    <div id="panel" role="tabpanel"></div>
   </section>
 </div>
 
 <dialog id="dlg">
   <form class="dlg" id="edit-form" method="dialog" novalidate>
-    <header><h2 id="dlg-title">Edit item</h2><button class="btn ghost small" type="button" id="dlg-close" aria-label="Close">✕</button></header>
+    <header><h2 id="dlg-title">Edit item</h2><button class="btn ghost" type="button" id="dlg-close">Close</button></header>
     <div class="body">
       <div class="fld"><label for="f-name">Name</label><input class="input" id="f-name" required></div>
       <div class="fld"><label for="f-desc">Description</label><textarea class="input" id="f-desc"></textarea><p class="hint" id="f-desc-hint"></p></div>
-      <div class="fld"><label>Prices</label><div class="price-grid" id="f-prices"></div><p class="hint">Leave a price blank to show “–” (or “TBC” in the shop).</p></div>
+      <div class="fld"><span class="lbl">Prices</span><div class="price-grid" id="f-prices"></div><p class="hint">Leave a price blank to show “–” (or “TBC” in the shop).</p></div>
       <div class="fld">
-        <label>Image</label>
+        <span class="lbl">Image</span>
         <div class="img-edit">
           <div id="f-img-box"></div>
           <div class="ctrls">
             <input type="file" id="f-file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" hidden>
-            <button class="btn ghost small" type="button" id="f-upload">Upload new image</button>
-            <button class="btn ghost small" type="button" id="f-img-remove">Remove image</button>
+            <button class="btn ghost" type="button" id="f-upload">Upload new image</button>
+            <button class="btn ghost" type="button" id="f-img-remove">Remove image</button>
             <p class="hint">PNG, JPG, WebP or SVG, up to 5 MB.</p>
           </div>
         </div>
@@ -222,10 +269,32 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       <p class="msg err" id="f-err" role="alert" hidden></p>
     </div>
     <footer>
-      <button class="btn danger" type="button" id="f-delete">Delete</button>
+      <button class="btn ghost" type="button" id="f-delete">Delete</button>
       <div class="right">
         <button class="btn ghost" type="button" id="f-cancel">Cancel</button>
-        <button class="btn" type="submit" id="f-save">Save</button>
+        <button class="btn save" type="submit" id="f-save">Save</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
+
+<dialog id="sec-dlg" class="narrow">
+  <form class="dlg" id="sec-form" method="dialog" novalidate>
+    <header><h2 id="sec-title">Edit section</h2><button class="btn ghost" type="button" id="sec-close">Close</button></header>
+    <div class="body">
+      <div class="fld"><label for="s-title">Title</label><input class="input" id="s-title" required><p class="hint" id="s-key"></p></div>
+      <div class="fld" id="s-prices-fld"><label for="s-prices">Price columns</label><select class="input" id="s-prices"></select></div>
+      <p class="hint" id="s-shop-note" hidden>Shop sections have one price.</p>
+      <p class="msg warn" id="s-warn" role="status" hidden></p>
+      <label class="check" id="s-hidden-row"><input type="checkbox" id="s-hidden"><span>Hide from the site<small>Hides the whole section. Its items stay here.</small></span></label>
+      <p class="hint" id="s-delete-note" hidden></p>
+      <p class="msg err" id="s-err" role="alert" hidden></p>
+    </div>
+    <footer>
+      <button class="btn ghost" type="button" id="s-delete">Delete</button>
+      <div class="right">
+        <button class="btn ghost" type="button" id="s-cancel">Cancel</button>
+        <button class="btn save" type="submit" id="s-save">Save</button>
       </div>
     </footer>
   </form>
@@ -247,16 +316,39 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     return;
   }
 
-  // Invite and reset emails land here with the link type in the URL hash.
+  // Invite and reset emails land here with the link type in the URL hash, so read that before anything else.
   var linkType = (location.hash.match(/type=([a-z]+)/) || [])[1];
   var db = window.supabase.createClient(conf.url, conf.key);
 
-  var TABS = [
-    { brand: "tommy", kind: "menu" }, { brand: "tommy", kind: "shop" },
-    { brand: "merles", kind: "menu" }, { brand: "merles", kind: "shop" }
-  ];
-  var state = { tab: 0, rows: [], editing: null, image: undefined };
-  try { var saved = parseInt(localStorage.getItem("admin-tab"), 10); if (saved >= 0 && saved < 4) state.tab = saved; } catch (e) {}
+  var STORE_KEY = "housemates-admin";
+  var PAGE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._/-]*$/; // same check as brands.page
+  var PRICE_TEXT = {
+    pizza: "Large and Medium, each Collect and Deliver",
+    cd: "Collect and Deliver",
+    single: "One price"
+  };
+
+  var state = { brand: "tommy", view: "menu", user: null, rows: [], editing: null, image: undefined };
+  // What came from the brands and sections tables. Empty until they load, or if they aren't there yet.
+  var catalog = { ok: false, missing: false, brands: {}, sections: [] };
+  var settings = null; // the Settings tab's unsaved draft
+
+  function parseRoute(hash) {
+    var m = /^#(tommy|merles)\/(menu|shop|settings)$/.exec(hash || "");
+    return m ? { brand: m[1], view: m[2] } : null;
+  }
+
+  (function restoreRoute() {
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(STORE_KEY)); localStorage.removeItem("admin-tab"); } catch (e) {}
+    var r = parseRoute(location.hash) || (saved && parseRoute("#" + saved.brand + "/" + saved.view));
+    if (r) { state.brand = r.brand; state.view = r.view; }
+  })();
+
+  function saveRoute() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify({ brand: state.brand, view: state.view })); } catch (e) {}
+    if (!linkType) history.replaceState(null, "", "#" + state.brand + "/" + state.view);
+  }
 
   function h(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -274,7 +366,6 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   function toast(text, isErr) {
     var t = $("toast");
     t.textContent = text;
-    t.className = "toast" + (isErr ? " err" : "");
     t.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.hidden = true; }, isErr ? 6000 : 2500);
@@ -285,17 +376,24 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var n = Number(v);
     return "R" + (n % 1 ? n.toFixed(2) : n);
   }
+  function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
   // Site images are stored as paths relative to the site root; uploads are full URLs.
   function src(u) { return /^(https?:|data:)/.test(u) ? u : "../" + u; }
 
   function show(view) {
     ["login", "set-pw", "no-access", "app"].forEach(function (id) { $(id).hidden = id !== view; });
+    var inApp = view === "app";
+    $("bar").hidden = !inApp;
+    $("auth-mark").hidden = inApp;
+    document.body.classList.toggle("auth", !inApp);
   }
 
   // ---------- Auth ----------
   async function route(session) {
-    if (!session) { $("who").hidden = true; show("login"); return; }
-    $("who").hidden = false;
+    if (!session) { state.user = null; settings = null; show("login"); return; }
+    // Supabase repeats SIGNED_IN when the tab regains focus. Don't reload over someone's unsaved edits.
+    if (state.user === session.user.id && !$("app").hidden) return;
+    state.user = session.user.id;
     $("who-email").textContent = session.user.email;
     if (linkType === "invite" || linkType === "recovery") { show("set-pw"); return; }
     var res = await db.from("admins").select("user_id").eq("user_id", session.user.id).maybeSingle();
@@ -305,7 +403,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       return;
     }
     show("app");
-    drawTabs();
+    drawChrome();
     load();
   }
 
@@ -352,83 +450,179 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     route(s.data.session);
   });
 
-  $("sign-out").addEventListener("click", function () { db.auth.signOut(); });
+  document.querySelectorAll("[data-sign-out]").forEach(function (b) {
+    b.addEventListener("click", function () { if (okToLeaveSettings()) db.auth.signOut(); });
+  });
 
-  // ---------- Tabs ----------
-  function tabInfo() {
-    var t = TABS[state.tab];
-    var b = CFG.brands[t.brand];
-    return { brand: t.brand, kind: t.kind, label: b.label, sections: b[t.kind], page: b.page, table: t.kind === "menu" ? "menu_items" : "shop_items" };
+  // ---------- Brands and sections ----------
+  // Before the migration runs, or if these reads fail, everything comes from catalog-config.js.
+  async function loadCatalog() {
+    var res = await Promise.all([
+      db.from("brands").select("*"),
+      db.from("sections").select("*").order("sort_order")
+    ]);
+    var err = res[0].error || res[1].error;
+    if (err) {
+      catalog = { ok: false, missing: err.code === "PGRST205" || err.code === "42P01", brands: {}, sections: [] };
+      return;
+    }
+    var brands = {};
+    res[0].data.forEach(function (b) { brands[b.key] = b; });
+    catalog = { ok: true, missing: false, brands: brands, sections: res[1].data };
   }
 
-  function drawTabs() {
-    var wrap = $("tabs");
-    wrap.textContent = "";
-    TABS.forEach(function (t, i) {
-      var b = CFG.brands[t.brand];
-      wrap.appendChild(h("button", {
-        class: "tab", type: "button", role: "tab", "aria-selected": String(i === state.tab),
-        onclick: function () { state.tab = i; try { localStorage.setItem("admin-tab", i); } catch (e) {} drawTabs(); load(); }
-      }, [h("small", { text: b.label }), t.kind === "menu" ? "Menu" : "Shop"]));
+  function isLive(brand) { return catalog.ok && !!catalog.brands[brand]; }
+
+  function brandInfo(brand) {
+    return catalog.brands[brand] || { key: brand, label: CFG.brands[brand].label, page: CFG.brands[brand].page };
+  }
+
+  function sectionsFor(brand, kind) {
+    if (isLive(brand)) return catalog.sections.filter(function (s) { return s.brand === brand && s.kind === kind; });
+    return CFG.brands[brand][kind].map(function (s, i) {
+      return { id: null, brand: brand, kind: kind, key: s.key, title: s.title, prices: s.prices || null, is_hidden: false, sort_order: (i + 1) * 10 };
     });
   }
 
+  function tableFor(kind) { return kind === "menu" ? "menu_items" : "shop_items"; }
+
+  // ---------- Top bar, brand header, tabs ----------
+  function drawChrome() {
+    var brand = state.brand, info = brandInfo(brand);
+    document.documentElement.setAttribute("data-brand", brand);
+    document.querySelectorAll("[data-brand-btn]").forEach(function (b) {
+      var key = b.getAttribute("data-brand-btn");
+      b.textContent = brandInfo(key).label;
+      b.setAttribute("aria-pressed", String(key === brand));
+    });
+    document.querySelectorAll("[data-view-btn]").forEach(function (b) {
+      b.setAttribute("aria-selected", String(b.getAttribute("data-view-btn") === state.view));
+    });
+    $("panel").setAttribute("aria-labelledby", "tab-" + state.view);
+    var id = $("brand-id");
+    id.textContent = "";
+    if (brand === "tommy") {
+      id.appendChild(h("img", { class: "mark", src: "../tommy-mark.png", alt: "" }));
+      id.appendChild(h("div", { class: "name", text: info.label }));
+    } else {
+      id.appendChild(h("img", { class: "logo", src: "../merles-logo.svg", alt: info.label }));
+    }
+    $("view-site").href = "../" + info.page + (state.view === "settings" ? "" : "#" + state.view);
+    saveRoute();
+  }
+
+  function go(next) {
+    if (next.brand === state.brand && next.view === state.view) return;
+    if (!okToLeaveSettings()) { saveRoute(); return; }
+    state.brand = next.brand;
+    state.view = next.view;
+    settings = null;
+    drawChrome();
+    load();
+  }
+
+  document.querySelectorAll("[data-brand-btn]").forEach(function (b) {
+    b.addEventListener("click", function () { go({ brand: b.getAttribute("data-brand-btn"), view: state.view }); });
+  });
+  document.querySelectorAll("[data-view-btn]").forEach(function (b) {
+    b.addEventListener("click", function () { go({ brand: state.brand, view: b.getAttribute("data-view-btn") }); });
+  });
+  window.addEventListener("hashchange", function () {
+    var r = parseRoute(location.hash);
+    if (!r || $("app").hidden) return;
+    // A save in an open dialog goes to the current brand and view, so they can't change underneath it.
+    if ($("dlg").open || $("sec-dlg").open) { saveRoute(); return; }
+    go(r);
+  });
+
+  // Keyboard users keep their place when a row is moved and the list redraws.
+  function refocus(key) {
+    var moved = key && document.querySelector('[data-focus="' + key + '"]');
+    if (moved && moved.disabled) moved = document.querySelector('[data-focus="' + key.replace(/:(up|down)$/, function (m, d) { return ":" + (d === "up" ? "down" : "up"); }) + '"]');
+    if (moved) moved.focus();
+  }
+
+  // ---------- Loading ----------
+  var loadSeq = 0;
   async function load() {
-    var info = tabInfo();
-    $("view-page").href = "../" + info.page + "#" + info.kind;
-    $("tab-note").textContent = info.kind === "menu"
-      ? "Changes go live on the " + info.label + " menu as soon as you save."
-      : "Changes go live in the " + info.label + " shop as soon as you save.";
-    $("sections").textContent = "Loading…";
-    var res = await db.from(info.table).select("*").eq("brand", info.brand).order("sort_order").order("name");
-    if (res.error) { $("sections").textContent = ""; toast("Couldn't load items: " + res.error.message, true); return; }
-    state.rows = res.data;
+    var seq = ++loadSeq;
+    var brand = state.brand, view = state.view;
+    $("panel").textContent = "Loading…";
+    if (view === "settings") {
+      var all = await Promise.all([
+        loadCatalog(),
+        db.from("menu_items").select("section,price_deliver,price_medium,price_medium_deliver").eq("brand", brand),
+        db.from("shop_items").select("section").eq("brand", brand)
+      ]);
+      if (seq !== loadSeq) return;
+      drawChrome();
+      if (all[1].error || all[2].error) { $("panel").textContent = ""; toast("Couldn't load settings: " + (all[1].error || all[2].error).message, true); return; }
+      startSettings(all[1].data, all[2].data);
+      drawSettings();
+      return;
+    }
+    var res = await Promise.all([
+      db.from(tableFor(view)).select("*").eq("brand", brand).order("sort_order").order("name"),
+      loadCatalog()
+    ]);
+    if (seq !== loadSeq) return;
+    drawChrome();
+    if (res[0].error) { $("panel").textContent = ""; toast("Couldn't load items: " + res[0].error.message, true); return; }
+    state.rows = res[0].data;
     draw();
   }
 
-  function priceCols(info, sec) {
-    if (info.kind === "shop") return [["price", "Price"]];
+  // ---------- Menu and Shop tabs ----------
+  function priceCols(kind, sec) {
+    if (kind === "shop") return [["price", "Price"]];
     return CFG.priceLabels[sec.prices];
   }
 
-  function draw() {
-    var info = tabInfo();
-    var box = $("sections");
+  function draw(focusKey) {
+    var kind = state.view;
+    var box = $("panel");
     box.textContent = "";
-    info.sections.forEach(function (sec) {
+    var sections = sectionsFor(state.brand, kind);
+    if (!sections.length) box.appendChild(h("p", { class: "empty-row", text: "No sections yet. Add one in Settings." }));
+    sections.forEach(function (sec) {
       var items = state.rows.filter(function (r) { return r.section === sec.key; });
-      var list = h("ul", { class: "rows" });
-      if (!items.length) list.appendChild(h("li", { class: "empty-row", text: "Nothing in this section yet." }));
-      items.forEach(function (r, i) {
-        var thumb = r.image_url ? h("img", { class: "thumb", src: src(r.image_url), alt: "" }) : h("div", { class: "thumb empty", text: "No image" });
-        var name = h("div", { class: "name" }, [r.name,
-          r.is_hidden ? h("span", { class: "badge", text: "Hidden" }) : null,
-          r.is_sold_out ? h("span", { class: "badge red", text: "Sold out" }) : null,
-          r.is_orderable ? h("span", { class: "badge", text: "Order online" }) : null]);
-        var prices = h("div", { class: "prices" }, priceCols(info, sec).map(function (c) {
-          return h("div", {}, [h("span", { text: c[1].replace(" · ", " ") }), h("strong", { text: money(r[c[0]]) })]);
-        }));
-        var actions = h("div", { class: "actions" }, [
-          h("button", { class: "btn ghost small icon-btn", type: "button", "aria-label": "Move " + r.name + " up", disabled: i === 0, onclick: function () { move(sec.key, i, -1); } }, ["↑"]),
-          h("button", { class: "btn ghost small icon-btn", type: "button", "aria-label": "Move " + r.name + " down", disabled: i === items.length - 1, onclick: function () { move(sec.key, i, 1); } }, ["↓"]),
-          h("button", { class: "btn small", type: "button", onclick: function () { openEdit(r, sec.key); } }, ["Edit"])
-        ]);
-        list.appendChild(h("li", { class: "row" + (r.is_hidden ? " is-hidden" : "") }, [thumb,
-          h("div", { class: "main" }, [name, r.description ? h("p", { class: "desc", text: r.description }) : null]),
-          prices, actions]));
-      });
+      var list = null;
+      if (items.length) {
+        list = h("ul", { class: "rows" });
+        items.forEach(function (r, i) {
+          var thumb = r.image_url ? h("img", { class: "thumb", src: src(r.image_url), alt: "" }) : h("div", { class: "thumb empty", text: "No image" });
+          var name = h("div", { class: "name" }, [r.name,
+            r.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null,
+            r.is_sold_out ? h("span", { class: "tag sold", text: "Sold out" }) : null,
+            r.is_orderable ? h("span", { class: "tag", text: "Order online" }) : null]);
+          var prices = h("div", { class: "prices" }, priceCols(kind, sec).map(function (c) {
+            return h("div", {}, [h("span", { text: c[1].replace(" · ", " ") }), h("strong", { text: money(r[c[0]]) })]);
+          }));
+          var actions = h("div", { class: "actions" }, [
+            h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move " + r.name + " up", "data-focus": r.id + ":up", disabled: i === 0, onclick: function () { move(sec.key, i, -1, r.id + ":up"); } }, ["↑"]),
+            h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move " + r.name + " down", "data-focus": r.id + ":down", disabled: i === items.length - 1, onclick: function () { move(sec.key, i, 1, r.id + ":down"); } }, ["↓"]),
+            h("button", { class: "btn", type: "button", "aria-label": "Edit " + r.name, onclick: function () { openEdit(r, sec.key); } }, ["Edit"])
+          ]);
+          list.appendChild(h("li", { class: "row" + (r.is_hidden ? " is-hidden" : "") }, [thumb,
+            h("div", { class: "main" }, [name, r.description ? h("p", { class: "desc", text: r.description }) : null]),
+            prices, actions]));
+        });
+      }
       box.appendChild(h("section", { class: "section" }, [
         h("div", { class: "section-head" }, [
-          h("h2", {}, [sec.title, h("span", { class: "count", text: items.length + (items.length === 1 ? " item" : " items") })]),
-          h("button", { class: "btn small", type: "button", onclick: function () { openEdit(null, sec.key); } }, ["+ Add item"])
+          h("h2", {}, [sec.title,
+            h("span", { class: "count", text: plural(items.length, "item") }),
+            sec.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null]),
+          h("button", { class: "btn", type: "button", "aria-label": "Add item to " + sec.title, onclick: function () { openEdit(null, sec.key); } }, ["+ Add item"])
         ]),
-        list
+        list || h("p", { class: "empty-row", text: "Nothing in this section yet." })
       ]));
     });
+    refocus(focusKey);
   }
 
-  async function move(sectionKey, index, dir) {
-    var info = tabInfo();
+  async function move(sectionKey, index, dir, focusKey) {
+    var table = tableFor(state.view);
     var items = state.rows.filter(function (r) { return r.section === sectionKey; });
     var j = index + dir;
     if (j < 0 || j >= items.length) return;
@@ -437,16 +631,20 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var changes = [];
     items.forEach(function (r, k) { var want = (k + 1) * 10; if (r.sort_order !== want) { r.sort_order = want; changes.push(r); } });
     state.rows.sort(function (a, b) { return a.sort_order - b.sort_order || a.name.localeCompare(b.name); });
-    draw();
+    draw(focusKey);
     var results = await Promise.all(changes.map(function (r) {
-      return db.from(info.table).update({ sort_order: r.sort_order }).eq("id", r.id);
+      return db.from(table).update({ sort_order: r.sort_order }).eq("id", r.id);
     }));
     var bad = results.filter(function (x) { return x.error; })[0];
     if (bad) { toast("Couldn't save the new order: " + bad.error.message, true); load(); }
   }
 
-  // ---------- Edit dialog ----------
+  // ---------- Edit item dialog ----------
   var dlg = $("dlg");
+
+  function currentSection(key) {
+    return sectionsFor(state.brand, state.view).filter(function (s) { return s.key === key; })[0];
+  }
 
   function drawImage() {
     var box = $("f-img-box");
@@ -457,20 +655,19 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   }
 
   function openEdit(row, sectionKey) {
-    var info = tabInfo();
-    var isShop = info.kind === "shop";
+    var isShop = state.view === "shop";
     state.editing = row;
     state.image = row ? row.image_url : null;
     $("dlg-title").textContent = row ? "Edit " + row.name : "New item";
     $("f-name").value = row ? row.name : "";
     $("f-desc").value = row ? row.description : "";
-    $("f-desc-hint").textContent = isShop || info.brand === "merles" ? "" : "Items without a description show as a smaller line on the menu.";
+    $("f-desc-hint").textContent = isShop || state.brand === "merles" ? "" : "Items without a description show as a smaller line on the menu.";
     $("f-alt").value = row ? row.image_alt || "" : "";
     $("f-cart").value = row ? row.cart_name || "" : "";
     $("f-hidden").checked = row ? row.is_hidden : false;
     $("f-sold").checked = row ? !!row.is_sold_out : false;
     // Merle's offers its whole menu for collection; Tommy Sugo's items are ticked one by one.
-    $("f-orderable").checked = row ? !!row.is_orderable : info.brand === "merles";
+    $("f-orderable").checked = row ? !!row.is_orderable : state.brand === "merles";
     $("f-delete").hidden = !row;
     $("f-err").hidden = true;
     document.querySelectorAll("[data-shop-only]").forEach(function (n) { n.hidden = !isShop; });
@@ -478,7 +675,9 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 
     var sel = $("f-section");
     sel.textContent = "";
-    info.sections.forEach(function (s) { sel.appendChild(h("option", { value: s.key, text: s.title, selected: s.key === sectionKey })); });
+    sectionsFor(state.brand, state.view).forEach(function (s) {
+      sel.appendChild(h("option", { value: s.key, text: s.title + (s.is_hidden ? " (hidden)" : ""), selected: s.key === sectionKey }));
+    });
     sel.onchange = function () { drawPrices(sel.value); };
     $("f-prices").textContent = ""; // don't carry prices over from the last item opened
     drawPrices(sectionKey);
@@ -488,15 +687,14 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   }
 
   function drawPrices(sectionKey) {
-    var info = tabInfo();
-    var sec = info.sections.filter(function (s) { return s.key === sectionKey; })[0];
+    var sec = currentSection(sectionKey);
     var row = state.editing;
     // Keep what was typed when switching section.
     var typed = {};
     $("f-prices").querySelectorAll("input").forEach(function (i) { typed[i.name] = i.value; });
     var grid = $("f-prices");
     grid.textContent = "";
-    priceCols(info, sec).forEach(function (c) {
+    priceCols(state.view, sec).forEach(function (c) {
       var id = "f-" + c[0];
       var val = c[0] in typed ? typed[c[0]] : (row && row[c[0]] != null ? Number(row[c[0]]) : "");
       grid.appendChild(h("div", { class: "fld" }, [
@@ -513,9 +711,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     this.value = "";
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { toast("That image is over 5 MB. Try a smaller one.", true); return; }
-    var info = tabInfo();
     var safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
-    var path = info.brand + "/" + Date.now() + "-" + safe;
+    var path = state.brand + "/" + Date.now() + "-" + safe;
     $("f-upload").disabled = true;
     $("f-upload").textContent = "Uploading…";
     var res = await db.storage.from("item-images").upload(path, file, { cacheControl: "31536000", contentType: file.type });
@@ -532,12 +729,12 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 
   $("edit-form").addEventListener("submit", async function (e) {
     e.preventDefault();
-    var info = tabInfo();
+    var kind = state.view, table = tableFor(kind);
     var err = $("f-err");
     var name = $("f-name").value.trim();
     if (!name) { err.textContent = "Give the item a name."; err.hidden = false; return; }
     var data = {
-      brand: info.brand,
+      brand: state.brand,
       section: $("f-section").value,
       name: name,
       description: $("f-desc").value.trim(),
@@ -551,15 +748,14 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       data[i.name] = v === "" ? null : Number(v);
     });
     if (badPrice) { err.textContent = "Prices need to be numbers, like 125 or 12.50."; err.hidden = false; return; }
-    if (info.kind === "shop") {
+    if (kind === "shop") {
       data.image_alt = $("f-alt").value.trim();
       data.cart_name = $("f-cart").value.trim() || null;
       data.is_sold_out = $("f-sold").checked;
     } else {
       data.is_orderable = $("f-orderable").checked;
       // Clear price columns that the chosen section doesn't use.
-      var sec = info.sections.filter(function (s) { return s.key === data.section; })[0];
-      var used = CFG.priceLabels[sec.prices].map(function (c) { return c[0]; });
+      var used = CFG.priceLabels[currentSection(data.section).prices].map(function (c) { return c[0]; });
       ["price", "price_deliver", "price_medium", "price_medium_deliver"].forEach(function (k) { if (used.indexOf(k) < 0) data[k] = null; });
     }
     var row = state.editing;
@@ -569,8 +765,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     }
     $("f-save").disabled = true;
     var res = row
-      ? await db.from(info.table).update(data).eq("id", row.id).select().single()
-      : await db.from(info.table).insert(data).select().single();
+      ? await db.from(table).update(data).eq("id", row.id).select().single()
+      : await db.from(table).insert(data).select().single();
     $("f-save").disabled = false;
     if (res.error) { err.textContent = "Couldn't save: " + res.error.message; err.hidden = false; return; }
     closeDlg();
@@ -582,12 +778,336 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var row = state.editing;
     if (!row) return;
     if (!confirm("Delete “" + row.name + "” for good? To take it off the site for now, tick “Hide from the site” instead.")) return;
-    var res = await db.from(tabInfo().table).delete().eq("id", row.id);
+    var res = await db.from(tableFor(state.view)).delete().eq("id", row.id);
     if (res.error) { toast("Couldn't delete: " + res.error.message, true); return; }
     closeDlg();
     toast("Deleted " + row.name + ".");
     load();
   });
+
+  // ---------- Settings tab ----------
+  // Edits stay in this draft until "Save settings". `saved` tracks what the database holds, row by row, so a save
+  // that fails partway can be retried without redoing the parts that worked.
+  function sectionFields(s) {
+    return { title: s.title, prices: s.prices, is_hidden: !!s.is_hidden, sort_order: s.sort_order };
+  }
+
+  function startSettings(menuRows, shopRows) {
+    var live = isLive(state.brand);
+    var info = brandInfo(state.brand);
+    var counts = { menu: {}, shop: {} }, priced = {};
+    menuRows.forEach(function (r) {
+      counts.menu[r.section] = (counts.menu[r.section] || 0) + 1;
+      var p = priced[r.section] = priced[r.section] || [];
+      p.push(r);
+    });
+    shopRows.forEach(function (r) { counts.shop[r.section] = (counts.shop[r.section] || 0) + 1; });
+    var sections = sectionsFor(state.brand, "menu").concat(sectionsFor(state.brand, "shop"));
+    var saved = {};
+    sections.forEach(function (s) { saved[s.id || s.key] = sectionFields(s); });
+    settings = {
+      live: live,
+      label: info.label,
+      page: info.page,
+      savedBrand: { label: info.label, page: info.page },
+      sections: sections.map(function (s) { return Object.assign({}, s); }),
+      saved: saved,
+      deleted: [],
+      counts: counts,
+      priced: priced,
+      error: null
+    };
+  }
+
+  function settingsDirty() {
+    if (!settings || !settings.live) return false;
+    return !!settingsOps().length;
+  }
+
+  function okToLeaveSettings() {
+    if (!settingsDirty()) return true;
+    return confirm("You have unsaved settings. Leave without saving them?");
+  }
+
+  window.addEventListener("beforeunload", function (e) {
+    if (settingsDirty()) { e.preventDefault(); e.returnValue = ""; }
+  });
+
+  function sectionsOfKind(kind) {
+    return settings.sections.filter(function (s) { return s.kind === kind; });
+  }
+
+  // Price columns a change drops: in the old layout but not the new one.
+  function droppedCols(from, to) {
+    if (!from || !to || from === to) return [];
+    var keep = CFG.priceLabels[to].map(function (c) { return c[0]; });
+    return CFG.priceLabels[from].filter(function (c) { return keep.indexOf(c[0]) < 0; });
+  }
+
+  function dropSummary(sec, to) {
+    var was = sec.id ? settings.saved[sec.id] : null;
+    var cols = droppedCols(was && was.prices, to);
+    if (!cols.length) return null;
+    var rows = settings.priced[sec.key] || [];
+    var affected = rows.filter(function (r) { return cols.some(function (c) { return r[c[0]] != null; }); }).length;
+    return { names: cols.map(function (c) { return c[1]; }).join(", "), affected: affected };
+  }
+
+  function drawSettings() {
+    var box = $("panel");
+    box.textContent = "";
+    var s = settings;
+    if (!s.live) {
+      box.appendChild(h("p", { class: "notice", text: catalog.missing
+        ? "Settings can't be changed yet: the brands and sections tables aren't in the database. Until that migration is applied, the sections below come from js/catalog-config.js."
+        : "Settings can't be changed right now: the brands and sections tables couldn't be read. The sections below come from js/catalog-config.js." }));
+    }
+    var label = h("input", { class: "input", id: "b-label", value: s.label, required: true, disabled: !s.live, oninput: function () { s.label = this.value; drawStatus(); } });
+    var page = h("input", { class: "input", id: "b-page", value: s.page, required: true, disabled: !s.live, oninput: function () { s.page = this.value; drawStatus(); } });
+    box.appendChild(h("section", { class: "section" }, [
+      h("div", { class: "section-head" }, [h("h2", { text: "Brand" })]),
+      h("div", { class: "brand-fields" }, [
+        h("div", { class: "fld" }, [h("label", { for: "b-label", text: "Name" }), label]),
+        h("div", { class: "fld" }, [h("label", { for: "b-page", text: "Site page" }), page, h("p", { class: "hint", text: "The brand's file on the site. It's what View site opens." })])
+      ])
+    ]));
+    box.appendChild(sectionList("menu", "Menu Sections"));
+    box.appendChild(sectionList("shop", "Shop Sections"));
+    if (s.live) {
+      box.appendChild(h("div", { class: "set-foot" }, [
+        h("span", { class: "status", id: "set-status", role: "status" }),
+        h("p", { class: "msg err", id: "set-err", role: "alert", hidden: true }),
+        h("button", { class: "btn ghost", type: "button", onclick: cancelSettings }, ["Cancel"]),
+        h("button", { class: "btn save", type: "button", id: "set-save", onclick: saveSettings }, ["Save settings"])
+      ]));
+      drawStatus();
+    }
+  }
+
+  function drawStatus() {
+    var el = $("set-status");
+    if (el) el.textContent = settingsDirty() ? "Unsaved changes" : "";
+  }
+
+  function sectionList(kind, title) {
+    var list = sectionsOfKind(kind);
+    var live = settings.live;
+    var ul = h("ul", { class: "rows" });
+    list.forEach(function (sec, i) {
+      var n = settings.counts[kind][sec.key] || 0;
+      var text = kind === "shop" ? PRICE_TEXT.single : PRICE_TEXT[sec.prices];
+      var focusId = sec.key + ":" + kind;
+      ul.appendChild(h("li", { class: "row sec-row" }, [
+        h("div", { class: "main" }, [
+          h("div", { class: "sec-name" }, [sec.title, sec.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null]),
+          h("p", { class: "sub", text: "Prices: " + text })
+        ]),
+        h("div", { class: "count-cell", text: plural(n, "item") }),
+        live ? h("div", { class: "actions" }, [
+          h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move " + sec.title + " up", "data-focus": focusId + ":up", disabled: i === 0, onclick: function () { moveSection(kind, i, -1, focusId + ":up"); } }, ["↑"]),
+          h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move " + sec.title + " down", "data-focus": focusId + ":down", disabled: i === list.length - 1, onclick: function () { moveSection(kind, i, 1, focusId + ":down"); } }, ["↓"]),
+          h("button", { class: "btn", type: "button", "aria-label": "Edit " + sec.title, onclick: function () { openSection(kind, sec); } }, ["Edit"])
+        ]) : null
+      ]));
+    });
+    return h("section", { class: "section" }, [
+      h("div", { class: "section-head" }, [
+        h("h2", { text: title }),
+        live ? h("button", { class: "btn", type: "button", onclick: function () { openSection(kind, null); } }, ["+ Add section"]) : null
+      ]),
+      live ? h("p", { class: "section-note", text: "A new section shows here and stores items, but needs a site update to appear on the public page. The order here sets the order in this admin; the site keeps its layout." }) : null,
+      ul
+    ]);
+  }
+
+  function moveSection(kind, index, dir, focusKey) {
+    var list = sectionsOfKind(kind);
+    var j = index + dir;
+    if (j < 0 || j >= list.length) return;
+    var tmp = list[index]; list[index] = list[j]; list[j] = tmp;
+    list.forEach(function (s, k) { s.sort_order = (k + 1) * 10; });
+    settings.sections.sort(function (a, b) { return a.kind === b.kind ? a.sort_order - b.sort_order : (a.kind === "menu" ? -1 : 1); });
+    drawSettings();
+    refocus(focusKey);
+  }
+
+  function slugify(title) {
+    return title.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "section";
+  }
+
+  function newKey(kind, title) {
+    var taken = settings.sections.concat(settings.deleted).filter(function (s) { return s.kind === kind; }).map(function (s) { return s.key; });
+    var base = slugify(title), key = base, n = 2;
+    while (taken.indexOf(key) >= 0) { key = base + "-" + n; n++; }
+    return key;
+  }
+
+  // ---------- Section dialog ----------
+  var secDlg = $("sec-dlg");
+  var secEdit = { kind: "menu", sec: null };
+
+  function drawSectionKey() {
+    var key = secEdit.sec ? secEdit.sec.key : newKey(secEdit.kind, $("s-title").value);
+    $("s-key").textContent = "Key: " + key + (secEdit.sec ? " (fixed)" : ", made from the title. It can't change later.");
+  }
+
+  function drawSectionWarn() {
+    var warn = $("s-warn");
+    var drop = secEdit.sec && secEdit.kind === "menu" ? dropSummary(secEdit.sec, $("s-prices").value) : null;
+    warn.hidden = !drop;
+    if (drop) {
+      warn.textContent = "This drops " + drop.names + ". Prices in those columns will be cleared when you save settings" +
+        (drop.affected ? " (" + plural(drop.affected, "item") + " affected)." : ". No items have one at the moment.");
+    }
+  }
+
+  function openSection(kind, sec) {
+    secEdit = { kind: kind, sec: sec };
+    $("sec-title").textContent = sec ? "Edit " + sec.title : (kind === "menu" ? "New menu section" : "New shop section");
+    $("s-title").value = sec ? sec.title : "";
+    $("s-err").hidden = true;
+    $("s-prices-fld").hidden = kind !== "menu";
+    $("s-shop-note").hidden = kind !== "shop";
+    $("s-hidden-row").hidden = !sec;
+    $("s-hidden").checked = sec ? !!sec.is_hidden : false;
+
+    // Merle's page has no layout for large and medium, so only Tommy Sugo gets that option.
+    var sel = $("s-prices");
+    sel.textContent = "";
+    var current = sec ? sec.prices : "single";
+    ["pizza", "cd", "single"].forEach(function (p) {
+      if (p === "pizza" && state.brand === "merles" && current !== "pizza") return;
+      sel.appendChild(h("option", { value: p, text: PRICE_TEXT[p], selected: p === current }));
+    });
+
+    var n = sec ? settings.counts[kind][sec.key] || 0 : 0;
+    $("s-delete").hidden = !sec;
+    $("s-delete").disabled = n > 0;
+    $("s-delete-note").hidden = !(sec && n > 0);
+    if (sec && n > 0) $("s-delete-note").textContent = "This section has " + plural(n, "item") + ". Move or delete them before deleting it.";
+    drawSectionKey();
+    drawSectionWarn();
+    secDlg.showModal();
+    $("s-title").focus();
+  }
+
+  $("s-title").addEventListener("input", drawSectionKey);
+  $("s-prices").addEventListener("change", drawSectionWarn);
+  $("sec-close").addEventListener("click", function () { secDlg.close(); });
+  $("s-cancel").addEventListener("click", function () { secDlg.close(); });
+
+  $("sec-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var title = $("s-title").value.trim();
+    var err = $("s-err");
+    if (!title) { err.textContent = "Give the section a title."; err.hidden = false; return; }
+    var prices = secEdit.kind === "menu" ? $("s-prices").value : null;
+    if (secEdit.sec) {
+      secEdit.sec.title = title;
+      secEdit.sec.prices = prices;
+      secEdit.sec.is_hidden = $("s-hidden").checked;
+    } else {
+      var list = sectionsOfKind(secEdit.kind);
+      var max = list.reduce(function (m, s) { return Math.max(m, s.sort_order); }, 0);
+      settings.sections.push({ id: null, brand: state.brand, kind: secEdit.kind, key: newKey(secEdit.kind, title), title: title, prices: prices, is_hidden: false, sort_order: max + 10 });
+      settings.sections.sort(function (a, b) { return a.kind === b.kind ? a.sort_order - b.sort_order : (a.kind === "menu" ? -1 : 1); });
+    }
+    secDlg.close();
+    drawSettings();
+  });
+
+  $("s-delete").addEventListener("click", function () {
+    var sec = secEdit.sec;
+    if (!sec) return;
+    if (!confirm("Delete the section “" + sec.title + "”? This happens when you save settings.")) return;
+    settings.sections.splice(settings.sections.indexOf(sec), 1);
+    if (sec.id) settings.deleted.push(sec);
+    secDlg.close();
+    drawSettings();
+  });
+
+  // What the draft needs to send to the database: deletes first, so a new section can't clash with an old one.
+  function settingsOps() {
+    var s = settings, ops = [];
+    var brandPatch = {};
+    if (s.label.trim() !== s.savedBrand.label) brandPatch.label = s.label.trim();
+    if (s.page.trim() !== s.savedBrand.page) brandPatch.page = s.page.trim();
+    if (Object.keys(brandPatch).length) {
+      ops.push({
+        run: function () { return db.from("brands").update(brandPatch).eq("key", state.brand); },
+        done: function () { Object.assign(s.savedBrand, brandPatch); }
+      });
+    }
+    s.deleted.forEach(function (sec) {
+      ops.push({
+        run: function () { return db.from("sections").delete().eq("id", sec.id); },
+        done: function () { s.deleted.splice(s.deleted.indexOf(sec), 1); delete s.saved[sec.id]; }
+      });
+    });
+    s.sections.forEach(function (sec) {
+      var now = sectionFields(sec);
+      if (!sec.id) {
+        ops.push({
+          run: function () {
+            return db.from("sections").insert(Object.assign({ brand: sec.brand, kind: sec.kind, key: sec.key }, now)).select().single();
+          },
+          done: function (res) { sec.id = res.data.id; s.saved[sec.id] = now; }
+        });
+        return;
+      }
+      var was = s.saved[sec.id], patch = {};
+      Object.keys(now).forEach(function (k) { if (now[k] !== was[k]) patch[k] = now[k]; });
+      if (Object.keys(patch).length) {
+        ops.push({
+          run: function () { return db.from("sections").update(patch).eq("id", sec.id); },
+          done: function () { s.saved[sec.id] = now; }
+        });
+      }
+    });
+    return ops;
+  }
+
+  function cancelSettings() {
+    if (settingsDirty() && !confirm("Discard your unsaved settings?")) return;
+    settings = null;
+    load();
+  }
+
+  async function saveSettings() {
+    var s = settings;
+    var err = $("set-err");
+    err.hidden = true;
+    function fail(text) { err.textContent = text; err.hidden = false; }
+    if (!s.label.trim()) { fail("Give the brand a name."); $("b-label").focus(); return; }
+    if (!PAGE_PATTERN.test(s.page.trim())) { fail("The site page should be a file on this site, like tommy-sugo.html."); $("b-page").focus(); return; }
+
+    var ops = settingsOps();
+    if (!ops.length) { toast("Nothing to save."); return; }
+
+    var drops = [];
+    s.sections.forEach(function (sec) {
+      if (sec.kind !== "menu" || !sec.id) return;
+      var d = dropSummary(sec, sec.prices);
+      if (d && d.affected) drops.push("• " + sec.title + ": " + d.names + " (" + plural(d.affected, "item") + ")");
+    });
+    if (drops.length && !confirm("These prices will be cleared for good:\n\n" + drops.join("\n") + "\n\nSave settings?")) return;
+
+    var btn = $("set-save");
+    btn.disabled = true;
+    for (var i = 0; i < ops.length; i++) {
+      var res = await ops[i].run();
+      if (res.error) {
+        btn.disabled = false;
+        fail("Couldn't save everything: " + res.error.message + " Your other changes are still here, so you can try again.");
+        return;
+      }
+      ops[i].done(res);
+    }
+    toast("Settings saved.");
+    settings = null;
+    load();
+  }
 })();
 </script>
 </body>
