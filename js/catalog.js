@@ -146,7 +146,9 @@
 
   function shopItem(it) {
     var label = it.cart_name || it.name;
-    var a = el("article", "product" + (it.is_sold_out ? " sold-out" : ""));
+    // A shop item linked to Yoco has no price while Yoco has it disabled or deleted.
+    var soldOut = it.is_sold_out || (it.yoco_id && !money(it.price));
+    var a = el("article", "product" + (soldOut ? " sold-out" : ""));
     a.setAttribute("data-product", label);
     if (money(it.price)) a.setAttribute("data-price", String(Number(it.price)));
     if (it.image_url) a.appendChild(img(it.image_url, "ill", it.image_alt));
@@ -155,7 +157,7 @@
     if (it.description) body.appendChild(el("p", "desc", it.description));
     var foot = el("div", "product-foot");
     foot.appendChild(el("span", "price", money(it.price) || "TBC"));
-    if (it.is_sold_out) {
+    if (soldOut) {
       foot.appendChild(el("span", "sold", "Sold out"));
     } else {
       foot.appendChild(stepper(it.name));

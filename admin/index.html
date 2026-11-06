@@ -151,6 +151,21 @@ textarea.input { min-height: 88px; resize: vertical; }
 .set-foot .status { margin-right: auto; font-size: 14px; font-weight: 700; }
 .set-foot .msg.err { flex-basis: 100%; }
 
+/* Yoco, in Settings */
+.yoco-body { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+.yoco-body p { margin: 0; }
+.yoco-status { font-weight: 700; }
+.inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.inline .input { flex: 1 1 260px; width: auto; }
+.yoco-body details summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+.yoco-body details ul { margin: 8px 0 0; padding-left: 20px; font-size: 14px; }
+.match-group { font-size: 14px; font-weight: 700; margin: 24px 0 8px; }
+.match-rows { display: flex; flex-direction: column; gap: 8px; }
+.match-row { display: grid; grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1.4fr); gap: 12px; align-items: center; padding: 8px 12px; background: var(--raised); }
+.match-row .name { display: flex; gap: 4px 8px; align-items: center; flex-wrap: wrap; font-weight: 700; }
+.match-row .price { text-align: right; font-family: var(--item-font); font-weight: var(--item-weight); letter-spacing: var(--item-track); font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) { .match-row { grid-template-columns: minmax(0, 1fr) 72px; } .match-row select { grid-column: 1 / -1; } }
+
 /* Dialogs */
 dialog { border: 2px solid #000; padding: 0; width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: var(--ground); color: var(--ink); }
 dialog.narrow { width: min(460px, calc(100vw - 32px)); }
@@ -247,7 +262,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     <div class="body">
       <div class="fld"><label for="f-name">Name</label><input class="input" id="f-name" required></div>
       <div class="fld"><label for="f-desc">Description</label><textarea class="input" id="f-desc"></textarea><p class="hint" id="f-desc-hint"></p></div>
-      <div class="fld"><span class="lbl">Prices</span><div class="price-grid" id="f-prices"></div><p class="hint">Leave a price blank to show “–” (or “TBC” in the shop).</p></div>
+      <div class="fld"><span class="lbl">Prices</span><div class="price-grid" id="f-prices"></div><p class="hint" id="f-price-hint"></p></div>
       <div class="fld">
         <span class="lbl">Image</span>
         <div class="img-edit">
@@ -332,6 +347,9 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   // What came from the brands and sections tables. Empty until they load, or if they aren't there yet.
   var catalog = { ok: false, missing: false, brands: {}, sections: [] };
   var settings = null; // the Settings tab's unsaved draft
+  var YOCO_BRANDS = ["tommy"]; // brands connected to their own Yoco account; must match BRANDS in the edge functions
+  var yocoState = null; // the Yoco part of Settings, which saves straight away rather than with the draft
+  var yocoOnlyUnmatched = false;
 
   function parseRoute(hash) {
     var m = /^#(tommy|merles)\/(menu|shop|settings)$/.exec(hash || "");
@@ -558,7 +576,9 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       drawChrome();
       if (all[1].error || all[2].error) { $("panel").textContent = ""; toast("Couldn't load settings: " + (all[1].error || all[2].error).message, true); return; }
       startSettings(all[1].data, all[2].data);
+      yocoState = null;
       drawSettings();
+      loadYoco();
       return;
     }
     var res = await Promise.all([
@@ -594,7 +614,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
           var name = h("div", { class: "name" }, [r.name,
             r.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null,
             r.is_sold_out ? h("span", { class: "tag sold", text: "Sold out" }) : null,
-            r.is_orderable ? h("span", { class: "tag", text: "Order online" }) : null]);
+            r.is_orderable ? h("span", { class: "tag", text: "Order online" }) : null,
+            r.yoco_id || r.yoco_id_medium ? h("span", { class: "tag", text: "Yoco" }) : null]);
           var prices = h("div", { class: "prices" }, priceCols(kind, sec).map(function (c) {
             return h("div", {}, [h("span", { text: c[1].replace(" · ", " ") }), h("strong", { text: money(r[c[0]]) })]);
           }));
@@ -694,14 +715,19 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     $("f-prices").querySelectorAll("input").forEach(function (i) { typed[i.name] = i.value; });
     var grid = $("f-prices");
     grid.textContent = "";
+    var linkedCols = { price: row && row.yoco_id, price_medium: row && row.yoco_id_medium };
+    var anyLinked = false;
     priceCols(state.view, sec).forEach(function (c) {
       var id = "f-" + c[0];
       var val = c[0] in typed ? typed[c[0]] : (row && row[c[0]] != null ? Number(row[c[0]]) : "");
+      var linked = !!linkedCols[c[0]];
+      if (linked) { anyLinked = true; val = row[c[0]] != null ? Number(row[c[0]]) : ""; }
       grid.appendChild(h("div", { class: "fld" }, [
         h("label", { for: id, text: c[1] }),
-        h("div", { class: "money" }, [h("input", { class: "input", id: id, name: c[0], type: "number", inputmode: "decimal", min: "0", step: "0.01", value: val })])
+        h("div", { class: "money" }, [h("input", { class: "input", id: id, name: c[0], type: "number", inputmode: "decimal", min: "0", step: "0.01", value: val, disabled: linked })])
       ]));
     });
+    $("f-price-hint").textContent = (anyLinked ? "Greyed-out prices come from Yoco: change them there. " : "") + "Leave a price blank to show “–” (or “TBC” in the shop).";
   }
 
   $("f-upload").addEventListener("click", function () { $("f-file").click(); });
@@ -757,6 +783,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       // Clear price columns that the chosen section doesn't use.
       var used = CFG.priceLabels[currentSection(data.section).prices].map(function (c) { return c[0]; });
       ["price", "price_deliver", "price_medium", "price_medium_deliver"].forEach(function (k) { if (used.indexOf(k) < 0) data[k] = null; });
+      if (used.indexOf("price_medium") < 0) data.yoco_id_medium = null;
     }
     var row = state.editing;
     if (!row || row.section !== data.section) {
@@ -882,6 +909,285 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       ]));
       drawStatus();
     }
+    if (YOCO_BRANDS.indexOf(state.brand) >= 0) {
+      box.appendChild(h("div", { id: "yoco-panel" }));
+      drawYoco();
+    }
+  }
+
+  // ---------- Settings: the brand's Yoco connection ----------
+  // Separate from the draft above: these save straight away. The API key goes to the yoco-admin edge function and is
+  // never sent back. Prices flow one way, from Yoco to the site.
+  async function yoco(action, extra) {
+    var res = await db.functions.invoke("yoco-admin", { body: Object.assign({ action: action, brand: state.brand }, extra || {}) });
+    if (res.error) {
+      var detail = null;
+      try { detail = await res.error.context.json(); } catch (e) {}
+      throw new Error((detail && detail.error) || "Couldn't reach the Yoco connection. Try again in a moment.");
+    }
+    if (!res.data || !res.data.ok) throw new Error((res.data && res.data.error) || "Something went wrong talking to Yoco.");
+    return res.data;
+  }
+
+  async function loadYoco() {
+    var brand = state.brand, seq = loadSeq;
+    if (YOCO_BRANDS.indexOf(brand) < 0) return;
+    var results = await Promise.all([
+      db.from("yoco_catalogue").select("*").eq("brand", brand).order("category").order("name").order("option_label"),
+      db.from("menu_items").select("*").eq("brand", brand).order("sort_order").order("name"),
+      db.from("shop_items").select("*").eq("brand", brand).order("sort_order").order("name")
+    ]);
+    var bad = results.filter(function (r) { return r.error; })[0];
+    var status = null, statusError = bad ? "Couldn't load the Yoco settings: " + bad.error.message : null;
+    if (!bad) { try { status = await yoco("status"); } catch (e) { statusError = e.message; } }
+    if (seq !== loadSeq) return; // moved to another tab or brand while loading
+    yocoState = { brand: brand, status: status, statusError: statusError, catalogue: bad ? [] : results[0].data, menu: bad ? [] : results[1].data, shop: bad ? [] : results[2].data };
+    drawYoco();
+  }
+
+  // Runs an action with its button disabled, then reloads the Yoco section.
+  async function yocoAct(button, label, fn, done) {
+    var was = button.textContent;
+    button.disabled = true;
+    if (label) button.textContent = label;
+    try {
+      await fn();
+      if (done) toast(done);
+      await loadYoco();
+    } catch (e) {
+      toast(e.message, true);
+      button.disabled = false;
+      if (label) button.textContent = was;
+    }
+  }
+
+  function yocoWhen(iso) {
+    return iso ? new Date(iso).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" }) : "never";
+  }
+
+  // Every website price that can follow a Yoco item. A pizza has one for Large and one for Medium.
+  function matchSlots() {
+    var y = yocoState, slots = [];
+    sectionsFor(state.brand, "menu").forEach(function (sec) {
+      y.menu.filter(function (r) { return r.section === sec.key; }).forEach(function (r) {
+        if (sec.prices === "pizza") {
+          slots.push({ group: sec.title, table: "menu_items", row: r, col: "yoco_id", priceCol: "price", label: r.name + " · Large", match: r.name + " large" });
+          slots.push({ group: sec.title, table: "menu_items", row: r, col: "yoco_id_medium", priceCol: "price_medium", label: r.name + " · Medium", match: r.name + " medium", optional: r.price_medium == null });
+        } else {
+          slots.push({ group: sec.title, table: "menu_items", row: r, col: "yoco_id", priceCol: "price", label: r.name, match: r.name });
+        }
+      });
+    });
+    sectionsFor(state.brand, "shop").forEach(function (sec) {
+      y.shop.filter(function (r) { return r.section === sec.key; }).forEach(function (r) {
+        slots.push({ group: "Shop · " + sec.title, table: "shop_items", row: r, col: "yoco_id", priceCol: "price", label: r.cart_name || r.name, match: r.cart_name || r.name });
+      });
+    });
+    return slots;
+  }
+
+  function matchKey(text) {
+    return (text || "").toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean).sort().join(" ");
+  }
+
+  function catalogueLabel(c) {
+    return c.name + (c.option_label ? " · " + c.option_label : "") + " · " + (c.price == null ? "no price" : money(c.price)) +
+      (c.is_deleted ? " (deleted in Yoco)" : !c.is_available ? " (unavailable in Yoco)" : "");
+  }
+
+  async function setLink(slot, yocoId) {
+    var patch = {};
+    patch[slot.col] = yocoId || null;
+    var res = await db.from(slot.table).update(patch).eq("id", slot.row.id).select().single();
+    if (res.error) { toast("Couldn't save that match: " + res.error.message, true); return; }
+    Object.assign(slot.row, res.data);
+    drawYoco();
+  }
+
+  // Links only exact, unambiguous name matches. Anything else is left for a person to choose.
+  async function autoMatch(button) {
+    var byKey = {};
+    yocoState.catalogue.forEach(function (c) {
+      if (c.is_deleted) return;
+      var key = matchKey(c.name + " " + (c.option_label || ""));
+      (byKey[key] = byKey[key] || []).push(c);
+    });
+    var todo = [];
+    matchSlots().forEach(function (s) {
+      if (s.row[s.col]) return;
+      var found = (byKey[matchKey(s.match)] || []).filter(function (c) { return s.table === "menu_items" || c.kind === "variant"; });
+      if (found.length === 1) todo.push({ slot: s, id: found[0].yoco_id });
+    });
+    if (!todo.length) { toast("No more exact name matches. Choose the rest from the lists."); return; }
+    if (!confirm("Link " + todo.length + " website prices to Yoco items with the same name? Their prices on the live site will change to Yoco's straight away.")) return;
+    await yocoAct(button, "Matching…", async function () {
+      var results = await Promise.all(todo.map(function (t) {
+        var patch = {};
+        patch[t.slot.col] = t.id;
+        return db.from(t.slot.table).update(patch).eq("id", t.slot.row.id);
+      }));
+      var bad = results.filter(function (r) { return r.error; })[0];
+      if (bad) throw new Error("Couldn't save every match: " + bad.error.message);
+    }, "Matched " + todo.length + " prices.");
+  }
+
+  function drawYoco() {
+    var box = $("yoco-panel");
+    if (!box) return;
+    box.textContent = "";
+    var y = yocoState;
+    if (!y || y.brand !== state.brand) {
+      box.appendChild(yocoCard("Yoco connection", [h("p", { text: "Loading…" })]));
+      return;
+    }
+    var st = y.status || {};
+    var conn = st.connection || {};
+    if (y.statusError) box.appendChild(h("p", { class: "notice", text: y.statusError }));
+    box.appendChild(yocoConnection(st, conn));
+    box.appendChild(yocoSync(st, conn));
+    box.appendChild(yocoMatching());
+  }
+
+  function yocoCard(title, kids, note) {
+    return h("section", { class: "section" }, [
+      h("div", { class: "section-head" }, [h("h2", { text: title })]),
+      note ? h("p", { class: "section-note", text: note }) : null,
+      h("div", { class: "yoco-body" }, kids)
+    ]);
+  }
+
+  function yocoConnection(st, conn) {
+    var input = h("input", { class: "input", id: "yoco-key", type: "password", autocomplete: "new-password", spellcheck: "false", placeholder: "Paste a new API key" });
+    var save = h("button", { class: "btn", type: "submit", text: "Save key" });
+    var keyLine = st.keySource === "admin" ? "Saved here, ending ••••" + (conn.api_key_hint || "")
+      : st.keySource === "edge-secret" ? "Using the Supabase edge function secret"
+      : "No API key yet";
+    var form = h("form", { class: "fld", novalidate: true, onsubmit: function (e) {
+      e.preventDefault();
+      var value = input.value.trim();
+      if (!value) { toast("Paste the API key first.", true); return; }
+      yocoAct(save, "Checking…", async function () { await yoco("save_key", { api_key: value }); }, "API key saved.");
+    } }, [
+      h("label", { for: "yoco-key", text: "Yoco API key" }),
+      h("div", { class: "inline" }, [input, save,
+        st.keySource === "admin" ? h("button", { class: "btn ghost", type: "button", text: "Remove saved key", onclick: function () {
+          if (!confirm("Remove the saved API key? Live updates from Yoco will stop until a key is added again.")) return;
+          yocoAct(this, "Removing…", async function () { await yoco("remove_key"); }, "API key removed.");
+        } }) : null]),
+      h("p", { class: "hint", text: "From the Yoco Developer Console, for this brand's Yoco account. It's stored encrypted and can't be read back here. The website only reads from Yoco." })
+    ]);
+
+    var locations = st.locations || [];
+    var locationField = null;
+    if (locations.length > 1) {
+      var sel = h("select", { class: "input", id: "yoco-location", onchange: function () {
+        var chosen = this.value;
+        yocoAct(this, "", async function () {
+          await yoco("set_location", { location_id: chosen });
+          await yoco("sync");
+        }, "Location saved and prices updated.");
+      } }, [h("option", { value: "", text: "Choose a location…", disabled: true, selected: !conn.location_id })].concat(locations.map(function (l) {
+        return h("option", { value: l.id, text: l.name, selected: l.id === conn.location_id });
+      })));
+      locationField = h("div", { class: "fld" }, [h("label", { for: "yoco-location", text: "Location" }), sel,
+        h("p", { class: "hint", text: "Which location's prices and availability the website follows." })]);
+    } else if (conn.location_name) {
+      locationField = h("p", { text: "Location: " + conn.location_name });
+    }
+
+    return yocoCard("Yoco connection", [
+      h("p", { class: "yoco-status", text: keyLine }),
+      st.keyError ? h("p", { class: "msg err", text: st.keyError }) : null,
+      form, locationField
+    ], "Yoco settings save straight away. They aren't part of Save settings above.");
+  }
+
+  function yocoSync(st, conn) {
+    var hasKey = !!st.keySource && !st.keyError;
+    var needsLocation = (st.locations || []).length > 1 && !conn.location_id;
+    var live = !!conn.webhook_subscription_id;
+    var syncBtn = h("button", { class: "btn", type: "button", text: "Sync now", disabled: !hasKey || needsLocation, onclick: function () {
+      yocoAct(syncBtn, "Syncing…", async function () { await yoco("sync"); }, "Synced with Yoco.");
+    } });
+    var liveBtn = h("button", { class: "btn ghost", type: "button", text: live ? "Turn off live updates" : "Turn on live updates", disabled: !hasKey, onclick: function () {
+      yocoAct(liveBtn, "Working…", async function () { await yoco(live ? "disconnect_webhook" : "connect_webhook"); }, live ? "Live updates off." : "Live updates on.");
+    } });
+    return yocoCard("Product Sync", [
+      conn.last_sync_at
+        ? h("p", {}, [h("span", { class: "yoco-status", text: conn.last_sync_ok ? "Last sync worked. " : "Last sync failed. " }),
+            yocoWhen(conn.last_sync_at) + ". " + (conn.last_sync_message || "")])
+        : h("p", { text: "Not synced yet." }),
+      needsLocation ? h("p", { class: "msg err", text: "Choose a location above before syncing." }) : null,
+      h("p", { text: live
+        ? "Live updates are on: changes in Yoco reach the website within moments. Last change received: " + yocoWhen(conn.webhook_last_event_at) + "."
+        : "Live updates are off, so changes in Yoco only arrive when you sync." }),
+      h("div", { class: "inline" }, [syncBtn, liveBtn]),
+      h("p", { class: "hint", text: "Stock counts aren't available from Yoco's API, so “Sold out” in the shop is still set by hand." })
+    ]);
+  }
+
+  function yocoMatching() {
+    var y = yocoState;
+    if (!y.catalogue.length) {
+      return yocoCard("Match Items", [h("p", { text: "Sync with Yoco first, then match its items to the website's." })]);
+    }
+    var slots = matchSlots();
+    var used = {};
+    slots.forEach(function (s) { if (s.row[s.col]) used[s.row[s.col]] = true; });
+    var counted = slots.filter(function (s) { return !s.optional || s.row[s.col]; });
+    var matched = counted.filter(function (s) { return s.row[s.col]; }).length;
+
+    var groups = {}, order = [], byId = {};
+    y.catalogue.forEach(function (c) {
+      var g = c.category || "Other";
+      if (!groups[g]) { groups[g] = []; order.push(g); }
+      groups[g].push(c);
+      byId[c.yoco_id] = c;
+    });
+
+    var matchBtn = h("button", { class: "btn", type: "button", text: "Match identical names", onclick: function () { autoMatch(matchBtn); } });
+    var filter = h("label", { class: "check" }, [
+      h("input", { type: "checkbox", checked: yocoOnlyUnmatched, onchange: function () { yocoOnlyUnmatched = this.checked; drawYoco(); } }),
+      h("span", { text: "Only show unmatched" })
+    ]);
+    var missing = y.catalogue.filter(function (c) { return c.kind === "variant" && !c.is_deleted && !used[c.yoco_id]; });
+
+    var list = h("div", {});
+    var lastGroup = null, rows = null;
+    slots.forEach(function (s) {
+      var current = s.row[s.col];
+      if (yocoOnlyUnmatched && (current || s.optional)) return;
+      if (s.group !== lastGroup) {
+        list.appendChild(h("div", { class: "match-group", text: s.group }));
+        rows = h("div", { class: "match-rows" });
+        list.appendChild(rows);
+        lastGroup = s.group;
+      }
+      var options = [h("option", { value: "", text: "Not matched", selected: !current })];
+      order.forEach(function (g) {
+        options.push(h("optgroup", { label: g }, groups[g].filter(function (c) { return !c.is_deleted || c.yoco_id === current; }).map(function (c) {
+          return h("option", { value: c.yoco_id, text: catalogueLabel(c), selected: c.yoco_id === current });
+        })));
+      });
+      var link = current ? byId[current] : null;
+      var problem = link && link.is_deleted ? "Deleted in Yoco" : link && !link.is_available ? "Unavailable in Yoco" : null;
+      rows.appendChild(h("div", { class: "match-row" }, [
+        h("div", { class: "name" }, [s.label, problem ? h("span", { class: "tag sold", text: problem }) : null]),
+        h("div", { class: "price", text: money(s.row[s.priceCol]) }),
+        h("select", { class: "input", "aria-label": "Yoco item for " + s.label, onchange: function () { setLink(s, this.value); } }, options)
+      ]));
+    });
+
+    return yocoCard("Match Items", [
+      h("p", { class: "yoco-status", text: matched + " of " + counted.length + " website prices follow Yoco." }),
+      h("p", { text: "Once matched, the price on the live site always follows Yoco, and the item shows as unavailable if Yoco disables or deletes it. Unmatched items keep the price set here." }),
+      h("div", { class: "inline" }, [matchBtn, filter]),
+      missing.length ? h("details", {}, [
+        h("summary", { text: plural(missing.length, "Yoco item") + " not on the website" }),
+        h("ul", {}, missing.map(function (c) { return h("li", { text: catalogueLabel(c) }); }))
+      ]) : null,
+      list
+    ]);
   }
 
   function drawStatus() {

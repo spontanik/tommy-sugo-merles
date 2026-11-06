@@ -17,6 +17,9 @@ the page if Supabase isn't configured or can't be reached.
 | `supabase/migrations/…_private_is_admin_and_anon_reads.sql` | Fix-up: lets visitors read visible items, moves the admin check to a private schema |
 | `supabase/migrations/…_menu_items_orderable.sql` | Adds `menu_items.is_orderable` and turns it on for all of Merle's |
 | `supabase/migrations/…_brands_and_sections.sql` | The `brands` and `sections` tables, seeded from `catalog-config.js`, and the rules that protect them |
+| `supabase/migrations/…_yoco_catalogue_sync.sql` | Yoco connection status, the catalogue copy, item links, and price triggers |
+| `supabase/functions/yoco-admin` | Used by the admin's Settings tab: credentials, location, sync, live updates |
+| `supabase/functions/yoco-webhook` | Receives item changes from Yoco, checks the signature, refreshes the item |
 | `supabase/seed.sql` | The items that were hard-coded in the pages on 2026-11-05 |
 
 ## Setting up Supabase
@@ -98,6 +101,23 @@ One cart per brand page, holding menu items and shop items:
 - Sold-out shop items can't be added. Add buttons only appear with live data, so the static fallback can't take food orders.
 
 Checkout is still a prototype: it validates the form and shows a confirmation, but saves nothing and takes no payment.
+
+## Yoco product sync
+
+Tommy Sugo only for now. Each brand has its own Yoco account, so credentials and data are all per brand. To add Merle's: add it to `BRANDS` and `ENV_KEYS` in `supabase/functions/_shared/yoco.ts`, insert its `yoco_connections` row, and add it to `YOCO_BRANDS` in `admin/index.html`.
+
+- **Direction:** the sync only reads from Yoco and never changes anything there.
+- **Yoco owns** the price and availability of any website item matched to it. A database trigger enforces this, so a save from the admin can't override a matched price. **The website keeps** names, descriptions, images, order, and what's hidden.
+- **Set up in the admin, under Tommy Sugo → Settings:** add the API key (or use the edge function secret), pick a location if there are several, Sync now, Match Items, then turn on live updates. These save straight away, separately from Save settings.
+- **Credentials:** a key saved in the admin is encrypted in Supabase Vault and can't be read back. If there isn't one, the functions use the edge function secret `YOCO_API_KEY_TOMMY` or `YOCO_API_KEY`. The webhook signing secret is saved to Vault automatically.
+- **Unavailable items:** when Yoco disables or deletes a matched item, its price goes blank: "–" with no Add button on the menu, "Sold out" in the shop. It comes back when Yoco re-enables it.
+- **Not synced:** stock counts (not available from Yoco's API, so "Sold out" stays manual) and new Yoco items (listed in Settings, never published automatically).
+
+Both functions are deployed with `verify_jwt` off: `yoco-admin` checks the caller is in `admins`, and `yoco-webhook` checks Yoco's signature. To test the catalogue and signature logic:
+
+```bash
+node --test supabase/functions/_shared/yoco-catalogue.test.ts
+```
 
 ## Running locally
 
