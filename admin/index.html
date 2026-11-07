@@ -177,6 +177,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 .dlg footer { padding: 16px 24px; border-top: 2px solid #000; display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap; }
 .dlg footer .right { display: flex; gap: 12px; margin-left: auto; }
 .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; align-items: end; }
+.yoco-links { display: flex; flex-direction: column; gap: 12px; }
 .money { position: relative; }
 .money::before { content: "R"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-weight: 700; color: var(--muted); }
 .money .input { padding-left: 28px; font-family: var(--item-font); font-weight: var(--item-weight); letter-spacing: var(--item-track); }
@@ -263,6 +264,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       <div class="fld"><label for="f-name">Name</label><input class="input" id="f-name" required></div>
       <div class="fld"><label for="f-desc">Description</label><textarea class="input" id="f-desc"></textarea><p class="hint" id="f-desc-hint"></p></div>
       <div class="fld"><span class="lbl">Prices</span><div class="price-grid" id="f-prices"></div><p class="hint" id="f-price-hint"></p></div>
+      <div class="fld" id="f-yoco-wrap" hidden><span class="lbl">Yoco item</span><div class="yoco-links" id="f-yoco"></div><p class="hint" id="f-yoco-hint"></p></div>
       <div class="fld">
         <span class="lbl">Image</span>
         <div class="img-edit">
@@ -350,6 +352,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var YOCO_BRANDS = ["tommy"]; // brands connected to their own Yoco account; must match BRANDS in the edge functions
   var yocoState = null; // the Yoco part of Settings, which saves straight away rather than with the draft
   var yocoOnlyUnmatched = false;
+  var YOCO_COLS = { price: "yoco_id", price_medium: "yoco_id_medium" }; // the website prices that can follow a Yoco item
 
   function parseRoute(hash) {
     var m = /^#(tommy|merles)\/(menu|shop|settings)$/.exec(hash || "");
@@ -583,12 +586,14 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     }
     var res = await Promise.all([
       db.from(tableFor(view)).select("*").eq("brand", brand).order("sort_order").order("name"),
-      loadCatalog()
+      loadCatalog(),
+      YOCO_BRANDS.indexOf(brand) < 0 ? null : fetchYocoCatalogue(brand)
     ]);
     if (seq !== loadSeq) return;
     drawChrome();
     if (res[0].error) { $("panel").textContent = ""; toast("Couldn't load items: " + res[0].error.message, true); return; }
     state.rows = res[0].data;
+    state.yocoCatalogue = res[2] && !res[2].error ? res[2].data : null; // null: no Yoco here, or it couldn't load
     draw();
   }
 
@@ -700,7 +705,9 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       sel.appendChild(h("option", { value: s.key, text: s.title + (s.is_hidden ? " (hidden)" : ""), selected: s.key === sectionKey }));
     });
     sel.onchange = function () { drawPrices(sel.value); };
-    $("f-prices").textContent = ""; // don't carry prices over from the last item opened
+    $("f-prices").textContent = ""; // don't carry prices or Yoco choices over from the last item opened
+    $("f-yoco").textContent = "";
+    state.manualPrices = {};
     drawPrices(sectionKey);
     drawImage();
     dlg.showModal();
@@ -710,24 +717,59 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   function drawPrices(sectionKey) {
     var sec = currentSection(sectionKey);
     var row = state.editing;
-    // Keep what was typed when switching section.
-    var typed = {};
-    $("f-prices").querySelectorAll("input").forEach(function (i) { typed[i.name] = i.value; });
-    var grid = $("f-prices");
+    var catalogue = state.yocoCatalogue;
+    // Keep what was typed and chosen when switching section or Yoco item. A price typed by hand comes back if its
+    // Yoco item is chosen and then taken off again.
+    var typed = {}, picked = {};
+    $("f-prices").querySelectorAll("input").forEach(function (i) {
+      typed[i.name] = i.value;
+      if (!i.disabled) state.manualPrices[i.name] = i.value;
+    });
+    $("f-yoco").querySelectorAll("select").forEach(function (s) { picked[s.name] = s.value; });
+    var byId = {};
+    (catalogue || []).forEach(function (c) { byId[c.yoco_id] = c; });
+
+    var grid = $("f-prices"), links = $("f-yoco");
     grid.textContent = "";
-    var linkedCols = { price: row && row.yoco_id, price_medium: row && row.yoco_id_medium };
+    links.textContent = "";
+    var cols = priceCols(state.view, sec);
+    var canLink = !!(catalogue && catalogue.length);
     var anyLinked = false;
-    priceCols(state.view, sec).forEach(function (c) {
-      var id = "f-" + c[0];
-      var val = c[0] in typed ? typed[c[0]] : (row && row[c[0]] != null ? Number(row[c[0]]) : "");
-      var linked = !!linkedCols[c[0]];
-      if (linked) { anyLinked = true; val = row[c[0]] != null ? Number(row[c[0]]) : ""; }
+    cols.forEach(function (c) {
+      var id = "f-" + c[0], yocoCol = YOCO_COLS[c[0]];
+      var link = !yocoCol ? "" : yocoCol in picked ? picked[yocoCol] : (row && row[yocoCol]) || "";
+      var item = byId[link];
+      var val = c[0] in state.manualPrices ? state.manualPrices[c[0]] : c[0] in typed ? typed[c[0]] : (row && row[c[0]] != null ? Number(row[c[0]]) : "");
+      if (link) {
+        anyLinked = true;
+        var live = item ? yocoLivePrice(item) : row[c[0]];
+        val = live != null ? Number(live) : "";
+      }
       grid.appendChild(h("div", { class: "fld" }, [
         h("label", { for: id, text: c[1] }),
-        h("div", { class: "money" }, [h("input", { class: "input", id: id, name: c[0], type: "number", inputmode: "decimal", min: "0", step: "0.01", value: val, disabled: linked })])
+        h("div", { class: "money" }, [h("input", { class: "input", id: id, name: c[0], type: "number", inputmode: "decimal", min: "0", step: "0.01", value: val, disabled: !!link })])
+      ]));
+      if (!yocoCol || !canLink) return;
+      var selId = "f-" + yocoCol;
+      var note = !item ? null : item.is_deleted ? "Deleted in Yoco" : !item.is_available ? "Unavailable in Yoco" : item.price == null ? "No price in Yoco" : null;
+      links.appendChild(h("div", { class: "fld" }, [
+        h("label", { for: selId, text: c[1] }),
+        h("select", { class: "input", id: selId, name: yocoCol, onchange: function () { drawPrices($("f-section").value); } }, yocoOptions(catalogue, link)),
+        note ? h("p", { class: "hint", text: note + ", so no price shows on the site." }) : null
       ]));
     });
-    $("f-price-hint").textContent = (anyLinked ? "Greyed-out prices come from Yoco: change them there. " : "") + "Leave a price blank to show “–” (or “TBC” in the shop).";
+
+    $("f-price-hint").textContent = (anyLinked
+      ? (canLink ? "Greyed-out prices come from the Yoco item below: change them in Yoco, or set the item to “Not matched”. " : "Greyed-out prices come from Yoco: change them there. ")
+      : "") + "Leave a price blank to show “–” (or “TBC” in the shop).";
+
+    $("f-yoco-wrap").hidden = YOCO_BRANDS.indexOf(state.brand) < 0;
+    var hasDeliver = cols.some(function (c) { return /deliver/.test(c[0]); });
+    $("f-yoco-hint").textContent = !catalogue
+      ? "Couldn't load the Yoco items, so these links can't be changed right now."
+      : !canLink
+        ? "Sync with Yoco in Settings to choose an item here."
+        : "A matched price follows Yoco. Saving changes it on the live site straight away." + (hasDeliver ? " Deliver prices stay as set here." : "");
   }
 
   $("f-upload").addEventListener("click", function () { $("f-file").click(); });
@@ -774,6 +816,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       data[i.name] = v === "" ? null : Number(v);
     });
     if (badPrice) { err.textContent = "Prices need to be numbers, like 125 or 12.50."; err.hidden = false; return; }
+    // Only the links on show: if the Yoco items couldn't load, the item's links are left as they are.
+    $("f-yoco").querySelectorAll("select").forEach(function (s) { data[s.name] = s.value || null; });
     if (kind === "shop") {
       data.image_alt = $("f-alt").value.trim();
       data.cart_name = $("f-cart").value.trim() || null;
@@ -929,11 +973,15 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     return res.data;
   }
 
+  function fetchYocoCatalogue(brand) {
+    return db.from("yoco_catalogue").select("*").eq("brand", brand).order("category").order("name").order("option_label");
+  }
+
   async function loadYoco() {
     var brand = state.brand, seq = loadSeq;
     if (YOCO_BRANDS.indexOf(brand) < 0) return;
     var results = await Promise.all([
-      db.from("yoco_catalogue").select("*").eq("brand", brand).order("category").order("name").order("option_label"),
+      fetchYocoCatalogue(brand),
       db.from("menu_items").select("*").eq("brand", brand).order("sort_order").order("name"),
       db.from("shop_items").select("*").eq("brand", brand).order("sort_order").order("name")
     ]);
@@ -993,6 +1041,26 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   function catalogueLabel(c) {
     return c.name + (c.option_label ? " · " + c.option_label : "") + " · " + (c.price == null ? "no price" : money(c.price)) +
       (c.is_deleted ? " (deleted in Yoco)" : !c.is_available ? " (unavailable in Yoco)" : "");
+  }
+
+  // The price a linked item shows on the site, the same rule as private.yoco_live_price in the database.
+  function yocoLivePrice(c) { return c.is_deleted || !c.is_available ? null : c.price; }
+
+  // "Not matched", then the catalogue by category. Deleted items only appear if they're the current link.
+  function yocoOptions(catalogue, current) {
+    var groups = {}, order = [];
+    catalogue.forEach(function (c) {
+      var g = c.category || "Other";
+      if (!groups[g]) { groups[g] = []; order.push(g); }
+      groups[g].push(c);
+    });
+    var options = [h("option", { value: "", text: "Not matched", selected: !current })];
+    order.forEach(function (g) {
+      options.push(h("optgroup", { label: g }, groups[g].filter(function (c) { return !c.is_deleted || c.yoco_id === current; }).map(function (c) {
+        return h("option", { value: c.yoco_id, text: catalogueLabel(c), selected: c.yoco_id === current });
+      })));
+    });
+    return options;
   }
 
   async function setLink(slot, yocoId) {
@@ -1137,13 +1205,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var counted = slots.filter(function (s) { return !s.optional || s.row[s.col]; });
     var matched = counted.filter(function (s) { return s.row[s.col]; }).length;
 
-    var groups = {}, order = [], byId = {};
-    y.catalogue.forEach(function (c) {
-      var g = c.category || "Other";
-      if (!groups[g]) { groups[g] = []; order.push(g); }
-      groups[g].push(c);
-      byId[c.yoco_id] = c;
-    });
+    var byId = {};
+    y.catalogue.forEach(function (c) { byId[c.yoco_id] = c; });
 
     var matchBtn = h("button", { class: "btn", type: "button", text: "Match identical names", onclick: function () { autoMatch(matchBtn); } });
     var filter = h("label", { class: "check" }, [
@@ -1163,18 +1226,12 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
         list.appendChild(rows);
         lastGroup = s.group;
       }
-      var options = [h("option", { value: "", text: "Not matched", selected: !current })];
-      order.forEach(function (g) {
-        options.push(h("optgroup", { label: g }, groups[g].filter(function (c) { return !c.is_deleted || c.yoco_id === current; }).map(function (c) {
-          return h("option", { value: c.yoco_id, text: catalogueLabel(c), selected: c.yoco_id === current });
-        })));
-      });
       var link = current ? byId[current] : null;
       var problem = link && link.is_deleted ? "Deleted in Yoco" : link && !link.is_available ? "Unavailable in Yoco" : null;
       rows.appendChild(h("div", { class: "match-row" }, [
         h("div", { class: "name" }, [s.label, problem ? h("span", { class: "tag sold", text: problem }) : null]),
         h("div", { class: "price", text: money(s.row[s.priceCol]) }),
-        h("select", { class: "input", "aria-label": "Yoco item for " + s.label, onchange: function () { setLink(s, this.value); } }, options)
+        h("select", { class: "input", "aria-label": "Yoco item for " + s.label, onchange: function () { setLink(s, this.value); } }, yocoOptions(y.catalogue, current))
       ]));
     });
 

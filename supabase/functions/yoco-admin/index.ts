@@ -5,8 +5,8 @@ import {
   BRANDS,
   fullSync,
   getApiKey,
-  getSecret,
   listLocations,
+  listLocationsIfAllowed,
   setSecret,
   yocoJson,
 } from "../_shared/yoco.ts";
@@ -62,7 +62,8 @@ Deno.serve(async (req) => {
     let keyError: string | null = null;
     if (key) {
       try {
-        locations = (await listLocations(key)).map((l: { id: string; name: string }) => ({ id: l.id, name: l.name }));
+        locations = (await listLocationsIfAllowed(key)).locations
+          .map((l: { id: string; name: string }) => ({ id: l.id, name: l.name }));
         if (!connection.location_id && locations.length === 1) {
           await updateConnection({ location_id: locations[0].id, location_name: locations[0].name });
           connection.location_id = locations[0].id;
@@ -83,7 +84,8 @@ Deno.serve(async (req) => {
       case "save_key": {
         const newKey = String(body.api_key ?? "").trim();
         if (!newKey) return reply({ ok: false, error: "Paste the API key first." });
-        const locations = await listLocations(newKey); // proves the key works before it's saved
+        await yocoJson(newKey, "/v1/items/?limit=1"); // proves the key can read the catalogue before it's saved
+        const { locations } = await listLocationsIfAllowed(newKey);
         const { key: oldKey } = await getApiKey(db, brand);
         const { data: current } = await db.from("yoco_connections")
           .select("location_id, webhook_subscription_id").eq("brand", brand).single();
@@ -121,10 +123,12 @@ Deno.serve(async (req) => {
         if (!key) return reply({ ok: false, error: "Add a Yoco API key first." });
         try {
           const result = await fullSync(db, brand, key);
+          const { refused } = await listLocationsIfAllowed(key);
           await updateConnection({
             last_sync_at: new Date().toISOString(),
             last_sync_ok: true,
-            last_sync_message: `${result.items} items read from Yoco.`,
+            last_sync_message: `${result.items} items read from Yoco.` +
+              (refused ? " Yoco refused the location list, so default prices were used." : ""),
           });
           return reply({ ok: true, ...result });
         } catch (e) {

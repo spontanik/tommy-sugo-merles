@@ -61,14 +61,25 @@ export async function yocoFetch(key: string, path: string, init: RequestInit = {
   return res;
 }
 
+// Says which Yoco area was refused, so a permissions error can be traced. Yoco may name the missing permission in
+// `errors`. None of this includes the API key.
+function refusedArea(path: string): string {
+  if (path.startsWith("/v1/locations")) return "locations";
+  if (path.startsWith("/v1/items")) return "catalogue items";
+  if (path.startsWith("/v1/webhooks")) return "webhooks";
+  return "that";
+}
+
 export async function yocoJson(key: string, path: string, init: RequestInit = {}) {
   const res = await yocoFetch(key, path, init);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    const details = (body.errors ?? []).map((e: { detail?: string }) => e.detail).filter(Boolean).join(" ");
+    console.warn(JSON.stringify({ yoco: path.split("?")[0], status: res.status, code: body.code, detail: body.detail, errors: body.errors }));
     const reason = res.status === 401
       ? "Yoco didn't accept this API key."
       : res.status === 403
-      ? `This API key doesn't have permission for that. ${body.detail ?? ""}`.trim()
+      ? `Yoco refused access to ${refusedArea(path)}. ${details || body.detail || ""}`.trim()
       : (body.detail ?? `Yoco returned an error (${res.status}).`);
     throw new YocoError(res.status, reason);
   }
@@ -90,6 +101,17 @@ async function listAll(key: string, path: string) {
 }
 
 export const listLocations = (key: string) => listAll(key, "/v1/locations/");
+
+// Locations only decide which prices to use when an account has several, so a refusal here shouldn't stop the sync:
+// it falls back to the catalogue's default prices.
+export async function listLocationsIfAllowed(key: string) {
+  try {
+    return { locations: await listLocations(key), refused: false };
+  } catch (e) {
+    if (e instanceof YocoError && e.status === 403) return { locations: [], refused: true };
+    throw e;
+  }
+}
 
 async function connectionLocation(db: SupabaseClient, brand: string): Promise<string | null> {
   const { data, error } = await db.from("yoco_connections").select("location_id").eq("brand", brand).single();
