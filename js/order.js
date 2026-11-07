@@ -37,10 +37,12 @@
     ".opt-dlg legend{padding:0 0 8px;font-weight:700}" +
     ".opt-dlg legend small{font-weight:400;margin-left:8px}" +
     ".opt-choice{display:flex;align-items:center;gap:12px;min-height:44px;cursor:pointer}" +
+    ".opt-choice[hidden]{display:none}" +
     ".opt-choice input{width:20px;height:20px;margin:0;flex:none;accent-color:currentColor}" +
     ".opt-choice .opt-name{flex:1;min-width:0}" +
     ".opt-choice .opt-price{font-weight:700;font-variant-numeric:tabular-nums}" +
     ".opt-choice input:disabled~span{opacity:.45}" +
+    ".opt-more{align-self:flex-start;min-height:44px;padding:0;background:none;border:0;color:inherit;font:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer}" +
     ".opt-err{margin:0;font-weight:700}" +
     ".opt-foot{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}" +
     ".opt-actions{display:flex;flex-wrap:wrap;gap:8px}";
@@ -198,6 +200,7 @@
     return { row: row, input: input };
   }
 
+  var SHOWN_CHOICES = 2; // choices in a group shown before View more
   var optDlg = null;
   function openOptions(box) {
     var variants = JSON.parse(box.getAttribute("data-options"));
@@ -281,6 +284,22 @@
           field.inputs.push({ input: c.input, modifier: m });
           set.appendChild(c.row);
         });
+        // Long groups show their first two choices and a View more. A preset further down keeps the group open.
+        var extra = field.inputs.slice(SHOWN_CHOICES);
+        if (extra.length && !extra.some(function (i) { return i.input.checked; })) {
+          var more = node("button", "opt-more", "View " + extra.length + " more");
+          more.type = "button";
+          field.expand = function () {
+            extra.forEach(function (i) { i.input.closest(".opt-choice").hidden = false; });
+            more.remove();
+          };
+          more.addEventListener("click", function () {
+            field.expand();
+            extra[0].input.focus();
+          });
+          extra.forEach(function (i) { i.input.closest(".opt-choice").hidden = true; });
+          set.appendChild(more);
+        }
         fields.push(field);
         groupsBox.appendChild(set);
       });
@@ -318,6 +337,7 @@
         return f.inputs.filter(function (i) { return i.input.checked; }).length < f.group.min;
       })[0];
       if (short) {
+        if (short.expand) short.expand();
         err.textContent = short.group.name + ": " + ruleText(short.group).toLowerCase() + ".";
         err.hidden = false;
         return;
@@ -404,6 +424,8 @@
       });
     });
     A.session().then(function (s) { if (s) signedIn(s); }).catch(function () { /* stays signed out */ });
+    // Confirming the email in another tab signs them in there: pick that up here, so the cart isn't lost.
+    A.onChange(function (event, s) { if (s && !acct.session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) signedIn(s); });
     drawAccount();
   }
 

@@ -77,7 +77,7 @@
   function friendly(error) {
     var code = (error && (error.code || "")) + " " + (error && error.message || "");
     if (/invalid_credentials|Invalid login/i.test(code)) return "That email and password don't match.";
-    if (/email_not_confirmed/i.test(code)) return "Please confirm your email first, using the link we sent you.";
+    if (/email_not_confirmed|Email not confirmed/i.test(code)) return "Your account isn't confirmed yet. Click the link we emailed you, or send it again below.";
     if (/signup_disabled|Signups not allowed/i.test(code)) return "Accounts aren't open yet. Please choose No account for now.";
     if (/email_address_not_authorized/i.test(code)) return "We can't send email to that address yet. Please choose No account for now.";
     if (/user_already_exists|already registered/i.test(code)) return "There's already an account with that email. Sign in instead.";
@@ -103,8 +103,18 @@
 
   function signIn(email, password) {
     return db().auth.signInWithPassword({ email: email, password: password }).then(function (r) {
-      if (r.error) throw new Error(friendly(r.error));
+      if (r.error) {
+        var e = new Error(friendly(r.error));
+        e.unconfirmed = /email_not_confirmed/i.test(r.error.code || "");
+        throw e;
+      }
       return r.data.session;
+    });
+  }
+
+  function resendConfirmation(email) {
+    return db().auth.resend({ type: "signup", email: email, options: { emailRedirectTo: pageUrl("account.html") } }).then(function (r) {
+      if (r.error) throw new Error(friendly(r.error));
     });
   }
 
@@ -162,12 +172,27 @@
     var forgot = el("button", { type: "button", class: "acct-link", style: "align-self:flex-start;min-height:44px;padding:0;background:none;border:0;color:inherit;font:inherit;text-decoration:underline;cursor:pointer" }, "Forgot your password?");
     sin.appendChild(iEmail.wrap); sin.appendChild(iPass.wrap); sin.appendChild(inBtn); sin.appendChild(forgot);
 
-    var msg = el("p", { role: "alert", style: "margin:0;font-weight:700" });
+    // Messages go above the fields, where they're seen, and get focus so the page scrolls to them.
+    var msg = el("div", { role: "alert", tabindex: "-1", style: "display:flex;flex-direction:column;gap:12px;align-items:flex-start;border-left:4px solid #ec1c24;padding:4px 0 4px 12px;font-weight:700;outline:none" });
     msg.hidden = true;
-    root.appendChild(tabs); root.appendChild(up); root.appendChild(sin); root.appendChild(msg);
+    var resend = el("button", { type: "button", class: "pill" }, "Send the link again");
+    root.appendChild(tabs); root.appendChild(msg); root.appendChild(up); root.appendChild(sin);
     container.appendChild(root);
 
-    function say(text) { msg.textContent = text; msg.hidden = !text; }
+    function say(text, withResend) {
+      msg.textContent = "";
+      msg.hidden = !text;
+      if (!text) return;
+      msg.appendChild(el("span", null, text));
+      if (withResend) { resend.disabled = false; resend.textContent = "Send the link again"; msg.appendChild(resend); }
+      msg.focus();
+    }
+    resend.addEventListener("click", function () {
+      resend.disabled = true;
+      resendConfirmation(iEmail.input.value.trim())
+        .then(function () { resend.textContent = "Sent. Check your inbox"; })
+        .catch(function (e) { say(e.message); });
+    });
     function show(which) {
       up.hidden = which !== "signup";
       sin.hidden = which !== "signin";
@@ -196,7 +221,7 @@
           if (r.needsConfirm) {
             iEmail.input.value = uEmail.input.value.trim();
             show("signin");
-            say("Nearly there: we've emailed you a link to confirm your address. Click it, then sign in here.");
+            say("Nearly there: we've emailed you a link to confirm your address. Click it and you'll be signed in.", true);
             return;
           }
           if (options.onSignedIn) options.onSignedIn(r.session);
@@ -209,7 +234,7 @@
       busy(inBtn, true, "Signing in…");
       signIn(iEmail.input.value.trim(), iPass.input.value)
         .then(function (s) { busy(inBtn, false, "Sign In"); if (options.onSignedIn) options.onSignedIn(s); })
-        .catch(function (e) { busy(inBtn, false, "Sign In"); say(e.message); });
+        .catch(function (e) { busy(inBtn, false, "Sign In"); say(e.message, e.unconfirmed); });
     });
 
     forgot.addEventListener("click", function () {
