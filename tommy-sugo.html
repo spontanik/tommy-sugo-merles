@@ -101,6 +101,9 @@ nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .frame-seal { position: absolute; top: calc(var(--seal) / -2); left: 50%; transform: translateX(-50%); width: max-content; padding: 0 20px; background: var(--surface); }
 .frame-seal img { width: var(--seal); height: var(--seal); max-width: none; display: block; }
 .frame-section { padding-top: 136px; }
+/* Bunting hung a little below the header line, with the frame moved down to match. */
+.bunting-drop { background-position: left 0 top 16px; }
+.frame-section.bunting-drop { padding-top: 152px; }
 
 /* SealPanel: one per view, a flat sauce block with the seal breaking its top edge */
 .seal-panel { position: relative; background: var(--sauce); color: var(--on-sauce); padding: 96px 40px 48px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; margin-top: 64px; }
@@ -245,7 +248,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
 <!-- HOME -->
 <main data-view="home">
-  <section class="frame-section section">
+  <section class="frame-section section bunting bunting-drop" style="padding-bottom: 48px;">
     <div class="wrap">
       <div class="frame center" style="max-width: 1040px; margin: 0 auto;">
         <div class="frame-seal"><img src="tommy-seal.png" alt="Tommy Sugo Pizza seal: The Secret's in the Sauce"></div>
@@ -261,7 +264,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
     </div>
   </section>
 
-  <section class="section bunting">
+  <section class="section bunting" style="padding-top: 72px;">
     <div class="wrap stack" style="gap: 48px;">
       <div class="center" style="gap: 16px;">
         <p class="tag red">The heavy hitters</p>
@@ -340,7 +343,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
 <!-- MENU -->
 <main data-view="menu" hidden>
-  <section class="section-tight">
+  <section class="section-tight bunting bunting-drop" style="padding-top: 112px;">
     <div class="wrap center" style="gap: 16px;">
       <p class="tag red">The menu</p>
       <h1 class="poster-xl" style="font-size: clamp(42px, 7vw, 80px);">You had me at mozzarella.</h1>
@@ -474,7 +477,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
 <!-- DELIVERY -->
 <main data-view="delivery" hidden>
-  <section style="padding-block: 80px 64px;">
+  <section class="bunting bunting-drop" style="padding-block: 112px 64px;">
     <div class="wrap split">
       <div class="stack" style="gap: 20px; align-items: flex-start;">
         <p class="tag red">Delivery · pizza only</p>
@@ -551,7 +554,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
 <!-- SHOP -->
 <main data-view="shop" hidden>
-  <section style="padding-block: 80px 64px;">
+  <section class="bunting bunting-drop" style="padding-block: 112px 64px;">
     <div class="wrap split">
       <div class="stack" style="gap: 20px; align-items: flex-start;">
         <p class="tag red">The shop · frozen pizza &amp; sauce</p>
@@ -684,7 +687,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
 <!-- ON THE CIRCUIT -->
 <main data-view="circuit" hidden>
-  <section style="padding-block: 80px 64px;">
+  <section class="bunting bunting-drop" style="padding-block: 112px 64px;">
     <div class="wrap split">
       <div class="stack" style="gap: 20px; align-items: flex-start;">
         <p class="tag red">On the circuit</p>
@@ -741,7 +744,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
 <!-- CATERING -->
 <main data-view="catering" hidden>
-  <section class="bunting">
+  <section class="bunting bunting-drop">
     <div class="wrap center" style="padding-block: 120px 96px; gap: 24px;">
       <p class="tag red">Catering</p>
       <h1 class="poster-xl">Your event,<br>fed.</h1>
@@ -832,7 +835,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
 <!-- OUR STORY -->
 <main data-view="story" hidden>
-  <section style="padding-block: 80px 64px;">
+  <section class="bunting bunting-drop" style="padding-block: 112px 64px;">
     <div class="wrap split">
       <div class="stack" style="gap: 20px; align-items: flex-start;">
         <p class="tag red">Our story</p>
