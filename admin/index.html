@@ -340,7 +340,6 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var STORE_KEY = "housemates-admin";
   var PAGE_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._/-]*$/; // same check as brands.page
   var PRICE_TEXT = {
-    pizza: "Large and Medium, each Collect and Deliver",
     cd: "Collect and Deliver",
     single: "One price"
   };
@@ -352,7 +351,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var YOCO_BRANDS = ["tommy"]; // brands connected to their own Yoco account; must match BRANDS in the edge functions
   var yocoState = null; // the Yoco part of Settings, which saves straight away rather than with the draft
   var yocoOnlyUnmatched = false;
-  var YOCO_COLS = { price: "yoco_id", price_medium: "yoco_id_medium" }; // the website prices that can follow a Yoco item
+  var YOCO_COLS = { price: "yoco_id" }; // the website prices that can follow a Yoco item
 
   function parseRoute(hash) {
     var m = /^#(tommy|merles)\/(menu|shop|settings)$/.exec(hash || "");
@@ -572,7 +571,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     if (view === "settings") {
       var all = await Promise.all([
         loadCatalog(),
-        db.from("menu_items").select("section,price_deliver,price_medium,price_medium_deliver").eq("brand", brand),
+        db.from("menu_items").select("section,price_deliver").eq("brand", brand),
         db.from("shop_items").select("section").eq("brand", brand)
       ]);
       if (seq !== loadSeq) return;
@@ -620,7 +619,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
             r.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null,
             r.is_sold_out ? h("span", { class: "tag sold", text: "Sold out" }) : null,
             r.is_orderable ? h("span", { class: "tag", text: "Order online" }) : null,
-            r.yoco_id || r.yoco_id_medium ? h("span", { class: "tag", text: "Yoco" }) : null]);
+            r.yoco_id ? h("span", { class: "tag", text: "Yoco" }) : null]);
           var prices = h("div", { class: "prices" }, priceCols(kind, sec).map(function (c) {
             return h("div", {}, [h("span", { text: c[1].replace(" · ", " ") }), h("strong", { text: money(r[c[0]]) })]);
           }));
@@ -755,7 +754,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       links.appendChild(h("div", { class: "fld" }, [
         h("label", { for: selId, text: c[1] }),
         h("select", { class: "input", id: selId, name: yocoCol, onchange: function () { drawPrices($("f-section").value); } }, yocoOptions(catalogue, link)),
-        note ? h("p", { class: "hint", text: note + ", so no price shows on the site." }) : null
+        note ? h("p", { class: "hint", text: note + ", so no price shows on the site." }) : null,
+        item ? h("p", { class: "hint", text: yocoChoiceText(item, catalogue) }) : null
       ]));
     });
 
@@ -826,8 +826,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       data.is_orderable = $("f-orderable").checked;
       // Clear price columns that the chosen section doesn't use.
       var used = CFG.priceLabels[currentSection(data.section).prices].map(function (c) { return c[0]; });
-      ["price", "price_deliver", "price_medium", "price_medium_deliver"].forEach(function (k) { if (used.indexOf(k) < 0) data[k] = null; });
-      if (used.indexOf("price_medium") < 0) data.yoco_id_medium = null;
+      ["price", "price_deliver"].forEach(function (k) { if (used.indexOf(k) < 0) data[k] = null; });
     }
     var row = state.editing;
     if (!row || row.section !== data.section) {
@@ -1013,17 +1012,12 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     return iso ? new Date(iso).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" }) : "never";
   }
 
-  // Every website price that can follow a Yoco item. A pizza has one for Large and one for Medium.
+  // Every website price that can follow a Yoco item.
   function matchSlots() {
     var y = yocoState, slots = [];
     sectionsFor(state.brand, "menu").forEach(function (sec) {
       y.menu.filter(function (r) { return r.section === sec.key; }).forEach(function (r) {
-        if (sec.prices === "pizza") {
-          slots.push({ group: sec.title, table: "menu_items", row: r, col: "yoco_id", priceCol: "price", label: r.name + " · Large", match: r.name + " large" });
-          slots.push({ group: sec.title, table: "menu_items", row: r, col: "yoco_id_medium", priceCol: "price_medium", label: r.name + " · Medium", match: r.name + " medium", optional: r.price_medium == null });
-        } else {
-          slots.push({ group: sec.title, table: "menu_items", row: r, col: "yoco_id", priceCol: "price", label: r.name, match: r.name });
-        }
+        slots.push({ group: sec.title, table: "menu_items", row: r, col: "yoco_id", priceCol: "price", label: r.name, match: r.name });
       });
     });
     sectionsFor(state.brand, "shop").forEach(function (sec) {
@@ -1061,6 +1055,18 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       })));
     });
     return options;
+  }
+
+  // What Yoco has the customer choose for this item, shown under the link in the item editor.
+  function yocoChoiceText(item, catalogue) {
+    var variants = catalogue.filter(function (c) {
+      return item.item_id && c.item_id === item.item_id && c.kind === "variant" && !c.is_deleted && c.option_label;
+    }).map(function (c) { return c.option_label; });
+    var groups = (item.modifier_groups || []).map(function (g) { return g.name + (g.min > 0 ? " (required)" : ""); });
+    var parts = [];
+    if (variants.length > 1) parts.push(variants.join(" or "));
+    if (groups.length) parts.push(groups.join(", "));
+    return parts.length ? "Customers choose: " + parts.join(". ") + "." : "No options in Yoco.";
   }
 
   async function setLink(slot, yocoId) {
@@ -1335,12 +1341,10 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     $("s-hidden-row").hidden = !sec;
     $("s-hidden").checked = sec ? !!sec.is_hidden : false;
 
-    // Merle's page has no layout for large and medium, so only Tommy Sugo gets that option.
     var sel = $("s-prices");
     sel.textContent = "";
     var current = sec ? sec.prices : "single";
-    ["pizza", "cd", "single"].forEach(function (p) {
-      if (p === "pizza" && state.brand === "merles" && current !== "pizza") return;
+    ["cd", "single"].forEach(function (p) {
       sel.appendChild(h("option", { value: p, text: PRICE_TEXT[p], selected: p === current }));
     });
 

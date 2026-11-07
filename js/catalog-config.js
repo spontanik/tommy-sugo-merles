@@ -1,8 +1,7 @@
 /* Shared by the public pages and /admin: which sections each brand has, and which price columns each section uses.
    The brands and sections tables hold the live version (edited in Settings). This is the fallback if they can't be read.
    priceLabels is the one part that isn't in the database.
-   prices: "pizza"  -> Large collect / Large deliver / Medium collect / Medium deliver
-           "cd"     -> Collect / Deliver
+   prices: "cd"     -> Collect / Deliver
            "single" -> one price */
 window.CATALOG_CONFIG = {
   brands: {
@@ -10,8 +9,8 @@ window.CATALOG_CONFIG = {
       label: "Tommy Sugo",
       page: "tommy-sugo.html",
       menu: [
-        { key: "pizza-classics", title: "Pizza · The Classics", prices: "pizza" },
-        { key: "pizza-signatures", title: "Pizza · The Signatures", prices: "pizza" },
+        { key: "pizza-classics", title: "Pizza · The Classics", prices: "cd" },
+        { key: "pizza-signatures", title: "Pizza · The Signatures", prices: "cd" },
         { key: "pizza-extras", title: "Pizza · Extras", prices: "cd" },
         { key: "wrapped", title: "Wrapped Differently", prices: "single" },
         { key: "pasta-potjies", title: "Pasta & Potjies", prices: "single" },
@@ -43,12 +42,6 @@ window.CATALOG_CONFIG = {
     }
   },
   priceLabels: {
-    pizza: [
-      ["price", "Large · Collect"],
-      ["price_deliver", "Large · Deliver"],
-      ["price_medium", "Medium · Collect"],
-      ["price_medium_deliver", "Medium · Deliver"]
-    ],
     cd: [
       ["price", "Collect"],
       ["price_deliver", "Deliver"]

@@ -95,7 +95,8 @@ To remove someone: `delete from public.admins where user_id = (select id from au
 
 One cart per brand page, holding menu items and shop items:
 
-- Tick **Order online for collection** on a menu item in the admin to give it an Add button. Merle's items are on by default; Tommy Sugo's are off until ticked. An item with no Collect price gets no button, and a pizza gets one button per size.
+- Tick **Order online for collection** on a menu item in the admin to give it an Add button. Merle's items are on by default; Tommy Sugo's are off until ticked. An item with no Collect price gets no button.
+- An item linked to Yoco offers Yoco's variants and modifiers when added (for example Bowl or Pita, Base, Extra meat), using Yoco's required and maximum selections. Each combination is its own line in the cart. Pizzas are sold in one size: the sync skips Yoco's Medium variants.
 - Menu items are collection only. Any food in the cart makes the whole order a collection from the kitchen, and shop items in that order are collected with it.
 - Delivery is only offered when the cart holds nothing but shop items. Those orders can also choose Collect.
 - Sold-out shop items can't be added. Add buttons only appear with live data, so the static fallback can't take food orders.

@@ -27,8 +27,8 @@
     ".order-opts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}" +
     ".order-opt{display:flex;align-items:center;gap:8px}" +
     ".pill.order-add{min-height:44px;padding:0 14px;font-size:14px}" +
-    ".order-size{font-weight:700;font-size:14px}" +
-    ".order-opt.has-qty .order-add,.order-opt:not(.has-qty) .order-size,.order-opt:not(.has-qty) .stepper{display:none}";
+    ".order-count{font-weight:700;font-size:14px}" +
+    ".order-opt[data-product].has-qty .order-add,.order-opt[data-product]:not(.has-qty) .stepper{display:none}";
   document.head.appendChild(style);
 
   function get(table) {
@@ -88,44 +88,54 @@
     return st;
   }
 
-  // Add buttons for a menu item the team has marked orderable: one per size that has a Collect price.
-  function orderControls(it, kind) {
-    if (!it.is_orderable) return null;
-    var choices = kind === "pizza"
-      ? [{ size: "Large", cart: it.name + ", large", price: it.price }, { size: "Medium", cart: it.name + ", medium", price: it.price_medium }]
-      : [{ size: "", cart: it.name, price: it.price }];
-    choices = choices.filter(function (c) { return money(c.price); });
-    if (!choices.length) return null;
+  // True when Yoco gives this item more than one variant, or anything to choose on the variant.
+  function hasChoices(variants) {
+    if (!variants || !variants.length) return false;
+    return variants.length > 1 || variants.some(function (v) { return (v.groups || []).length; });
+  }
+
+  // The Add button for a menu item the team has marked orderable, if it has a Collect price.
+  function orderControls(it) {
+    if (!it.is_orderable || !money(it.price)) return null;
     var wrap = el("div", "order-opts");
-    choices.forEach(function (c) {
-      var opt = el("div", "order-opt");
-      opt.setAttribute("data-product", c.cart);
-      opt.setAttribute("data-price", String(Number(c.price)));
-      opt.setAttribute("data-food", "");
-      var add = el("button", "pill order-add", c.size ? "+ " + c.size + " " + money(c.price) : "+ Add");
-      add.type = "button";
-      add.setAttribute("data-step", "1");
-      add.setAttribute("aria-label", "Add " + c.cart + " to your order, " + money(c.price));
+    var opt = el("div", "order-opt");
+    var choices = hasChoices(it.yoco_options);
+    var add = el("button", "pill order-add", choices ? "+ Choose " + money(it.price) : "+ Add");
+    add.type = "button";
+    if (choices) {
+      // js/order.js opens the options from these, and the cart keeps each choice as its own line.
+      opt.setAttribute("data-options", JSON.stringify(it.yoco_options));
+      opt.setAttribute("data-option-name", it.name);
+      opt.setAttribute("data-option-item", it.id);
+      opt.setAttribute("data-option-default", it.yoco_id || "");
+      add.setAttribute("data-configure", "");
+      add.setAttribute("aria-label", "Choose options for " + it.name + ", from " + money(it.price));
       opt.appendChild(add);
-      if (c.size) opt.appendChild(el("span", "order-size", c.size));
-      opt.appendChild(stepper(c.cart));
-      wrap.appendChild(opt);
-    });
+      opt.appendChild(el("span", "order-count"));
+    } else {
+      opt.setAttribute("data-product", it.name);
+      opt.setAttribute("data-price", String(Number(it.price)));
+      opt.setAttribute("data-food", "");
+      add.setAttribute("data-step", "1");
+      add.setAttribute("aria-label", "Add " + it.name + " to your order, " + money(it.price));
+      opt.appendChild(add);
+      opt.appendChild(stepper(it.name));
+    }
+    wrap.appendChild(opt);
     return wrap;
   }
 
   function menuItem(it, kind) {
-    var order = orderControls(it, kind);
+    var order = orderControls(it);
     var hasDesc = !!(it.description && it.description.trim());
     var desc = hasDesc ? el("p", "desc", it.description) : null;
     var thumb = it.image_url ? img(it.image_url, "item-thumb", it.name) : null;
 
     if (brand === "tommy" && kind !== "single") {
-      var pz = el("div", kind === "cd" ? "pz two" : "pz");
+      var pz = el("div", "pz");
       if (thumb) pz.appendChild(thumb);
       pz.appendChild(el("span", "name", it.name));
-      var cols = kind === "cd" ? ["price", "price_deliver"] : ["price", "price_deliver", "price_medium", "price_medium_deliver"];
-      cols.forEach(function (c) { pz.appendChild(priceSpan("p", it[c])); });
+      ["price", "price_deliver"].forEach(function (c) { pz.appendChild(priceSpan("p", it[c])); });
       if (desc) pz.appendChild(desc);
       if (order) pz.appendChild(order);
       return pz;
@@ -180,8 +190,7 @@
     ["menu", "shop"].forEach(function (kind) {
       var fromConfig = cfg[kind];
       var live = sectionRows.filter(function (s) { return s.kind === kind; }).map(function (s) {
-        // Merle's page has no large and medium layout.
-        return { key: s.key, title: s.title, prices: brand === "merles" && s.prices === "pizza" ? "cd" : s.prices };
+        return { key: s.key, title: s.title, prices: s.prices };
       });
       var keys = live.map(function (s) { return s.key; });
       fromConfig.forEach(function (s) {
@@ -237,13 +246,9 @@
   }
 
   function tommyColumns(sec, group) {
-    var head = el("div", sec.prices === "pizza" ? "pz-head" : "pz-head two");
+    var head = el("div", "pz-head");
     head.appendChild(group || el("span", "tag grp"));
-    if (sec.prices === "pizza") {
-      head.appendChild(el("span", "tag sz l", "Large"));
-      head.appendChild(el("span", "tag sz m", "Medium"));
-      ["Collect", "Deliver", "Collect", "Deliver"].forEach(function (t, i) { head.appendChild(el("span", i ? "tag ch" : "tag ch c1", t)); });
-    } else if (sec.prices === "cd") {
+    if (sec.prices === "cd") {
       ["Collect", "Deliver"].forEach(function (t, i) { head.appendChild(el("span", i ? "tag ch" : "tag ch c1", t)); });
     }
     return head;

@@ -127,31 +127,23 @@ nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .steps h3 { margin: 0; font-family: var(--poster); font-size: 24px; font-weight: 600; letter-spacing: 0.02em; }
 .steps p { margin: 0; }
 
-/* Pizza board: large and medium, each with a collection and a delivery price */
+/* Pizza board: a collection and a delivery price */
 .pizza-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 96px; row-gap: 48px; }
 .pizza-cols > div { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .pizza-cols > div + div { position: relative; }
 .pizza-cols > div + div::before { content: ""; position: absolute; left: -49px; top: 0; bottom: 0; width: 2px; background: var(--rule); }
-.pz { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 64px); column-gap: 8px; align-items: baseline; }
-.pz.two, .pz-head.two { grid-template-columns: minmax(0, 1fr) repeat(2, 64px); }
-.pz.two .name { font-family: var(--sans); font-size: 18px; line-height: 1.35; font-weight: 500; letter-spacing: 0; }
+.pz { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, 64px); column-gap: 8px; align-items: baseline; }
 .pz .name { font-family: var(--poster); font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: 0.02em; }
 .pz .p { font-family: var(--poster); font-size: 20px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
 .pz .desc { grid-column: 1 / -1; }
-.pz-head { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 64px); column-gap: 8px; row-gap: 4px; align-items: end; border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
-.pz-head .grp { grid-column: 1; grid-row: 1 / 3; font-size: 14px; }
-.pz-head.two .grp { grid-row: 1; }
-.pz-head .sz { font-size: 12px; text-align: center; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
-.pz-head .sz.l { grid-column: 2 / 4; }
-.pz-head .sz.m { grid-column: 4 / 6; }
+[data-section="pizza-extras"] .pz .name { font-family: var(--sans); font-size: 18px; line-height: 1.35; font-weight: 500; letter-spacing: 0; }
+.pz-head { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, 64px); column-gap: 8px; row-gap: 4px; align-items: end; border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
+.pz-head .grp { grid-column: 1; grid-row: 1; font-size: 14px; }
 .pz-head .ch { font-size: 11px; letter-spacing: 0.08em; text-align: right; }
 .pz-head .ch.c1 { grid-column-start: 2; }
 @media (max-width: 600px) {
-  .pz, .pz-head { grid-template-columns: minmax(0, 1fr) repeat(4, 54px); column-gap: 6px; }
-  .pz.two, .pz-head.two { grid-template-columns: minmax(0, 1fr) repeat(2, 56px); }
+  .pz, .pz-head { grid-template-columns: minmax(0, 1fr) repeat(2, 56px); column-gap: 6px; }
   .pz .p { font-size: 18px; }
-  .pz:not(.two) .name, .pz-head:not(.two) .grp { grid-column: 1 / -1; grid-row: auto; }
-  .pz:not(.two) .name + .p { grid-column-start: 2; }
 }
 
 .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 96px; row-gap: 48px; }
@@ -372,44 +364,44 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
         </div>
         <div class="pizza-cols">
           <div data-section="pizza-classics">
-            <div class="pz-head"><span class="tag grp" data-section-title="pizza-classics">The Classics</span><span class="tag sz l">Large</span><span class="tag sz m">Medium</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span><span class="tag ch">Collect</span><span class="tag ch">Deliver</span></div>
+            <div class="pz-head"><span class="tag grp" data-section-title="pizza-classics">The Classics</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
             <div data-menu-items="pizza-classics" style="display: contents;">
-              <div class="pz"><span class="name">Margherita</span><span class="p">R125</span><span class="p">[R000]</span><span class="p">R90</span><span class="p">[R000]</span><p class="desc">The OG. Sauce, mozzarella, olive oil. Nothing to hide behind.</p></div>
-              <div class="pz"><span class="name">Veggie</span><span class="p">R140</span><span class="p">[R000]</span><span class="p">R100</span><span class="p">[R000]</span><p class="desc">Mixed peppers, mushrooms, red onion, black olives.</p></div>
-              <div class="pz"><span class="name">Shroom</span><span class="p">R160</span><span class="p">[R000]</span><span class="p">R110</span><span class="p">[R000]</span><p class="desc">The truffle shuffle. Mixed mushrooms, parmesan, truffle oil, garlic salt.</p></div>
-              <div class="pz"><span class="name">Salami</span><span class="p">R180</span><span class="p">[R000]</span><span class="p">R125</span><span class="p">[R000]</span><p class="desc">Art-o-salami. Napoli salami, black olives, artichoke.</p></div>
-              <div class="pz"><span class="name">Chorizo</span><span class="p">R180</span><span class="p">[R000]</span><span class="p">R125</span><span class="p">[R000]</span><p class="desc">Chorizo, green olives and a hit of house schug.</p></div>
-              <div class="pz"><span class="name">Hawaiian</span><span class="p">R170</span><span class="p">[R000]</span><span class="p">R120</span><span class="p">[R000]</span><p class="desc">Hawaii-ville. Ham and pineapple. We don't judge.</p></div>
-              <div class="pz"><span class="name">Brekkie</span><span class="p">R170</span><span class="p">[R000]</span><span class="p" aria-label="No medium">–</span><span class="p" aria-label="No medium">–</span><p class="desc">Bacon and egg. Breakfast of champions, any time of day.</p></div>
+              <div class="pz"><span class="name">Margherita</span><span class="p">R125</span><span class="p">[R000]</span><p class="desc">The OG. Sauce, mozzarella, olive oil. Nothing to hide behind.</p></div>
+              <div class="pz"><span class="name">Veggie</span><span class="p">R140</span><span class="p">[R000]</span><p class="desc">Mixed peppers, mushrooms, red onion, black olives.</p></div>
+              <div class="pz"><span class="name">Shroom</span><span class="p">R160</span><span class="p">[R000]</span><p class="desc">The truffle shuffle. Mixed mushrooms, parmesan, truffle oil, garlic salt.</p></div>
+              <div class="pz"><span class="name">Salami</span><span class="p">R180</span><span class="p">[R000]</span><p class="desc">Art-o-salami. Napoli salami, black olives, artichoke.</p></div>
+              <div class="pz"><span class="name">Chorizo</span><span class="p">R180</span><span class="p">[R000]</span><p class="desc">Chorizo, green olives and a hit of house schug.</p></div>
+              <div class="pz"><span class="name">Hawaiian</span><span class="p">R170</span><span class="p">[R000]</span><p class="desc">Hawaii-ville. Ham and pineapple. We don't judge.</p></div>
+              <div class="pz"><span class="name">Brekkie</span><span class="p">R170</span><span class="p">[R000]</span><p class="desc">Bacon and egg. Breakfast of champions, any time of day.</p></div>
             </div>
           </div>
           <div data-section="pizza-signatures">
-            <div class="pz-head"><span class="tag grp" data-section-title="pizza-signatures">The Signatures</span><span class="tag sz l">Large</span><span class="tag sz m">Medium</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span><span class="tag ch">Collect</span><span class="tag ch">Deliver</span></div>
+            <div class="pz-head"><span class="tag grp" data-section-title="pizza-signatures">The Signatures</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
             <div data-menu-items="pizza-signatures" style="display: contents;">
-              <div class="pz"><span class="name">FAB</span><span class="p">R200</span><span class="p">[R000]</span><span class="p">R140</span><span class="p">[R000]</span><p class="desc">Oh so fabulous. Bacon, avo, feta.</p></div>
-              <div class="pz"><span class="name">Tasty Wastie</span><span class="p">R230</span><span class="p">[R000]</span><span class="p">R160</span><span class="p">[R000]</span><p class="desc">Chorizo, salami, ham, bacon, mushrooms. Waste not.</p></div>
-              <div class="pz"><span class="name">Franschhoek</span><span class="p">R190</span><span class="p">[R000]</span><span class="p">R140</span><span class="p">[R000]</span><p class="desc">Biltong, goats cheese, fig preserve. Wine country on a base.</p></div>
-              <div class="pz"><span class="name">Cha Cha Cha</span><span class="p">R180</span><span class="p">[R000]</span><span class="p">R125</span><span class="p">[R000]</span><p class="desc">Chicken breast, mixed peppers, feta. Dance with it.</p></div>
-              <div class="pz"><span class="name">POD</span><span class="p">R170</span><span class="p">[R000]</span><span class="p">R115</span><span class="p">[R000]</span><p class="desc">Baby tomatoes, pesto, rocket. Fresh as the morning after.</p></div>
-              <div class="pz"><span class="name">MexiCan</span><span class="p">R170</span><span class="p">[R000]</span><span class="p" aria-label="No medium">–</span><span class="p" aria-label="No medium">–</span><p class="desc">Yes we MexiCan. Slow-cooked bolognese, mixed peppers, onion.</p></div>
-              <div class="pz"><span class="name">California</span><span class="p">R170</span><span class="p">[R000]</span><span class="p" aria-label="No medium">–</span><span class="p" aria-label="No medium">–</span><p class="desc">[Toppings to confirm]</p></div>
+              <div class="pz"><span class="name">FAB</span><span class="p">R200</span><span class="p">[R000]</span><p class="desc">Oh so fabulous. Bacon, avo, feta.</p></div>
+              <div class="pz"><span class="name">Tasty Wastie</span><span class="p">R230</span><span class="p">[R000]</span><p class="desc">Chorizo, salami, ham, bacon, mushrooms. Waste not.</p></div>
+              <div class="pz"><span class="name">Franschhoek</span><span class="p">R190</span><span class="p">[R000]</span><p class="desc">Biltong, goats cheese, fig preserve. Wine country on a base.</p></div>
+              <div class="pz"><span class="name">Cha Cha Cha</span><span class="p">R180</span><span class="p">[R000]</span><p class="desc">Chicken breast, mixed peppers, feta. Dance with it.</p></div>
+              <div class="pz"><span class="name">POD</span><span class="p">R170</span><span class="p">[R000]</span><p class="desc">Baby tomatoes, pesto, rocket. Fresh as the morning after.</p></div>
+              <div class="pz"><span class="name">MexiCan</span><span class="p">R170</span><span class="p">[R000]</span><p class="desc">Yes we MexiCan. Slow-cooked bolognese, mixed peppers, onion.</p></div>
+              <div class="pz"><span class="name">California</span><span class="p">R170</span><span class="p">[R000]</span><p class="desc">[Toppings to confirm]</p></div>
             </div>
           </div>
         </div>
         <div class="pizza-cols" style="margin-top: 56px;" data-section="pizza-extras">
           <div>
-            <div class="pz-head two"><span class="tag grp" data-section-title="pizza-extras">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
+            <div class="pz-head"><span class="tag grp" data-section-title="pizza-extras">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
             <div data-menu-items="pizza-extras" style="display: contents;">
-              <div class="pz two"><span class="name">Gluten-free base</span><span class="p">R40</span><span class="p">[R000]</span></div>
-              <div class="pz two"><span class="name">Vegan cheese</span><span class="p">R40</span><span class="p">[R000]</span></div>
-              <div class="pz two"><span class="name">Extra meat, cheese or avo</span><span class="p">R30</span><span class="p">[R000]</span></div>
+              <div class="pz"><span class="name">Gluten-free base</span><span class="p">R40</span><span class="p">[R000]</span></div>
+              <div class="pz"><span class="name">Vegan cheese</span><span class="p">R40</span><span class="p">[R000]</span></div>
+              <div class="pz"><span class="name">Extra meat, cheese or avo</span><span class="p">R30</span><span class="p">[R000]</span></div>
             </div>
           </div>
           <div>
-            <div class="pz-head two"><span class="tag grp" data-section-title="pizza-extras">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
+            <div class="pz-head"><span class="tag grp" data-section-title="pizza-extras">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
             <div data-menu-items="pizza-extras" style="display: contents;">
-              <div class="pz two"><span class="name">Extra veg</span><span class="p">R15</span><span class="p">[R000]</span></div>
-              <div class="pz two"><span class="name">Pizza box</span><span class="p">R10</span><span class="p">[R000]</span></div>
+              <div class="pz"><span class="name">Extra veg</span><span class="p">R15</span><span class="p">[R000]</span></div>
+              <div class="pz"><span class="name">Pizza box</span><span class="p">R10</span><span class="p">[R000]</span></div>
             </div>
           </div>
         </div>
@@ -526,7 +518,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
         <article class="box">
           <p class="tag red">What delivers</p>
           <h3>Pizza. Only pizza.</h3>
-          <p class="muted">The full pizza board, large or medium, with gluten-free bases and vegan cheese. Falafel, shawarma, pasta, potjies and coffee stay on the truck.</p>
+          <p class="muted">The full pizza board, with gluten-free bases and vegan cheese. Falafel, shawarma, pasta, potjies and coffee stay on the truck.</p>
           <a href="#menu" style="font-weight: 700; margin-top: auto; padding-top: 8px;">Pizza menu →</a>
         </article>
         <article class="box raised" style="justify-content: center;">
@@ -543,7 +535,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
         <h2 class="poster-lg" style="text-align: center;">Three Taps to a Saved Life</h2>
         <ol class="steps">
           <li><span class="n">1</span><h3>Open your app.</h3><p class="muted">Search "Tommy Sugo" on Uber Eats or Mr D.</p></li>
-          <li><span class="n">2</span><h3>Pick your pie.</h3><p class="muted">Large or medium. Add a gluten-free base or vegan cheese.</p></li>
+          <li><span class="n">2</span><h3>Pick your pie.</h3><p class="muted">Add a gluten-free base or vegan cheese.</p></li>
           <li><span class="n">3</span><h3>Open the box.</h3><p class="muted">Seven hours of sauce, delivered in thirty minutes or so.</p></li>
         </ol>
       </div>
