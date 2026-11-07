@@ -371,12 +371,15 @@
   // ---------- With an account, or without ----------
   var A = window.Account;
   var accounts = !!(copy.liveCheckout && A && A.enabled() && $("acct"));
-  var acct = { use: "account", session: null };
+  // profile: their saved name and cell (null while loading); editing: they tapped Change to type other ones.
+  var acct = { use: "account", session: null, profile: null, editing: false };
 
   function drawAccount() {
     if (!accounts) return;
     var signed = !!acct.session;
     var needAuth = acct.use === "account" && !signed;
+    // Signed in, their saved details are shown rather than asked for again, unless they're missing or being changed.
+    var summary = acct.use === "account" && signed && !acct.editing;
     document.querySelectorAll("[data-acct]").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b.getAttribute("data-acct") === acct.use));
     });
@@ -384,33 +387,71 @@
     $("acct-auth").hidden = !needAuth;
     $("acct-signed").hidden = !(acct.use === "account" && signed);
     $("acct-device").hidden = acct.use !== "device";
-    // Until they've signed in, the details come from the account form instead.
-    document.querySelectorAll("[data-details]").forEach(function (f) { f.hidden = needAuth; });
+    document.querySelectorAll("[data-details]").forEach(function (f) { f.hidden = needAuth || summary; });
     $("shop-email").readOnly = acct.use === "account" && signed;
+    if (signed) drawSigned();
   }
 
-  function signedIn(session) {
-    acct.session = session;
-    acct.use = "account";
-    $("shop-email").value = session.user.email;
+  function drawSigned() {
     var note = $("acct-signed");
-    note.textContent = "Signed in as " + session.user.email + ". This order goes on your account. ";
+    var p = acct.profile;
+    note.textContent = "";
+    note.appendChild(document.createTextNode("Signed in as " + acct.session.user.email + ". This order goes on your account."));
+    if (!acct.editing) {
+      var who = node("span", null, p ? [p.name, p.phone].filter(Boolean).join(" · ") : "Loading your details…");
+      who.style.cssText = "display:block;margin-top:8px;font-weight:700;font-size:16px;color:var(--ink, inherit)";
+      note.appendChild(who);
+    }
+    var btns = node("span");
+    btns.style.cssText = "display:flex;gap:16px;flex-wrap:wrap;margin-top:4px";
+    if (p && !acct.editing) {
+      var change = node("button", "line-remove", "Change details");
+      change.type = "button";
+      change.style.margin = "0";
+      change.addEventListener("click", function () {
+        acct.editing = true;
+        drawAccount();
+        $("shop-name").focus();
+      });
+      btns.appendChild(change);
+    }
     var out = node("button", "line-remove", "Sign out");
     out.type = "button";
     out.style.margin = "0";
     out.addEventListener("click", function () {
       A.signOut().then(function () {
         acct.session = null;
-        $("shop-email").value = "";
+        acct.profile = null;
+        acct.editing = false;
+        ["shop-email", "shop-name", "shop-phone"].forEach(function (id) { $(id).value = ""; });
         drawAccount();
       });
     });
-    note.appendChild(out);
+    btns.appendChild(out);
+    note.appendChild(btns);
+  }
+
+  function signedIn(session) {
+    acct.session = session;
+    acct.use = "account";
+    acct.profile = null;
+    acct.editing = false;
+    $("shop-email").value = session.user.email;
     drawAccount();
     A.profile(session.user).then(function (p) {
-      if (!$("shop-name").value.trim()) $("shop-name").value = p.name || "";
-      if (!$("shop-phone").value.trim()) $("shop-phone").value = p.phone || "";
-    }).catch(function () { /* they can type them in */ });
+      if (acct.session !== session) return;
+      $("shop-name").value = p.name || "";
+      $("shop-phone").value = p.phone || "";
+      acct.profile = p;
+      // Anything missing from the account is asked for here.
+      acct.editing = !p.name || !p.phone;
+      drawAccount();
+    }).catch(function () {
+      // Couldn't load them: let them type them in.
+      if (acct.session !== session) return;
+      acct.editing = true;
+      drawAccount();
+    });
   }
 
   if (accounts) {
@@ -454,6 +495,7 @@
     var problem = "";
     if (!renderCart()) problem = copy.errEmpty;
     else if (accounts && acct.use === "account" && !acct.session) problem = "Create an account or sign in above, or choose No account.";
+    else if (accounts && acct.use === "account" && !acct.profile && !acct.editing) problem = "Just a moment, we're loading your details.";
     else if (mode === "delivery" && !$("shop-address").value.trim()) problem = copy.errAddress;
     else if (!$("shop-name").value.trim()) problem = copy.errName;
     else if (!email.value.trim() || !email.checkValidity()) problem = "Add an email address so we can send your confirmation.";
