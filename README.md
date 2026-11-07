@@ -13,6 +13,8 @@ the page if Supabase isn't configured or can't be reached.
 | `js/catalog-config.js` | The fallback list of sections and price columns, used if the `brands` and `sections` tables can't be read, plus the price column labels |
 | `js/catalog.js` | Loads live items into the public pages, with Add buttons on orderable menu items |
 | `js/order.js` | The cart and checkout rules on both brand pages (`window.ORDER_COPY` in each page holds its wording) |
+| `js/account.js` | Customer accounts and the orders kept on this device, shared by the checkout, `order.html` and `account.html` |
+| `account.html` | Your Orders: sign in or create an account, current and previous orders, profile and specials |
 | `supabase/migrations/…_menu_and_shop.sql` | Tables, row-level security, the `item-images` storage bucket |
 | `supabase/migrations/…_private_is_admin_and_anon_reads.sql` | Fix-up: lets visitors read visible items, moves the admin check to a private schema |
 | `supabase/migrations/…_menu_items_orderable.sql` | Adds `menu_items.is_orderable` and turns it on for all of Merle's |
@@ -111,6 +113,16 @@ Tommy Sugo takes real orders. Merle's checkout is still a prototype (`liveChecko
 2. `yoco-payment-webhook` confirms the payment. Only this moves an order on: the customer returning to the site proves nothing. It emails the customer their link and collection code, and records live orders in Yoco.
 3. `order.html` is the customer's page, reached by a private link. It shows the code and the order's progress.
 4. The **Orders** tab in the admin moves an order through Preparing and Ready. Marking it collected needs the customer's code, which staff can't see.
+
+### Customer accounts
+
+At checkout the customer picks **With an account** (sign in, or create one with name, email, cell number and password) or **No account**.
+
+- Orders placed while signed in are linked to the account (`orders.customer_id`). Their profile is in `public.customers`, filled from the sign-up by a trigger. Customers can read and edit only their own row.
+- Every order page saves its link in that browser, so `account.html` can list orders placed without an account, and a signed-in customer can add them to their account.
+- `my-orders` returns a customer's orders. Orders aren't readable by customers through the Data API, and customer accounts can't open the admin, which only lets in people listed in `admins`.
+- Supabase needs sign-ups switched on (Authentication → Sign In / Providers), and the site added to Redirect URLs for confirmation and password reset links. Its built-in email only reaches the project's team members, so customers can only confirm an account once custom SMTP is set up (Resend works, with a verified domain).
+- Yoco's API has no loyalty features. The site keeps the cell number, which is what Yoco Loyalty uses at the counter.
 
 Keys are saved in Settings (Online Payments, Order Emails) and kept in Vault. A `sk_test` key takes no money, and its orders are marked Test and aren't sent to Yoco unless someone presses **Send to Yoco**. Delivery can't be ordered online yet, as there are no delivery fees to charge. Cancelling an order doesn't refund it: do that in Yoco.
 

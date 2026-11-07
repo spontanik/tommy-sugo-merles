@@ -234,6 +234,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
       <a class="nav" href="#circuit" data-nav="circuit">On the Circuit</a>
       <a class="nav" href="#catering" data-nav="catering">Catering</a>
       <a class="nav" href="#story" data-nav="story">Our Story</a>
+      <a class="nav" href="account.html?from=tommy">Your Orders</a>
     </nav>
     <a class="btn" href="#book">Make an Enquiry</a>
   </div>
@@ -658,9 +659,22 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             <div class="fld" id="get-delivery"><label class="lbl" for="shop-address">Delivery address</label><input id="shop-address" class="field" type="text" placeholder="Street, suburb" autocomplete="street-address"><p class="desc" style="font-size: 14px;">Frozen orders deliver to [areas], packed cold. Delivery fee [R000].</p></div>
             <div class="fld" id="get-collect" hidden><label class="lbl" for="shop-collect">Collect from</label><select id="shop-collect" class="field"><option>The truck at [next event]</option><option data-kitchen>The dark kitchen, [AREA]</option></select></div>
             <p id="get-note" class="desc" style="font-size: 14px;" hidden></p>
-            <div class="fld"><label class="lbl" for="shop-name">Your name</label><input id="shop-name" class="field" type="text" autocomplete="name"></div>
-            <div class="fld"><label class="lbl" for="shop-email">Email</label><input id="shop-email" class="field" type="email" autocomplete="email"></div>
-            <div class="fld"><label class="lbl" for="shop-phone">Phone</label><input id="shop-phone" class="field" type="tel" autocomplete="tel"></div>
+            <div id="acct" class="stack" style="gap: 16px;" hidden>
+              <fieldset>
+                <legend class="lbl">Your details</legend>
+                <div class="btns">
+                  <button type="button" class="pill" data-acct="account" aria-pressed="true">With an account</button>
+                  <button type="button" class="pill" data-acct="device" aria-pressed="false">No account</button>
+                </div>
+              </fieldset>
+              <p id="acct-pitch" class="desc" style="font-size: 14px; border-left: 4px solid var(--sauce); padding-left: 12px;"></p>
+              <div id="acct-auth"></div>
+              <p id="acct-signed" class="desc" style="font-size: 14px;" hidden></p>
+              <p id="acct-device" class="desc" style="font-size: 14px;" hidden>We'll keep this order on this device only. You can create an account later and add it from <a href="account.html?from=tommy">Your Orders</a>.</p>
+            </div>
+            <div class="fld" data-details><label class="lbl" for="shop-name">Your name</label><input id="shop-name" class="field" type="text" autocomplete="name"></div>
+            <div class="fld" data-details><label class="lbl" for="shop-email">Email</label><input id="shop-email" class="field" type="email" autocomplete="email"></div>
+            <div class="fld" data-details><label class="lbl" for="shop-phone">Cell number</label><input id="shop-phone" class="field" type="tel" autocomplete="tel"></div>
             <p id="shop-err" class="shop-err" role="alert" hidden></p>
             <button class="btn" type="submit">Pay and Place Order</button>
             <p class="desc" style="font-size: 14px; margin: 0;">You'll pay on Yoco's secure page. We'll then email you a link to follow your order, and a collection code to give us when you collect.</p>
@@ -923,7 +937,9 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="js/supabase-config.js"></script>
+<script src="js/account.js"></script>
 <script src="js/catalog-config.js"></script>
 <script src="js/catalog.js"></script>
 <script>

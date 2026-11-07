@@ -1,5 +1,7 @@
 // Called by the checkout on a brand page. Public, so nothing from the request is trusted: prices come from the database.
 // Deploy with verify_jwt off. Saves the order as awaiting payment and returns Yoco's payment page.
+// A signed-in customer sends their session as the Authorization bearer, and the order is linked to their account.
+// Without one (or if it has run out) the order is placed without an account, as before.
 import { adminClient, BRANDS, getSecret } from "../_shared/yoco.ts";
 import { OrderError, priceOrder, type RequestedLine } from "../_shared/order-pricing.ts";
 import { checkoutFetch, CORS, orderLink, reply, SITE_URL } from "../_shared/orders.ts";
@@ -35,6 +37,10 @@ Deno.serve(async (req) => {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return reply({ ok: false, error: "Add an email address so we can send your collection code." });
 
   const db = adminClient();
+  const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const customerId = bearer.split(".").length === 3
+    ? (await db.auth.getUser(bearer).catch(() => null))?.data?.user?.id ?? null
+    : null;
   try {
     const key = await getSecret(db, brand, "checkout_key");
     if (!key) return reply({ ok: false, error: "Online payments aren't switched on yet. Please order in person or call us." });
@@ -65,6 +71,7 @@ Deno.serve(async (req) => {
       customer_phone: phone || null,
       collect_from: clean(body.collectFrom, 200) || null,
       total: totalCents / 100,
+      customer_id: customerId,
     }).select("id, number").single();
     if (error) throw new Error("Couldn't save your order.");
     const saved = await db.from("order_lines").insert(lines.map((l) => ({ ...l, order_id: order.id })));

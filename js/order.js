@@ -7,7 +7,9 @@
    A menu item with [data-options] has Yoco variants or modifiers: it opens a dialog first, and each combination the
    customer chooses is its own line in `chosen`, since those lines have no stepper on the page.
    Page copy comes from window.ORDER_COPY. With copy.liveCheckout set, the order goes to the order-create function and
-   the customer pays on Yoco's page. Otherwise checkout is a prototype: nothing is saved or charged. */
+   the customer pays on Yoco's page. Otherwise checkout is a prototype: nothing is saved or charged.
+   With live checkout and accounts (js/account.js) loaded, the customer either signs in or creates an account, or
+   chooses No account, and the order is then kept on this device only. A signed-in order goes on their account. */
 (function () {
   var form = document.getElementById("shop-form");
   if (!form) return;
@@ -346,6 +348,65 @@
     optDlg.showModal();
   }
 
+  // ---------- With an account, or without ----------
+  var A = window.Account;
+  var accounts = !!(copy.liveCheckout && A && A.enabled() && $("acct"));
+  var acct = { use: "account", session: null };
+
+  function drawAccount() {
+    if (!accounts) return;
+    var signed = !!acct.session;
+    var needAuth = acct.use === "account" && !signed;
+    document.querySelectorAll("[data-acct]").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-acct") === acct.use));
+    });
+    $("acct-pitch").hidden = !needAuth;
+    $("acct-auth").hidden = !needAuth;
+    $("acct-signed").hidden = !(acct.use === "account" && signed);
+    $("acct-device").hidden = acct.use !== "device";
+    // Until they've signed in, the details come from the account form instead.
+    document.querySelectorAll("[data-details]").forEach(function (f) { f.hidden = needAuth; });
+    $("shop-email").readOnly = acct.use === "account" && signed;
+  }
+
+  function signedIn(session) {
+    acct.session = session;
+    acct.use = "account";
+    $("shop-email").value = session.user.email;
+    var note = $("acct-signed");
+    note.textContent = "Signed in as " + session.user.email + ". This order goes on your account. ";
+    var out = node("button", "line-remove", "Sign out");
+    out.type = "button";
+    out.style.margin = "0";
+    out.addEventListener("click", function () {
+      A.signOut().then(function () {
+        acct.session = null;
+        $("shop-email").value = "";
+        drawAccount();
+      });
+    });
+    note.appendChild(out);
+    drawAccount();
+    A.profile(session.user).then(function (p) {
+      if (!$("shop-name").value.trim()) $("shop-name").value = p.name || "";
+      if (!$("shop-phone").value.trim()) $("shop-phone").value = p.phone || "";
+    }).catch(function () { /* they can type them in */ });
+  }
+
+  if (accounts) {
+    $("acct").hidden = false;
+    $("acct-pitch").textContent = A.PITCH;
+    A.authForm($("acct-auth"), { prefix: "co-", onSignedIn: signedIn });
+    document.querySelectorAll("[data-acct]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        acct.use = b.getAttribute("data-acct");
+        drawAccount();
+      });
+    });
+    A.session().then(function (s) { if (s) signedIn(s); }).catch(function () { /* stays signed out */ });
+    drawAccount();
+  }
+
   // The cart sits below the shop's hero (and, on small screens, below its products): go straight to it.
   bar.querySelector("a").addEventListener("click", function () {
     setTimeout(function () { $("cart-h").scrollIntoView(); }, 0);
@@ -370,6 +431,7 @@
     var email = $("shop-email");
     var problem = "";
     if (!renderCart()) problem = copy.errEmpty;
+    else if (accounts && acct.use === "account" && !acct.session) problem = "Create an account or sign in above, or choose No account.";
     else if (mode === "delivery" && !$("shop-address").value.trim()) problem = copy.errAddress;
     else if (!$("shop-name").value.trim()) problem = copy.errName;
     else if (!email.value.trim() || !email.checkValidity()) problem = "Add an email address so we can send your confirmation.";
@@ -411,9 +473,12 @@
     var err = $("shop-err");
     var select = $("shop-collect");
     submitting(true);
-    fetch(conf.url.replace(/\/$/, "") + "/functions/v1/order-create", {
+    // A signed-in order sends the (freshly refreshed) session, so it's saved to their account.
+    var who = accounts && acct.use === "account" && acct.session ? A.session() : Promise.resolve(null);
+    who.then(function (s) {
+      return fetch(conf.url.replace(/\/$/, "") + "/functions/v1/order-create", {
       method: "POST",
-      headers: { apikey: conf.key, Authorization: "Bearer " + conf.key, "Content-Type": "application/json" },
+      headers: { apikey: conf.key, Authorization: "Bearer " + (s ? s.access_token : conf.key), "Content-Type": "application/json" },
       body: JSON.stringify({
         brand: document.body.getAttribute("data-brand"),
         lines: orderLines(),
@@ -423,6 +488,7 @@
         collectFrom: select ? select.value : "",
         returnBase: /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? location.origin : undefined
       })
+      });
     }).then(function (r) { return r.json(); }).then(function (res) {
       if (!res.ok) throw new Error(res.error);
       location.href = res.redirectUrl;
