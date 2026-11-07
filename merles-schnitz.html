@@ -93,14 +93,11 @@ nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .desc { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink-muted); }
 .item { display: flex; flex-direction: column; gap: 4px; }
 
-.slogans { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px 40px; font-family: var(--poster); font-size: clamp(28px, 4vw, 44px); line-height: 1.1; text-transform: uppercase; padding-block: 40px; }
-.slogans i { width: 12px; height: 12px; background: var(--on-fill); display: block; }
+/* One saying with a square either side. The squares stay beside it; on a phone the saying breaks onto two lines between them. */
+.slogans { display: flex; flex-wrap: nowrap; justify-content: center; align-items: center; gap: clamp(16px, 4vw, 40px); font-family: var(--poster); font-size: clamp(28px, 4vw, 44px); line-height: 1.1; text-transform: uppercase; padding-block: 40px; }
+.slogans span { min-width: 0; text-align: center; }
+.slogans i { flex: none; width: 12px; height: 12px; background: var(--on-fill); display: block; }
 
-.steps { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; }
-.steps li { display: flex; flex-direction: column; gap: 8px; }
-.steps .n { font-family: var(--poster); font-size: 64px; line-height: 1; }
-.steps h3 { margin: 0; font-size: 22px; font-weight: 800; }
-.steps p { margin: 0; }
 
 .cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 96px; row-gap: 48px; }
 .cols > .col { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
@@ -213,7 +210,6 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
         <p class="tag">SCHNITZ AROUND THE CORNER</p>
         <h1 class="poster-xl">Let's get schnitzfaced.</h1>
         <div class="bar" aria-hidden="true"></div>
-        <p class="lede">Merle's is a delivery kitchen. No counter, no queue. Proper chicken schnitz, straight to your door.</p>
         <div class="btns" style="justify-content: center;">
           <a class="btn" href="https://www.ubereats.com" target="_blank" rel="noopener">Order on Uber Eats</a>
           <a class="btn" href="https://www.mrd.com" target="_blank" rel="noopener">Order on Mr D</a>
@@ -225,11 +221,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 
   <section class="band tracks" aria-label="Words to live by">
     <div class="wrap slogans">
-      <span>Holy schnitz</span><i aria-hidden="true"></i>
-      <span>Schnitz happens</span><i aria-hidden="true"></i>
-      <span>Get your schnitz together</span><i aria-hidden="true"></i>
-      <span>You've been schnitzed</span><i aria-hidden="true"></i>
-      <span>Schnitz and giggles</span>
+      <i aria-hidden="true"></i><span>Get your schnitz together</span><i aria-hidden="true"></i>
     </div>
   </section>
 
@@ -263,19 +255,6 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
         </article>
       </div>
       <div style="display: flex; justify-content: center;"><a class="btn btn-ghost" href="#menu">See the full menu</a></div>
-    </div>
-  </section>
-
-  <section style="padding-bottom: 96px;">
-    <div class="wrap">
-      <div class="stack" style="border-top: 8px solid var(--ink); padding-top: 64px; gap: 40px;">
-        <h2 class="poster-lg" style="text-align: center;">Three steps to schnitzfaced.</h2>
-        <ol class="steps">
-          <li><span class="n">1</span><h3>Open your app.</h3><p class="muted">Find Merle's Schnitz on Uber Eats or Mr D.</p></li>
-          <li><span class="n">2</span><h3>Pick your schnitz.</h3><p class="muted">The names are the joke. The schnitz is serious.</p></li>
-          <li><span class="n">3</span><h3>Get schnitzfaced.</h3><p class="muted">It arrives hot. You know what to do.</p></li>
-        </ol>
-      </div>
     </div>
   </section>
 
