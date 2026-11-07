@@ -20,11 +20,9 @@
     ".nav-icons.is-floating{position:fixed;z-index:20;top:calc(env(safe-area-inset-top,0px) + 8px);right:16px;" +
       "padding:0 4px;background:var(--surface);border:2px solid var(--rule,var(--ink))}" +
     ".nav.nav-icon{position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0}" +
-    // Drawn like the menu illustrations: an open brush line, with a copy printed just off register, down and right.
-    // That copy is sauce red on Tommy Sugo and grey on Merle's, which has no red.
-    ".nav-icon svg{flex:none;width:22px;height:22px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;overflow:visible}" +
-    ".nav-icon .line{stroke:currentColor}" +
-    ".nav-icon .echo{stroke:var(--sauce,var(--ink-muted));transform:translate(1px,1px)}" +
+    // Both brands use the Tommy Sugo design system's Icon set (cart, and bag for orders): filled brush strokes
+    // in ink at 24px, with no red line, which the design system keeps for 32px and up.
+    ".nav-icon svg{flex:none;width:24px;height:24px;fill:currentColor;stroke:none}" +
     // Badges use only the brand's own colours, and change colour instantly, never by fading or growing.
     ".nav-badge{position:absolute;top:4px;right:0;min-width:17px;height:17px;padding:0 4px;border-radius:9px;" +
       "background:var(--fill,var(--ink));color:var(--on-fill,var(--surface));box-shadow:0 0 0 2px var(--surface);" +
