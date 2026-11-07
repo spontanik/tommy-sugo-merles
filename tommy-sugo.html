@@ -103,7 +103,8 @@ nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .frame-section { padding-top: 136px; }
 /* Bunting hung a little below the header line, with the frame moved down to match. */
 .bunting-drop { background-position: left 0 top 16px; }
-.frame-section.bunting-drop { padding-top: 152px; }
+/* The seal hangs half above the frame, so the frame starts at: flags (16px drop + 44px) + a 32px gap + half the seal. */
+.frame-section.bunting-drop { padding-top: calc(16px + 44px + 32px + clamp(112px, 36vw, 176px) / 2); }
 
 /* SealPanel: one per view, a flat sauce block with the seal breaking its top edge */
 .seal-panel { position: relative; background: var(--sauce); color: var(--on-sauce); padding: 96px 40px 48px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; margin-top: 64px; }
