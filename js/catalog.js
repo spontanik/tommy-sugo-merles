@@ -117,6 +117,8 @@
       opt.setAttribute("data-product", it.name);
       opt.setAttribute("data-price", String(Number(it.price)));
       opt.setAttribute("data-food", "");
+      opt.setAttribute("data-item-id", it.id);
+      opt.setAttribute("data-item-kind", "menu");
       add.setAttribute("data-step", "1");
       add.setAttribute("aria-label", "Add " + it.name + " to your order, " + money(it.price));
       opt.appendChild(add);
@@ -161,6 +163,8 @@
     var soldOut = it.is_sold_out || (it.yoco_id && !money(it.price));
     var a = el("article", "product" + (soldOut ? " sold-out" : ""));
     a.setAttribute("data-product", label);
+    a.setAttribute("data-item-id", it.id);
+    a.setAttribute("data-item-kind", "shop");
     if (money(it.price)) a.setAttribute("data-price", String(Number(it.price)));
     if (it.image_url) a.appendChild(img(it.image_url, "ill", it.image_alt));
     var body = el("div", "product-body");

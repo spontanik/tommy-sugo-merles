@@ -103,7 +103,16 @@ One cart per brand page, holding menu items and shop items:
 - Delivery is only offered when the cart holds nothing but shop items. Those orders can also choose Collect.
 - Sold-out shop items can't be added. Add buttons only appear with live data, so the static fallback can't take food orders.
 
-Checkout is still a prototype: it validates the form and shows a confirmation, but saves nothing and takes no payment.
+### Checkout
+
+Tommy Sugo takes real orders. Merle's checkout is still a prototype (`liveCheckout` in `window.ORDER_COPY` switches it per page).
+
+1. `order-create` prices the cart again from the database, saves the order as awaiting payment, and sends the customer to Yoco Checkout.
+2. `yoco-payment-webhook` confirms the payment. Only this moves an order on: the customer returning to the site proves nothing. It emails the customer their link and collection code, and records live orders in Yoco.
+3. `order.html` is the customer's page, reached by a private link. It shows the code and the order's progress.
+4. The **Orders** tab in the admin moves an order through Preparing and Ready. Marking it collected needs the customer's code, which staff can't see.
+
+Keys are saved in Settings (Online Payments, Order Emails) and kept in Vault. A `sk_test` key takes no money, and its orders are marked Test and aren't sent to Yoco unless someone presses **Send to Yoco**. Delivery can't be ordered online yet, as there are no delivery fees to charge. Cancelling an order doesn't refund it: do that in Yoco.
 
 ## Yoco product sync
 

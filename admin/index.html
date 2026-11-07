@@ -178,6 +178,17 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 .dlg footer .right { display: flex; gap: 12px; margin-left: auto; }
 .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; align-items: end; }
 .yoco-links { display: flex; flex-direction: column; gap: 12px; }
+.orders { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.order { background: var(--raised); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.order-received { border: 3px solid #000; }
+.order-collected, .order-cancelled { opacity: .7; }
+.order-head { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.order-head h3 { margin: 0; font-size: 20px; overflow-wrap: anywhere; min-width: 0; }
+.order-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.order-total { margin: 0; font-weight: 700; }
+.order-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin-top: 8px; }
+.order-code { flex: 1 1 260px; }
+.order-code .input { flex: 1 1 96px; font-size: 20px; letter-spacing: .1em; }
 .yoco-switches { display: flex; flex-direction: column; gap: 12px; padding: 12px; background: var(--raised); }
 .yoco-switches .check { min-height: 32px; font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 15px; }
 .yoco-switches .check input { width: 20px; height: 20px; }
@@ -254,6 +265,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       <a class="btn ghost" id="view-site" target="_blank" rel="noopener">View site ↗</a>
     </div>
     <div class="tabs" role="tablist" aria-label="Sections of the admin">
+      <button class="tab" type="button" role="tab" id="tab-orders" data-view-btn="orders" aria-controls="panel" aria-selected="false">Orders</button>
       <button class="tab" type="button" role="tab" id="tab-menu" data-view-btn="menu" aria-controls="panel" aria-selected="false">Menu</button>
       <button class="tab" type="button" role="tab" id="tab-shop" data-view-btn="shop" aria-controls="panel" aria-selected="false">Shop</button>
       <button class="tab" type="button" role="tab" id="tab-settings" data-view-btn="settings" aria-controls="panel" aria-selected="false">Settings</button>
@@ -359,7 +371,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var YOCO_COLS = { price: "yoco_id" }; // the website prices that can follow a Yoco item
 
   function parseRoute(hash) {
-    var m = /^#(tommy|merles)\/(menu|shop|settings)$/.exec(hash || "");
+    var m = /^#(tommy|merles)\/(orders|menu|shop|settings)$/.exec(hash || "");
     return m ? { brand: m[1], view: m[2] } : null;
   }
 
@@ -532,7 +544,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     } else {
       id.appendChild(h("img", { class: "logo", src: "../merles-logo.svg", alt: info.label }));
     }
-    $("view-site").href = "../" + info.page + (state.view === "settings" ? "" : "#" + state.view);
+    $("view-site").href = "../" + info.page + (state.view === "menu" || state.view === "shop" ? "#" + state.view : "");
     saveRoute();
   }
 
@@ -572,7 +584,14 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   async function load() {
     var seq = ++loadSeq;
     var brand = state.brand, view = state.view;
+    clearTimeout(ordersTimer);
+    document.title = PAGE_TITLE;
     $("panel").textContent = "Loading…";
+    if (view === "orders") {
+      drawChrome();
+      loadOrders(seq, true);
+      return;
+    }
     if (view === "settings") {
       var all = await Promise.all([
         loadCatalog(),
@@ -599,6 +618,142 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     state.rows = res[0].data;
     state.yocoCatalogue = res[2] && !res[2].error ? res[2].data : null; // null: no Yoco here, or it couldn't load
     draw();
+  }
+
+  // ---------- Orders tab ----------
+  // Polls rather than holds a connection open, so a tablet left on the counter recovers by itself from a bad signal.
+  var PAGE_TITLE = document.title;
+  var ORDERS_EVERY = 15000;
+  var ordersTimer = null;
+  var ordersKnown = null; // order ids already seen, to flag new ones
+  var ordersRows = [];
+  var ordersCodes = {}; // what's been typed into each collection code box, kept across redraws
+  var ORDER_COLUMNS = "id,number,status,customer_name,customer_email,customer_phone,collect_from,total,payment_mode,created_at,paid_at,yoco_order_id,yoco_order_error,email_sent_at,email_error,order_lines(name,qty,unit_price,position)";
+  var ORDER_ACTIVE = ["received", "preparing", "ready"];
+  var ORDER_LABELS = { received: "New", preparing: "Preparing", ready: "Ready", collected: "Collected", cancelled: "Cancelled" };
+
+  async function orderAct(action, id, extra) {
+    var res = await db.functions.invoke("order-admin", { body: Object.assign({ action: action, id: id }, extra || {}) });
+    if (res.error) {
+      var detail = null;
+      try { detail = await res.error.context.json(); } catch (e) {}
+      throw new Error((detail && detail.error) || "Couldn't reach the server. Try again in a moment.");
+    }
+    if (!res.data || !res.data.ok) throw new Error((res.data && res.data.error) || "That didn't work. Try again.");
+  }
+
+  async function runOrderAct(button, action, id, extra, done) {
+    button.disabled = true;
+    try {
+      await orderAct(action, id, extra);
+      if (done) toast(done);
+      await loadOrders(loadSeq, true);
+    } catch (e) {
+      toast(e.message, true);
+      button.disabled = false;
+    }
+  }
+
+  async function loadOrders(seq, force) {
+    var brand = state.brand;
+    if (YOCO_BRANDS.indexOf(brand) < 0) {
+      $("panel").textContent = "";
+      $("panel").appendChild(h("p", { class: "empty-row", text: "Online orders aren't switched on for " + brandInfo(brand).label + " yet." }));
+      return;
+    }
+    var res = await db.from("orders").select(ORDER_COLUMNS).eq("brand", brand).neq("status", "pending_payment")
+      .order("created_at", { ascending: false }).limit(100);
+    if (seq !== loadSeq) return;
+    if (res.error) {
+      toast("Couldn't load orders: " + res.error.message, true);
+    } else {
+      var known = ordersKnown, fresh = 0;
+      ordersKnown = {};
+      res.data.forEach(function (o) {
+        ordersKnown[o.id] = true;
+        if (known && !known[o.id]) fresh++;
+      });
+      if (fresh) toast(plural(fresh, "new order") + ".");
+      ordersRows = res.data;
+      // Don't redraw under someone typing a code, unless they've just done something.
+      var typing = document.activeElement && document.activeElement.hasAttribute("data-code-for");
+      if (force || !typing) drawOrders();
+      var waiting = ordersRows.filter(function (o) { return o.status === "received"; }).length;
+      document.title = (waiting ? "(" + waiting + ") " : "") + PAGE_TITLE;
+    }
+    ordersTimer = setTimeout(function () { if (seq === loadSeq) loadOrders(seq); }, ORDERS_EVERY);
+  }
+
+  function orderCard(o) {
+    var when = new Date(o.created_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" });
+    var lines = (o.order_lines || []).slice().sort(function (a, b) { return a.position - b.position; });
+    var actions = h("div", { class: "order-actions" });
+    function act(label, cls, action, extra, done) {
+      var b = h("button", { class: "btn" + cls, type: "button", text: label, onclick: function () { runOrderAct(b, action, o.id, extra, done); } });
+      actions.appendChild(b);
+      return b;
+    }
+    if (o.status === "received") act("Start preparing", "", "set_status", { status: "preparing" });
+    if (o.status === "preparing") act("Ready for collection", "", "set_status", { status: "ready" });
+    if (o.status === "ready") {
+      var codeId = "code-" + o.id;
+      var input = h("input", { class: "input", id: codeId, inputmode: "numeric", autocomplete: "off", maxlength: "4", placeholder: "0000", "data-code-for": o.id, value: ordersCodes[o.id] || "",
+        oninput: function () { ordersCodes[o.id] = this.value; } });
+      var collect = h("button", { class: "btn", type: "button", text: "Mark collected", onclick: async function () {
+        if (!input.value.trim()) { toast("Ask the customer for their collection code.", true); input.focus(); return; }
+        await runOrderAct(collect, "collect", o.id, { code: input.value }, "Order #" + o.number + " collected.");
+      } });
+      actions.appendChild(h("div", { class: "fld order-code" }, [h("label", { for: codeId, text: "Customer's collection code" }), h("div", { class: "inline" }, [input, collect])]));
+    }
+    if (ORDER_ACTIVE.indexOf(o.status) >= 0) {
+      var cancel = h("button", { class: "btn ghost", type: "button", text: "Cancel order", onclick: function () {
+        if (!confirm("Cancel order #" + o.number + "? This doesn't refund the customer: do that in Yoco.")) return;
+        runOrderAct(cancel, "cancel", o.id, null, "Order #" + o.number + " cancelled. Remember to refund it in Yoco.");
+      } });
+      actions.appendChild(cancel);
+    }
+    var problems = [];
+    if (o.email_error) {
+      problems.push(h("p", { class: "notice" }, ["The email didn't send: " + o.email_error + " "]));
+      var resend = h("button", { class: "btn ghost", type: "button", text: "Send email again", onclick: function () { runOrderAct(resend, "resend_email", o.id, null, "Email sent again."); } });
+      actions.appendChild(resend);
+    }
+    if (o.yoco_order_error) problems.push(h("p", { class: "notice", text: "Not recorded in Yoco: " + o.yoco_order_error }));
+    var test = o.payment_mode === "test";
+    if (!o.yoco_order_id && o.status !== "cancelled" && (o.yoco_order_error || test)) {
+      var toYoco = h("button", { class: "btn ghost", type: "button", text: "Send to Yoco", onclick: function () {
+        if (test && !confirm("Send this test order to Yoco? It creates a real open order there, marked unpaid, which you'll need to void.")) return;
+        runOrderAct(toYoco, "send_to_yoco", o.id, null);
+      } });
+      actions.appendChild(toYoco);
+    }
+    return h("li", { class: "order order-" + o.status }, [
+      h("div", { class: "order-head" }, [
+        h("h3", {}, ["#" + o.number + " · " + o.customer_name]),
+        h("span", { class: "tag" + (o.status === "received" ? " sold" : ""), text: ORDER_LABELS[o.status] }),
+        test ? h("span", { class: "tag", text: "Test" }) : null,
+        o.yoco_order_id ? h("span", { class: "tag", text: "In Yoco" }) : null
+      ]),
+      h("p", { class: "hint", text: when + (o.customer_phone ? " · " + o.customer_phone : "") + " · " + o.customer_email }),
+      h("ul", { class: "order-lines" }, lines.map(function (l) { return h("li", {}, [h("strong", { text: l.qty + " × " }), l.name]); })),
+      h("p", { class: "order-total", text: "Total " + money(o.total) + (o.collect_from ? " · " + o.collect_from : "") })
+    ].concat(problems, [actions.children.length ? actions : null]));
+  }
+
+  function drawOrders() {
+    var box = $("panel");
+    box.textContent = "";
+    var active = ordersRows.filter(function (o) { return ORDER_ACTIVE.indexOf(o.status) >= 0; })
+      .sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
+    var done = ordersRows.filter(function (o) { return ORDER_ACTIVE.indexOf(o.status) < 0; });
+    box.appendChild(h("section", { class: "section" }, [
+      h("div", { class: "section-head" }, [h("h2", {}, ["To do", h("span", { class: "count", text: plural(active.length, "order") })])]),
+      active.length ? h("ul", { class: "orders" }, active.map(orderCard)) : h("p", { class: "empty-row", text: "No orders waiting. New ones appear here by themselves." })
+    ]));
+    if (done.length) box.appendChild(h("section", { class: "section" }, [
+      h("div", { class: "section-head" }, [h("h2", {}, ["Finished", h("span", { class: "count", text: plural(done.length, "order") })])]),
+      h("ul", { class: "orders" }, done.map(orderCard))
+    ]));
   }
 
   // ---------- Menu and Shop tabs ----------
@@ -1181,6 +1336,47 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     box.appendChild(yocoConnection(st, conn));
     box.appendChild(yocoSync(st, conn));
     box.appendChild(yocoMatching());
+    box.appendChild(yocoPayments(conn));
+    box.appendChild(yocoEmails(conn));
+  }
+
+  function yocoPayments(conn) {
+    var input = h("input", { class: "input", id: "checkout-key", type: "password", autocomplete: "new-password", spellcheck: "false", placeholder: "Paste a secret key (sk_test or sk_live)" });
+    var save = h("button", { class: "btn", type: "button", text: conn.checkout_key_hint ? "Replace key" : "Save key", onclick: function () {
+      var value = input.value.trim();
+      if (!value) { toast("Paste the secret key first.", true); input.focus(); return; }
+      yocoAct(save, "Checking…", async function () { await yoco("save_checkout_key", { checkout_key: value }); }, "Checkout key saved.");
+    } });
+    var remove = conn.checkout_key_hint ? h("button", { class: "btn ghost", type: "button", text: "Remove key", onclick: function () {
+      if (!confirm("Remove the Checkout key? Customers won't be able to pay online until a new one is saved.")) return;
+      yocoAct(remove, "Removing…", async function () { await yoco("remove_checkout_key"); }, "Checkout key removed.");
+    } }) : null;
+    var line = !conn.checkout_key_hint ? "Online payments are off: customers can't check out yet."
+      : conn.checkout_mode === "live" ? "Live: customers pay real money. Key ending " + conn.checkout_key_hint + "."
+      : "Test mode: no real money is taken. Key ending " + conn.checkout_key_hint + ".";
+    return yocoCard("Online Payments", [
+      h("p", { class: "yoco-status", text: line }),
+      h("div", { class: "fld" }, [h("label", { for: "checkout-key", text: "Yoco Checkout secret key" }), h("div", { class: "inline" }, [input, save, remove]),
+        h("p", { class: "hint", text: "In the Yoco App: Checkout API, then How to connect. This is a different key from the API key above. Live keys appear once Yoco approves your website's domain." })])
+    ]);
+  }
+
+  function yocoEmails(conn) {
+    var from = h("input", { class: "input", id: "email-from", type: "text", autocomplete: "off", spellcheck: "false", placeholder: "Tommy Sugo <orders@yourdomain.co.za>", value: conn.email_from || "" });
+    var key = h("input", { class: "input", id: "email-key", type: "password", autocomplete: "new-password", spellcheck: "false", placeholder: conn.email_key_hint ? "Saved, ending " + conn.email_key_hint : "Paste a Resend API key" });
+    var save = h("button", { class: "btn", type: "button", text: "Save", onclick: function () {
+      yocoAct(save, "Saving…", async function () { await yoco("save_email", { email_from: from.value, email_key: key.value }); }, "Email settings saved.");
+    } });
+    var test = conn.email_key_hint && conn.email_from ? h("button", { class: "btn ghost", type: "button", text: "Send a test email", onclick: function () {
+      yocoAct(test, "Sending…", async function () { var res = await yoco("test_email"); toast("Test email sent to " + res.sentTo + "."); });
+    } }) : null;
+    return yocoCard("Order Emails", [
+      h("p", { class: "yoco-status", text: conn.email_key_hint && conn.email_from ? "Emails send from " + conn.email_from + "." : "Emails are off: customers won't get their link and collection code by email." }),
+      h("div", { class: "fld" }, [h("label", { for: "email-from", text: "Send from" }), from]),
+      h("div", { class: "fld" }, [h("label", { for: "email-key", text: "Resend API key" }), key,
+        h("p", { class: "hint", text: "From resend.com. To email customers, the address above must be on a domain you've verified there. Their test address, onboarding@resend.dev, only delivers to your own Resend account's email." })]),
+      h("div", { class: "inline" }, [save, test])
+    ]);
   }
 
   function yocoCard(title, kids, note) {

@@ -662,8 +662,8 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             <div class="fld"><label class="lbl" for="shop-email">Email</label><input id="shop-email" class="field" type="email" autocomplete="email"></div>
             <div class="fld"><label class="lbl" for="shop-phone">Phone</label><input id="shop-phone" class="field" type="tel" autocomplete="tel"></div>
             <p id="shop-err" class="shop-err" role="alert" hidden></p>
-            <button class="btn" type="submit">Checkout with PayFast</button>
-            <p class="desc" style="font-size: 14px; margin: 0;">Prices, sizes, delivery areas and fees are placeholders.</p>
+            <button class="btn" type="submit">Pay and Place Order</button>
+            <p class="desc" style="font-size: 14px; margin: 0;">You'll pay on Yoco's secure page. We'll then email you a link to follow your order, and a collection code to give us when you collect.</p>
           </div>
           <div id="shop-done" class="stack" role="status" hidden style="gap: 12px;">
             <p class="tag">Order placed · prototype</p>
@@ -928,6 +928,9 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 <script src="js/catalog.js"></script>
 <script>
 window.ORDER_COPY = {
+  liveCheckout: true,
+  errDeliveryLive: "Delivery can't be ordered online yet. Choose Collect, or message us to arrange it.",
+  errUnpriced: "Some of your items don't have a price yet. Please remove them to check out.",
   noteFood: "Menu items are collection only, from the kitchen in [AREA]. Ready in about [X] minutes.",
   noteMixed: "Menu items are collection only, so your shop items come with them, from the kitchen in [AREA]. Ready in about [X] minutes. Want the shop items delivered? Place them as a separate order.",
   errEmpty: "Add something from the menu or the shop to your order.",

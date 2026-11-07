@@ -5,11 +5,13 @@ import {
   BRANDS,
   fullSync,
   getApiKey,
+  getSecret,
   listLocations,
   listLocationsIfAllowed,
   setSecret,
   yocoJson,
 } from "../_shared/yoco.ts";
+import { checkoutFetch, sendEmail } from "../_shared/orders.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -51,6 +53,15 @@ Deno.serve(async (req) => {
     }
     await setSecret(db, brand, "webhook_secret", null);
     await updateConnection({ webhook_subscription_id: null });
+  };
+
+  const removePaymentWebhook = async () => {
+    const key = await getSecret(db, brand, "checkout_key");
+    const { data: current } = await db.from("yoco_connections").select("checkout_webhook_id").eq("brand", brand).single();
+    if (key && current?.checkout_webhook_id) {
+      // Best effort: it may already be gone.
+      await checkoutFetch(key, `/webhooks/${encodeURIComponent(current.checkout_webhook_id)}`, { method: "DELETE" }).catch(() => null);
+    }
   };
 
   // One location is chosen automatically; with several, someone picks in Settings.
@@ -167,6 +178,54 @@ Deno.serve(async (req) => {
           .select("webhook_subscription_id").eq("brand", brand).single();
         await removeWebhook(key, current?.webhook_subscription_id ?? null);
         return reply(await describe());
+      }
+
+      case "save_checkout_key": {
+        const newKey = String(body.checkout_key ?? "").trim();
+        const mode = newKey.startsWith("sk_live") ? "live" : newKey.startsWith("sk_test") ? "test" : null;
+        if (!mode) return reply({ ok: false, error: "Paste the secret key, which starts with sk_test or sk_live." });
+        await removePaymentWebhook();
+        // Registering the webhook also proves the key works. Yoco only shows this secret once.
+        const webhook = await checkoutFetch(newKey, "/webhooks", {
+          method: "POST",
+          body: JSON.stringify({
+            name: `Website orders (${brand})`,
+            url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/yoco-payment-webhook?brand=${brand}`,
+          }),
+        });
+        await setSecret(db, brand, "checkout_key", newKey);
+        await setSecret(db, brand, "checkout_webhook_secret", webhook.secret);
+        await updateConnection({ checkout_key_hint: newKey.slice(-4), checkout_mode: mode, checkout_webhook_id: webhook.id });
+        return reply(await describe());
+      }
+
+      case "remove_checkout_key": {
+        await removePaymentWebhook();
+        await setSecret(db, brand, "checkout_key", null);
+        await setSecret(db, brand, "checkout_webhook_secret", null);
+        await updateConnection({ checkout_key_hint: null, checkout_mode: null, checkout_webhook_id: null });
+        return reply(await describe());
+      }
+
+      case "save_email": {
+        const from = String(body.email_from ?? "").trim();
+        if (!/^[^<>]*<?[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+>?$/.test(from)) {
+          return reply({ ok: false, error: "Add a sending address, like orders@yourdomain.co.za." });
+        }
+        const newKey = String(body.email_key ?? "").trim();
+        if (newKey) await setSecret(db, brand, "email_key", newKey);
+        await updateConnection({ email_from: from, ...(newKey ? { email_key_hint: newKey.slice(-4) } : {}) });
+        return reply(await describe());
+      }
+
+      case "test_email": {
+        await sendEmail(db, brand, {
+          to: auth.user.email!,
+          subject: "Test email from your website's orders",
+          text: "Order emails are working.",
+          html: "<p>Order emails are working.</p>",
+        });
+        return reply({ ...(await describe()), sentTo: auth.user.email });
       }
 
       default:

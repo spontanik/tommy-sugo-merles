@@ -6,7 +6,8 @@
    Anything with [data-product] and a stepper counts as a line; [data-food] marks the menu items (see catalog.js).
    A menu item with [data-options] has Yoco variants or modifiers: it opens a dialog first, and each combination the
    customer chooses is its own line in `chosen`, since those lines have no stepper on the page.
-   Page copy comes from window.ORDER_COPY. Checkout is still a prototype: nothing is saved or charged. */
+   Page copy comes from window.ORDER_COPY. With copy.liveCheckout set, the order goes to the order-create function and
+   the customer pays on Yoco's page. Otherwise checkout is a prototype: nothing is saved or charged. */
 (function () {
   var form = document.getElementById("shop-form");
   if (!form) return;
@@ -372,12 +373,65 @@
     else if (mode === "delivery" && !$("shop-address").value.trim()) problem = copy.errAddress;
     else if (!$("shop-name").value.trim()) problem = copy.errName;
     else if (!email.value.trim() || !email.checkValidity()) problem = "Add an email address so we can send your confirmation.";
+    if (!problem && copy.liveCheckout) {
+      if (mode === "delivery") problem = copy.errDeliveryLive;
+      else if (products().some(function (p) { return qtyOf(p) && p.getAttribute("data-price") === null; })) problem = copy.errUnpriced;
+    }
     if (problem) { err.textContent = problem; err.hidden = false; return; }
+    if (copy.liveCheckout) { placeOrder(email.value.trim()); return; }
     $("shop-done-email").textContent = email.value.trim();
     $("shop-done-title").textContent = mode === "collect" ? copy.doneCollect : copy.doneDelivery;
     $("shop-order").hidden = true;
     $("shop-done").hidden = false;
   });
+
+  // What's sent is only what was chosen: the server works out every price again from the database.
+  function orderLines() {
+    var lines = chosen.map(function (l) {
+      return { kind: "menu", itemId: l.itemId, qty: l.qty, variantId: l.variantId, modifierIds: l.modifierIds };
+    });
+    products().forEach(function (p) {
+      var q = qtyOf(p);
+      if (q) lines.push({ kind: p.getAttribute("data-item-kind"), itemId: p.getAttribute("data-item-id"), qty: q });
+    });
+    return lines;
+  }
+
+  var submit = form.querySelector('button[type="submit"]');
+  var submitText = submit.textContent;
+  function submitting(on) {
+    submit.disabled = on;
+    submit.textContent = on ? "Taking you to payment…" : submitText;
+  }
+  // Coming back from Yoco's page with the browser's Back button shows this page as it was left.
+  window.addEventListener("pageshow", function () { submitting(false); });
+
+  function placeOrder(emailAddress) {
+    var conf = window.SITE_SUPABASE;
+    var err = $("shop-err");
+    var select = $("shop-collect");
+    submitting(true);
+    fetch(conf.url.replace(/\/$/, "") + "/functions/v1/order-create", {
+      method: "POST",
+      headers: { apikey: conf.key, Authorization: "Bearer " + conf.key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        brand: document.body.getAttribute("data-brand"),
+        lines: orderLines(),
+        name: $("shop-name").value.trim(),
+        email: emailAddress,
+        phone: $("shop-phone").value.trim(),
+        collectFrom: select ? select.value : "",
+        returnBase: /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? location.origin : undefined
+      })
+    }).then(function (r) { return r.json(); }).then(function (res) {
+      if (!res.ok) throw new Error(res.error);
+      location.href = res.redirectUrl;
+    }).catch(function (e) {
+      submitting(false);
+      err.textContent = e.message && !/fetch|network/i.test(e.message) ? e.message : "We couldn't reach the server. You haven't been charged. Please try again.";
+      err.hidden = false;
+    });
+  }
 
   $("shop-again").addEventListener("click", function () {
     form.reset();
