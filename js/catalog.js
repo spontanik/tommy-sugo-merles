@@ -3,6 +3,7 @@
    Hooks in the page:
      [data-menu-items="section-key"]  (optional data-part="1" / "2" to split a section over two columns)
      [data-shop-items="section-key"]  the .products grid for that shop section
+     [data-extras="section-key other-key"]  a list of the extras on those sections' items, from their Yoco modifiers
      [data-price-of="Item name"]      a price elsewhere on the page (e.g. featured cards) kept in sync with the menu
      [data-section-title="key"]       a section's heading, swapped for the title set in the admin
      [data-section="key other-key"]   hidden with the section, or once all the sections listed are hidden
@@ -274,6 +275,33 @@
     });
   }
 
+  // The extras a customer can add, from the items' Yoco modifiers. Only what costs extra: "Standard" isn't an extra.
+  function drawExtras(rows) {
+    document.querySelectorAll("[data-extras]").forEach(function (list) {
+      var keys = list.getAttribute("data-extras").split(" ");
+      var groups = [], byId = {};
+      rows.filter(function (r) { return keys.indexOf(r.section) >= 0; }).forEach(function (r) {
+        (r.yoco_options || []).forEach(function (v) {
+          (v.groups || []).forEach(function (g) {
+            if (!byId[g.id]) { byId[g.id] = { name: g.name, names: [] }; groups.push(byId[g.id]); }
+            g.modifiers.forEach(function (m) {
+              if (Number(m.price) && byId[g.id].names.indexOf(m.name) < 0) byId[g.id].names.push(m.name);
+            });
+          });
+        });
+      });
+      groups = groups.filter(function (g) { return g.names.length; });
+      if (!groups.length) return;
+      list.textContent = "";
+      groups.forEach(function (g) {
+        var li = el("li");
+        li.appendChild(el("strong", null, g.name));
+        li.appendChild(el("span", null, g.names.join(", ")));
+        list.appendChild(li);
+      });
+    });
+  }
+
   function drawShop(rows) {
     // Keep anything already in the cart if the shopper was quick.
     var qty = {};
@@ -303,6 +331,7 @@
   ]).then(function (res) {
     applySections(res[2], res[3]);
     drawMenu(res[0]);
+    drawExtras(res[0]);
     drawShop(res[1]);
     document.dispatchEvent(new CustomEvent("catalog:rendered"));
   }).catch(function (err) {

@@ -136,7 +136,11 @@ nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .pz .name { font-family: var(--poster); font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: 0.02em; }
 .pz .p { font-family: var(--poster); font-size: 20px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
 .pz .desc { grid-column: 1 / -1; }
-[data-section="pizza-extras"] .pz .name { font-family: var(--sans); font-size: 18px; line-height: 1.35; font-weight: 500; letter-spacing: 0; }
+.extras { margin-top: 56px; display: flex; flex-direction: column; gap: 12px; }
+.extras h3 { margin: 0; font-family: var(--poster); font-size: 24px; font-weight: 600; letter-spacing: 0.02em; }
+.extras p { margin: 0; }
+.extras ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 32px; }
+.extras li strong { display: block; }
 .pz-head { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, 64px); column-gap: 8px; row-gap: 4px; align-items: end; border-bottom: 2px solid var(--rule); padding-bottom: 8px; }
 .pz-head .grp { grid-column: 1; grid-row: 1; font-size: 14px; }
 .pz-head .ch { font-size: 11px; letter-spacing: 0.08em; text-align: right; }
@@ -356,7 +360,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
       <div class="frame">
         <div class="frame-seal"><img src="tommy-seal-white.png" alt="Tommy Sugo Pizza seal" style="height: 160px; width: 160px;"></div>
 
-        <div class="head-group with-ill" style="margin-bottom: 32px;" data-section="pizza-classics pizza-signatures pizza-extras">
+        <div class="head-group with-ill" style="margin-bottom: 32px;" data-section="pizza-classics pizza-signatures">
           <img class="sec-ill lg" src="illustrations/section-pizza.svg" alt="" loading="lazy" decoding="async"><p class="tag">Slice, slice, baby</p>
           <h2 class="section-head">Pizza</h2>
           <p class="muted" style="margin: 8px 0 0;">Collect from the kitchen in [AREA], or order delivery on Uber Eats or Mr D. Deliver prices are the app prices.</p>
@@ -383,27 +387,19 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
               <div class="pz"><span class="name">Franschhoek</span><span class="p">R190</span><span class="p">[R000]</span><p class="desc">Biltong, goats cheese, fig preserve. Wine country on a base.</p></div>
               <div class="pz"><span class="name">Cha Cha Cha</span><span class="p">R180</span><span class="p">[R000]</span><p class="desc">Chicken breast, mixed peppers, feta. Dance with it.</p></div>
               <div class="pz"><span class="name">POD</span><span class="p">R170</span><span class="p">[R000]</span><p class="desc">Baby tomatoes, pesto, rocket. Fresh as the morning after.</p></div>
-              <div class="pz"><span class="name">MexiCan</span><span class="p">R170</span><span class="p">[R000]</span><p class="desc">Yes we MexiCan. Slow-cooked bolognese, mixed peppers, onion.</p></div>
-              <div class="pz"><span class="name">California</span><span class="p">R170</span><span class="p">[R000]</span><p class="desc">[Toppings to confirm]</p></div>
             </div>
           </div>
         </div>
-        <div class="pizza-cols" style="margin-top: 56px;" data-section="pizza-extras">
-          <div>
-            <div class="pz-head"><span class="tag grp" data-section-title="pizza-extras">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
-            <div data-menu-items="pizza-extras" style="display: contents;">
-              <div class="pz"><span class="name">Gluten-free base</span><span class="p">R40</span><span class="p">[R000]</span></div>
-              <div class="pz"><span class="name">Vegan cheese</span><span class="p">R40</span><span class="p">[R000]</span></div>
-              <div class="pz"><span class="name">Extra meat, cheese or avo</span><span class="p">R30</span><span class="p">[R000]</span></div>
-            </div>
-          </div>
-          <div>
-            <div class="pz-head"><span class="tag grp" data-section-title="pizza-extras">Extras</span><span class="tag ch c1">Collect</span><span class="tag ch">Deliver</span></div>
-            <div data-menu-items="pizza-extras" style="display: contents;">
-              <div class="pz"><span class="name">Extra veg</span><span class="p">R15</span><span class="p">[R000]</span></div>
-              <div class="pz"><span class="name">Pizza box</span><span class="p">R10</span><span class="p">[R000]</span></div>
-            </div>
-          </div>
+        <div class="extras" data-section="pizza-classics pizza-signatures">
+          <h3>Make It Yours</h3>
+          <p class="muted">Choose your extras when you add a pizza to your order.</p>
+          <ul data-extras="pizza-classics pizza-signatures">
+            <li><strong>Base</strong><span>Gluten Free</span></li>
+            <li><strong>Cheese</strong><span>Vegan</span></li>
+            <li><strong>Extra Cheese</strong><span>Mozzarella, Feta</span></li>
+            <li><strong>Extra meat</strong><span>Salami, Chorizo, Bacon, Chicken, Mince, Eggs</span></li>
+            <li><strong>Extra Veg</strong><span>Mushrooms, Avocado, Olives, Peppers, Pineapple, Artichoke, Onion</span></li>
+          </ul>
         </div>
 
         <hr class="menu-break">

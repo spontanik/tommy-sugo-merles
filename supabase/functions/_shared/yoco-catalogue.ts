@@ -11,20 +11,24 @@ export type CatalogueRow = {
   price: number | null;
   is_available: boolean;
   modifier_groups: ModifierGroup[] | null;
+  off_by_default: boolean;
 };
 
 // The choices a customer makes on one variant, in Yoco's order. A group is required when min is above 0, and max is
-// null when there's no limit.
+// null when there's no limit. `off` means it starts switched off on every menu item.
 export type ModifierGroup = {
   id: string;
   name: string;
   min: number;
   max: number | null;
+  off: boolean;
   modifiers: { id: string; name: string; price: number; selected: boolean }[];
 };
 
-// Yoco variants a brand doesn't sell online. They stay on the till but never reach the website or the admin.
-const HIDDEN_OPTIONS: Record<string, string[]> = { tommy: ["Medium"] };
+// What starts switched off on each menu item, until someone switches it on in the item editor.
+const OFF_BY_DEFAULT: Record<string, { variants: string[]; groups: string[] }> = {
+  tommy: { variants: ["Medium"], groups: ["Package"] },
+};
 
 // deno-lint-ignore no-explicit-any
 type Yoco = any;
@@ -62,7 +66,7 @@ const byOrdinal = (a: Yoco, b: Yoco) => (a.ordinal ?? 0) - (b.ordinal ?? 0);
 
 // A variant's choices: the item's groups, which apply to every variant, plus its own. A modifier with no known price
 // is left out, so nobody can order it at the wrong price.
-function groupsFor(item: Yoco, variant: Yoco, variantPrices: Map<string, number | null>): ModifierGroup[] {
+function groupsFor(item: Yoco, variant: Yoco, variantPrices: Map<string, number | null>, offGroups: string[]): ModifierGroup[] {
   const seen = new Set<string>();
   return [...(item.modifier_groups ?? []), ...(variant.modifier_groups ?? [])]
     .filter((g: Yoco) => !seen.has(g.id) && seen.add(g.id))
@@ -72,6 +76,7 @@ function groupsFor(item: Yoco, variant: Yoco, variantPrices: Map<string, number 
       name: g.name,
       min: g.min_selections ?? 0,
       max: g.max_selections ?? null,
+      off: offGroups.includes(g.name),
       modifiers: [...(g.modifiers ?? [])].sort(byOrdinal)
         .map((m: Yoco) => ({ m, price: modifierPrice(m, variantPrices) }))
         .filter(({ price }) => price !== null)
@@ -82,13 +87,11 @@ function groupsFor(item: Yoco, variant: Yoco, variantPrices: Map<string, number 
 
 // Turns Yoco items into catalogue rows, one per variant and one per modifier.
 export function catalogueRows(items: Yoco[], brand: string, locationId: string | null): CatalogueRow[] {
-  const hidden = HIDDEN_OPTIONS[brand] ?? [];
+  const off = OFF_BY_DEFAULT[brand] ?? { variants: [], groups: [] };
   const variantPrices = new Map<string, number | null>();
   const rows: CatalogueRow[] = [];
-  const isOffered = (variant: Yoco) =>
-    !(variant.selected_options ?? []).some((o: Yoco) => hidden.includes(o.value));
 
-  // Prices first: a modifier can take its price from a variant of any item, including a hidden one.
+  // Prices first: a modifier can take its price from a variant of any item.
   for (const item of items) {
     for (const variant of item.variants ?? []) {
       const cents = overrideAt(variant.price_overrides, locationId) ??
@@ -101,7 +104,7 @@ export function catalogueRows(items: Yoco[], brand: string, locationId: string |
   for (const item of items) {
     const itemAvailable = availableAt(item.location_availability, locationId);
     const category = item.category?.name ?? null;
-    for (const variant of (item.variants ?? []).filter(isOffered)) {
+    for (const variant of item.variants ?? []) {
       const options = (variant.selected_options ?? []).map((o: Yoco) => o.value).filter(Boolean);
       rows.push({
         brand,
@@ -114,7 +117,8 @@ export function catalogueRows(items: Yoco[], brand: string, locationId: string |
         price: variantPrices.get(variant.id) ?? null,
         is_available: variant.is_enabled !== false && itemAvailable &&
           availableAt(variant.location_availability, locationId),
-        modifier_groups: groupsFor(item, variant, variantPrices),
+        modifier_groups: groupsFor(item, variant, variantPrices, off.groups),
+        off_by_default: options.some((o: string) => off.variants.includes(o)),
       });
     }
   }
@@ -122,7 +126,7 @@ export function catalogueRows(items: Yoco[], brand: string, locationId: string |
   // Modifiers are shared between items, so each one becomes a single row.
   const seen = new Set<string>();
   for (const item of items) {
-    const groups = [...(item.modifier_groups ?? []), ...(item.variants ?? []).filter(isOffered).flatMap((v: Yoco) => v.modifier_groups ?? [])];
+    const groups = [...(item.modifier_groups ?? []), ...(item.variants ?? []).flatMap((v: Yoco) => v.modifier_groups ?? [])];
     for (const group of groups) {
       for (const modifier of group.modifiers ?? []) {
         if (seen.has(modifier.id)) continue;
@@ -138,6 +142,7 @@ export function catalogueRows(items: Yoco[], brand: string, locationId: string |
           price: modifierPrice(modifier, variantPrices),
           is_available: true,
           modifier_groups: null,
+          off_by_default: false,
         });
       }
     }

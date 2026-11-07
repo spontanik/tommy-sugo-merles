@@ -11,7 +11,6 @@ window.CATALOG_CONFIG = {
       menu: [
         { key: "pizza-classics", title: "Pizza · The Classics", prices: "cd" },
         { key: "pizza-signatures", title: "Pizza · The Signatures", prices: "cd" },
-        { key: "pizza-extras", title: "Pizza · Extras", prices: "cd" },
         { key: "wrapped", title: "Wrapped Differently", prices: "single" },
         { key: "pasta-potjies", title: "Pasta & Potjies", prices: "single" },
         { key: "breakfast", title: "Breakfast", prices: "single" },

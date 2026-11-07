@@ -96,7 +96,7 @@ test("rejects a changed body, wrong secret, old timestamp, or missing header", a
   assert.equal(await verifyWebhook({ ...vector, signatures: "v1,not base64!" }), false);
 });
 
-test("skips a brand's hidden variants but keeps their prices for modifiers", () => {
+test("keeps every variant, with a brand's chosen ones off by default", () => {
   const item = {
     id: "i",
     name: "Pizza",
@@ -104,16 +104,24 @@ test("skips a brand's hidden variants but keeps their prices for modifiers", () 
       { id: "l", is_enabled: true, price: money(12500), selected_options: [{ name: "Size", value: "Large" }] },
       { id: "m", is_enabled: true, price: money(9000), selected_options: [{ name: "Size", value: "Medium" }] },
     ],
-    modifier_groups: [{
-      id: "g",
-      name: "Add",
-      modifiers: [{ id: "x", name: "Medium as a side", pricing_strategy: "product", variant_id: "m" }],
-    }],
   };
-  const tommy = catalogueRows([item], "tommy", null);
-  assert.deepEqual(tommy.filter((r) => r.kind === "variant").map((r) => r.yoco_id), ["l"]);
-  assert.equal(tommy.find((r) => r.yoco_id === "x")!.price, 90);
-  assert.equal(catalogueRows([item], "merles", null).filter((r) => r.kind === "variant").length, 2);
+  const flags = (brand: string) => catalogueRows([item], brand, null).map((r) => [r.yoco_id, r.off_by_default]);
+  assert.deepEqual(flags("tommy"), [["l", false], ["m", true]]);
+  assert.deepEqual(flags("merles"), [["l", false], ["m", false]]);
+});
+
+test("marks a brand's chosen modifier groups off by default", () => {
+  const item = {
+    id: "i",
+    name: "Pizza",
+    variants: [{ id: "v", is_enabled: true, price: money(10000) }],
+    modifier_groups: [
+      { id: "p", name: "Package", modifiers: [{ id: "b", name: "Box", pricing_strategy: "free" }] },
+      { id: "c", name: "Cheese", modifiers: [{ id: "f", name: "Feta", pricing_strategy: "free" }] },
+    ],
+  };
+  const groups = catalogueRows([item], "tommy", null).find((r) => r.yoco_id === "v")!.modifier_groups!;
+  assert.deepEqual(groups.map((g) => [g.name, g.off]), [["Package", true], ["Cheese", false]]);
 });
 
 test("builds each variant's groups in Yoco's order, with their selection rules", () => {
@@ -157,7 +165,7 @@ test("builds each variant's groups in Yoco's order, with their selection rules",
   const plain = rows.find((r) => r.yoco_id === "plain")!;
   assert.deepEqual(plain.modifier_groups!.map((g) => g.name), ["Base", "Extra"]);
   assert.deepEqual(plain.modifier_groups![0], {
-    id: "base", name: "Base", min: 1, max: 1,
+    id: "base", name: "Base", min: 1, max: 1, off: false,
     modifiers: [{ id: "std", name: "Standard", price: 0, selected: true }],
   });
   assert.deepEqual(plain.modifier_groups![1].modifiers.map((m) => [m.name, m.price]), [["Avo", 20], ["Bacon", 30]]);
