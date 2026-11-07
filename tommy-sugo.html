@@ -55,9 +55,10 @@ img { max-width: 100%; }
 
 header.site { border-bottom: 2px solid var(--rule); }
 header.site .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-block: 16px; }
-.lockup { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
-.lockup img { height: 48px; width: 48px; display: block; }
-.lockup span { font-family: var(--poster); font-weight: 700; font-size: 26px; letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; }
+/* The lockup never squashes: it keeps its shape and, below about 480px wide, scales down as one piece. */
+.lockup { flex: none; display: flex; align-items: center; gap: clamp(6px, 2.5vw, 12px); text-decoration: none; color: var(--ink); }
+.lockup img { flex: none; width: clamp(30px, 10vw, 48px); height: auto; aspect-ratio: 1 / 1; display: block; }
+.lockup span { font-family: var(--poster); font-weight: 700; font-size: clamp(15px, 5.2vw, 26px); letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; white-space: nowrap; }
 nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .nav { color: var(--ink); font-weight: 700; font-size: 16px; text-decoration: none; padding: 10px 0; border-bottom: 3px solid transparent; }
 .nav:hover, .nav[aria-current="page"] { border-bottom-color: var(--sauce); }
@@ -227,16 +228,20 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 <header class="site">
   <div class="wrap">
     <a class="lockup" href="#home" aria-label="Tommy Sugo home"><img src="tommy-mark.png" alt=""><span>Tommy Sugo</span></a>
-    <nav class="main" aria-label="Main">
+    <nav class="main" id="main-nav" aria-label="Main">
       <a class="nav" href="#menu" data-nav="menu">Menu</a>
       <a class="nav" href="#delivery" data-nav="delivery">Delivery</a>
       <a class="nav" href="#shop" data-nav="shop">Shop</a>
       <a class="nav" href="#circuit" data-nav="circuit">On the Circuit</a>
       <a class="nav" href="#catering" data-nav="catering">Catering</a>
       <a class="nav" href="#story" data-nav="story">Our Story</a>
-      <a class="nav" href="account.html?from=tommy">Your Orders</a>
+      <a class="btn" href="#book">Make an Enquiry</a>
     </nav>
-    <a class="btn" href="#book">Make an Enquiry</a>
+    <span class="nav-icons">
+      <a class="nav nav-icon" href="#shop" data-cart-icon aria-label="Your cart, empty"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g class="echo"><path d="M3 10h17.5v9H4"/><path d="M5 6.5h13.5l2 3"/><path d="M10.5 14.5a1.6 1.6 0 1 0 2.5 0"/></g><g class="line"><path d="M3 10h17.5v9H4"/><path d="M5 6.5h13.5l2 3"/><path d="M10.5 14.5a1.6 1.6 0 1 0 2.5 0"/></g></svg></a>
+      <a class="nav nav-icon" href="account.html?from=tommy" data-orders-icon aria-label="Your orders"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><g class="echo"><path d="M6 3h12v17l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5V5"/><path d="M9 8h6M9 12h5"/></g><g class="line"><path d="M6 3h12v17l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5V5"/><path d="M9 8h6M9 12h5"/></g></svg></a>
+    </span>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Menu" hidden><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
   </div>
 </header>
 
@@ -940,6 +945,8 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/account.js"></script>
+<script src="js/nav-icons.js"></script>
+<script src="js/site-menu.js"></script>
 <script src="js/catalog-config.js"></script>
 <script src="js/catalog.js"></script>
 <script>
