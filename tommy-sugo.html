@@ -96,9 +96,10 @@ nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .paper .ph { background: var(--shade); color: #000; }
 
 /* Frame: solid rule, the seal breaking through the top line (no curved notches: the seal is the brand's only curve) */
-.frame { position: relative; border: 2px solid var(--rule); padding: 128px clamp(20px, 6vw, 72px) 72px; }
-.frame-seal { position: absolute; top: -88px; left: 50%; transform: translateX(-50%); padding: 0 20px; background: var(--surface); }
-.frame-seal img { height: 176px; width: 176px; display: block; }
+/* The seal hangs from the frame's top line. It never squashes: it stays round and, on narrow screens, scales down as one piece. */
+.frame { --seal: clamp(112px, 36vw, 176px); position: relative; border: 2px solid var(--rule); padding: calc(var(--seal) / 2 + 40px) clamp(20px, 6vw, 72px) 72px; }
+.frame-seal { position: absolute; top: calc(var(--seal) / -2); left: 50%; transform: translateX(-50%); width: max-content; padding: 0 20px; background: var(--surface); }
+.frame-seal img { width: var(--seal); height: var(--seal); max-width: none; display: block; }
 .frame-section { padding-top: 136px; }
 
 /* SealPanel: one per view, a flat sauce block with the seal breaking its top edge */
@@ -350,7 +351,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
   <section class="paper" style="padding-top: 152px; padding-bottom: 96px;">
     <div class="wrap">
       <div class="frame">
-        <div class="frame-seal"><img src="tommy-seal-white.png" alt="Tommy Sugo Pizza seal" style="height: 160px; width: 160px;"></div>
+        <div class="frame-seal" style="--seal: clamp(112px, 34vw, 160px);"><img src="tommy-seal-white.png" alt="Tommy Sugo Pizza seal"></div>
 
         <div class="head-group with-ill" style="margin-bottom: 32px;" data-section="pizza-classics pizza-signatures">
           <img class="sec-ill lg" src="illustrations/section-pizza.svg" alt="" loading="lazy" decoding="async"><p class="tag">Slice, slice, baby</p>

@@ -79,8 +79,9 @@ nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .frame::before, .frame::after { content: ""; position: absolute; top: -8px; width: 48px; height: 48px; background: var(--surface); border-bottom: 8px solid var(--ink); }
 .frame::before { left: -8px; border-right: 8px solid var(--ink); border-bottom-right-radius: 48px; }
 .frame::after { right: -8px; border-left: 8px solid var(--ink); border-bottom-left-radius: 48px; }
-.frame-portrait { position: absolute; top: -96px; left: 50%; transform: translateX(-50%); padding: 0 20px; background: var(--surface); }
-.frame-portrait img { height: 184px; width: auto; display: block; }
+/* The portrait never squashes: it keeps its proportions and, on narrow screens, scales down as one piece. */
+.frame-portrait { --portrait: clamp(120px, 40vw, 184px); position: absolute; top: calc(var(--portrait) * -0.52); left: 50%; transform: translateX(-50%); width: max-content; padding: 0 20px; background: var(--surface); }
+.frame-portrait img { height: var(--portrait); width: auto; max-width: none; display: block; }
 .frame-section { padding-top: 136px; }
 .card { border: 8px solid var(--ink); display: flex; flex-direction: column; }
 .card .ph { height: 220px; }
