@@ -169,14 +169,20 @@
     return n;
   }
 
+  // One choice from a group with a preset, like a Standard base, always has an answer, even if Yoco calls it optional.
+  function isSingleChoice(g) {
+    return g.max === 1 && (g.min >= 1 || g.modifiers.some(function (m) { return m.selected; }));
+  }
+
   function ruleText(g) {
-    if (g.max === 1) return g.min ? "Choose 1" : "Optional, choose 1";
+    if (isSingleChoice(g)) return "Choose 1";
+    if (g.max === 1) return "Optional, choose 1";
     if (g.min && g.max === g.min) return "Choose " + g.min;
     if (g.min) return g.max ? "Choose " + g.min + " to " + g.max : "Choose at least " + g.min;
     return g.max ? "Optional, up to " + g.max : "Optional";
   }
 
-  // Required single choices are radio buttons. Everything else is checkboxes, so a choice can be taken off again.
+  // Single choices are radio buttons. Everything else is checkboxes, so a choice can be taken off again.
   function choiceRow(type, name, label, price, checked) {
     var row = node("label", "opt-choice");
     var input = node("input");
@@ -260,7 +266,7 @@
         var legend = node("legend", null, g.name);
         legend.appendChild(node("small", null, ruleText(g)));
         set.appendChild(legend);
-        var radio = g.max === 1 && g.min >= 1;
+        var radio = isSingleChoice(g);
         var field = { group: g, inputs: [] };
         g.modifiers.forEach(function (m) {
           var c = choiceRow(radio ? "radio" : "checkbox", "opt-group-" + gi, m.name, Number(m.price) ? "+" + rand(Number(m.price)) : "", !!m.selected);
