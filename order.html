@@ -19,6 +19,7 @@ h1 { margin: 0; font-family: Oswald, "Arial Narrow", Impact, sans-serif; font-si
 p { margin: 0; }
 .tag { font-family: Oswald, "Arial Narrow", Impact, sans-serif; font-size: 14px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
 .muted { color: var(--muted); }
+.lede { font-size: 20px; line-height: 1.4; font-weight: 500; }
 .box { border: 2px solid var(--ink); padding: 20px; display: flex; flex-direction: column; gap: 8px; background: #fff; }
 .code { font-family: Oswald, "Arial Narrow", Impact, sans-serif; font-size: 72px; line-height: 1; font-weight: 700; letter-spacing: .12em; font-variant-numeric: tabular-nums; }
 .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -50,10 +51,81 @@ p { margin: 0; }
   var box = document.getElementById("order");
   var HOMES = { tommy: "tommy-sugo.html", merles: "merles-schnitz.html" };
   var NAMES = { tommy: "Tommy Sugo", merles: "Merle's" };
-  var STEPS = [["received", "Order received"], ["preparing", "Being prepared"], ["ready", "Ready for collection"], ["collected", "Collected"]];
-  var HEADINGS = { received: "We've Got Your Order.", preparing: "It's Being Made.", ready: "Come and Get It.", collected: "Enjoy." };
+  var STAGES = ["received", "preparing", "ready", "collected"];
+  // Each stage: [progress label, heading, line under the heading]. While it's being made, the line is a list that
+  // moves on every PREP_EVERY, so the page follows the pizza from base to box.
+  var PLAIN = {
+    received: ["Order received", "We've Got Your Order."],
+    preparing: ["Being prepared", "It's Being Made."],
+    ready: ["Ready for collection", "Come and Get It."],
+    collected: ["Collected", "Enjoy."]
+  };
+  // Tommy Sugo orders get one of these voices, picked from the order's token: the same voice every time that order's
+  // page opens, and a different one from order to order. Other brands keep PLAIN until they have their own.
+  var VOICES = {
+    tommy: [
+      { // Kitchen Call
+        received: ["In", "Order In.", "It's on the rail. The oven's hot."],
+        preparing: ["Firing", "Firing.", ["Base rolled.", "Sauce on.", "In the oven.", "Out. Slicing."]],
+        ready: ["Up", "Order Up.", "Boxed and on the counter. Bring your code."],
+        collected: ["Gone", "Gone.", "Out the door. Eat it hot."]
+      },
+      { // The Obsession
+        received: ["Order in", "We've Got Your Order.", "Dough's out. Oven's hot. You're next."],
+        preparing: ["Hands in the dough", "Hands in the Dough.", [
+          "Base hand-rolled. Thin, the way it should be.",
+          "7-hour slow-cooked Roma tomato sauce going on.",
+          "Mozzarella down. Into the oven.",
+          "The cheese is starting to melt.",
+          "Crust blistering. Nearly there."
+        ]],
+        ready: ["Ready at the counter", "Come and Get It.", "Boxed, hot and waiting at the counter. Bring your code."],
+        collected: ["Collected", "The Secret's in the Sauce.", "Now you know. Eat it while it's hot."]
+      },
+      { // Saved My Life
+        received: ["Order in", "The Oven's Calling.", "Your order's in. Get ready."],
+        preparing: ["Being made", "Ooh, Here We Go.", [
+          "7 hours of sauce, all for you.",
+          "Ooh. That cheese is starting to melt.",
+          "Crust going golden. Hold tight."
+        ]],
+        ready: ["Ready", "Your Dreams Are About to Come True.", "They're boxed at the counter. Bring your code."],
+        collected: ["Collected", "Tonight a Pizza Saved Your Life.", "Thanks for coming to get it. See you next time."]
+      }
+    ]
+  };
+  var PREP_EVERY = 45 * 1000;
   var timer = null;
+  var prepTimer = null;
   var last = null;
+
+  function voiceFor(o) {
+    var set = VOICES[o.brand];
+    if (!set) return PLAIN;
+    var n = parseInt(token.slice(0, 8), 16);
+    return set[(isNaN(n) ? 0 : n) % set.length];
+  }
+
+  // When this browser first saw the order being made, so a reload carries on where the updates were.
+  function prepStart() {
+    var key = "tsm-prep-" + token.slice(0, 16);
+    try {
+      var at = Number(localStorage.getItem(key));
+      if (at) return at;
+      localStorage.setItem(key, String(Date.now()));
+    } catch (e) { /* private browsing: start from the first update */ }
+    return Date.now();
+  }
+
+  // The updates walk forward and stop on the last one: no going back to the base once it's in the oven.
+  function prepLine(p, lines, start) {
+    function show() {
+      var i = Math.min(lines.length - 1, Math.floor((Date.now() - start) / PREP_EVERY));
+      p.textContent = lines[i];
+      if (i < lines.length - 1) prepTimer = setTimeout(show, PREP_EVERY - ((Date.now() - start) % PREP_EVERY));
+    }
+    show();
+  }
 
   function el(tag, cls, text) {
     var e = document.createElement(tag);
@@ -89,6 +161,7 @@ p { margin: 0; }
   }
 
   function draw(o) {
+    clearTimeout(prepTimer);
     box.textContent = "";
     box.appendChild(link("back", "← " + (NAMES[o.brand] || "Back to the website"), home(o)));
     body(o);
@@ -124,7 +197,19 @@ p { margin: 0; }
       return;
     }
 
-    box.appendChild(el("h1", null, HEADINGS[o.status]));
+    var voice = voiceFor(o);
+    var stage = voice[o.status];
+    box.appendChild(el("h1", null, stage[1]));
+    if (stage[2]) {
+      var say = el("p", "lede");
+      if (Array.isArray(stage[2])) {
+        say.setAttribute("aria-live", "off"); // the updates are flavour: don't read each one out
+        prepLine(say, stage[2], prepStart());
+      } else {
+        say.textContent = stage[2];
+      }
+      box.appendChild(say);
+    }
     if (o.status !== "collected") {
       var card = el("div", "box");
       card.appendChild(el("p", "tag", "Your collection code"));
@@ -133,10 +218,10 @@ p { margin: 0; }
       if (o.collectFrom) card.appendChild(el("p", "muted", "Collect from: " + o.collectFrom));
       box.appendChild(card);
     }
-    var at = STEPS.map(function (s) { return s[0]; }).indexOf(o.status);
+    var at = STAGES.indexOf(o.status);
     var steps = el("ol", "steps");
-    STEPS.forEach(function (s, i) {
-      var li = el("li", i < at ? "done" : i === at ? "now" : "", s[1]);
+    STAGES.forEach(function (s, i) {
+      var li = el("li", i < at ? "done" : i === at ? "now" : "", voice[s][0]);
       if (i === at) li.setAttribute("aria-current", "step");
       steps.appendChild(li);
     });

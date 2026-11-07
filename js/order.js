@@ -145,6 +145,7 @@
     applyFulfilment(hasFood, hasShop);
     bar.hidden = count === 0;
     barText.textContent = plural(count) + " · " + totalText;
+    if (window.NavIcons) window.NavIcons.cart(count);
     return count;
   }
 

@@ -4,8 +4,23 @@
     {
       "name": "site",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8123", "--bind", "127.0.0.1"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8123",
+        "--bind",
+        "127.0.0.1"
+      ],
       "port": 8123
+    },
+    {
+      "name": "site-2",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "python3 -m http.server ${PORT:-8126} --bind 127.0.0.1"
+      ],
+      "port": 8126
     }
   ]
 }
