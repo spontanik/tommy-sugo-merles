@@ -117,6 +117,15 @@ textarea.input { min-height: 88px; resize: vertical; }
 .section-head h2 { font-size: 28px; font-family: var(--sans); font-weight: 800; display: flex; align-items: baseline; gap: 4px 10px; flex-wrap: wrap; }
 .section-head .count { font-size: 14px; color: var(--muted); font-weight: 500; }
 .section-note { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
+/* Sections that fold away: the heading is the button. */
+.section.folded { margin-top: 16px; }
+.fold { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; min-height: 44px; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.fold::before { content: ""; flex: none; width: 10px; height: 10px; margin: 0 6px 0 2px; border-right: 3px solid currentColor; border-bottom: 3px solid currentColor; transform: rotate(45deg) translate(-2px, -2px); transition: transform .15s; }
+.fold[aria-expanded="false"]::before { transform: rotate(-45deg); }
+.fold:hover .fold-title { text-decoration: underline; }
+.fold-all { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+.fold-all + .section, .fold-all + .notice { margin-top: 16px; }
+@media (prefers-reduced-motion: reduce) { .fold::before { transition: none; } }
 .rows { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
 .row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto auto; gap: 16px; align-items: center; padding: 12px; background: var(--raised); }
 .row.sec-row { grid-template-columns: minmax(0, 1fr) auto auto; }
@@ -406,6 +415,53 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     t.hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.hidden = true; }, isErr ? 6000 : 2500);
+  }
+
+  // ---------- Sections that fold ----------
+  // Menu, Shop and Settings sections start folded. Which ones are open is remembered on this device, per brand and tab.
+  var OPEN_KEY = "housemates-admin-open";
+  var openSections = {};
+  try { openSections = JSON.parse(localStorage.getItem(OPEN_KEY)) || {}; } catch (e) {}
+
+  function foldId(key) { return state.brand + "/" + state.view + "/" + key; }
+  function isOpen(key) { return !!openSections[foldId(key)]; }
+  function setOpen(key, open) {
+    if (open) openSections[foldId(key)] = true; else delete openSections[foldId(key)];
+    try { localStorage.setItem(OPEN_KEY, JSON.stringify(openSections)); } catch (e) {}
+  }
+
+  // A section whose heading opens and closes its body. `title` is the heading's content; `extra` sits beside it.
+  function foldSection(key, title, extra, body) {
+    var open = isOpen(key);
+    var bodyId = "fold-" + state.view + "-" + key.replace(/[^A-Za-z0-9_-]/g, "-");
+    var btn = h("button", { class: "fold", type: "button", "aria-expanded": String(open), "aria-controls": bodyId, "data-fold": key });
+    title.forEach(function (c) { if (c) btn.appendChild(typeof c === "string" ? h("span", { class: "fold-title", text: c }) : c); });
+    var inner = h("div", { id: bodyId, hidden: !open }, body);
+    var sec = h("section", { class: "section" + (open ? "" : " folded") }, [
+      h("div", { class: "section-head" }, [h("h2", {}, [btn])].concat(extra || [])),
+      inner
+    ]);
+    btn.addEventListener("click", function () { foldTo(sec, btn.getAttribute("aria-expanded") !== "true"); });
+    return sec;
+  }
+
+  function foldTo(sec, open) {
+    var btn = sec.querySelector(".fold");
+    btn.setAttribute("aria-expanded", String(open));
+    $(btn.getAttribute("aria-controls")).hidden = !open;
+    sec.classList.toggle("folded", !open);
+    setOpen(btn.getAttribute("data-fold"), open);
+  }
+
+  // Expand all / Collapse all, for the folding sections in the panel.
+  function foldAllBar() {
+    function all(open) {
+      return function () { document.querySelectorAll("#panel .fold").forEach(function (b) { foldTo(b.closest(".section"), open); }); };
+    }
+    return h("div", { class: "fold-all" }, [
+      h("button", { class: "btn ghost", type: "button", onclick: all(true) }, ["Expand all"]),
+      h("button", { class: "btn ghost", type: "button", onclick: all(false) }, ["Collapse all"])
+    ]);
   }
 
   function money(v) {
@@ -794,16 +850,13 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
             prices, actions]));
         });
       }
-      box.appendChild(h("section", { class: "section" }, [
-        h("div", { class: "section-head" }, [
-          h("h2", {}, [sec.title,
-            h("span", { class: "count", text: plural(items.length, "item") }),
-            sec.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null]),
-          h("button", { class: "btn", type: "button", "aria-label": "Add item to " + sec.title, onclick: function () { openEdit(null, sec.key); } }, ["+ Add item"])
-        ]),
-        list || h("p", { class: "empty-row", text: "Nothing in this section yet." })
-      ]));
+      box.appendChild(foldSection(sec.key, [sec.title,
+          h("span", { class: "count", text: plural(items.length, "item") }),
+          sec.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null],
+        [h("button", { class: "btn", type: "button", "aria-label": "Add item to " + sec.title, onclick: function () { openEdit(null, sec.key); } }, ["+ Add item"])],
+        [list || h("p", { class: "empty-row", text: "Nothing in this section yet." })]));
     });
+    if (sections.length > 1) box.insertBefore(foldAllBar(), box.firstChild);
     refocus(focusKey);
   }
 
@@ -1010,6 +1063,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     if (res.error) { err.textContent = "Couldn't save: " + res.error.message; err.hidden = false; return; }
     closeDlg();
     toast(row ? "Saved " + name + "." : "Added " + name + ".");
+    setOpen(data.section, true); // show where the item now sits
     load();
   });
 
@@ -1103,8 +1157,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     }
     var label = h("input", { class: "input", id: "b-label", value: s.label, required: true, disabled: !s.live, oninput: function () { s.label = this.value; drawStatus(); } });
     var page = h("input", { class: "input", id: "b-page", value: s.page, required: true, disabled: !s.live, oninput: function () { s.page = this.value; drawStatus(); } });
-    box.appendChild(h("section", { class: "section" }, [
-      h("div", { class: "section-head" }, [h("h2", { text: "Brand" })]),
+    box.appendChild(foldAllBar());
+    box.appendChild(foldSection("brand", ["Brand"], null, [
       h("div", { class: "brand-fields" }, [
         h("div", { class: "fld" }, [h("label", { for: "b-label", text: "Name" }), label]),
         h("div", { class: "fld" }, [h("label", { for: "b-page", text: "Site page" }), page, h("p", { class: "hint", text: "The brand's file on the site. It's what View site opens." })])
@@ -1380,8 +1434,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   }
 
   function yocoCard(title, kids, note) {
-    return h("section", { class: "section" }, [
-      h("div", { class: "section-head" }, [h("h2", { text: title })]),
+    return foldSection("yoco-" + title.toLowerCase().replace(/[^a-z0-9]+/g, "-"), [title], null, [
       note ? h("p", { class: "section-note", text: note }) : null,
       h("div", { class: "yoco-body" }, kids)
     ]);
@@ -1536,11 +1589,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
         ]) : null
       ]));
     });
-    return h("section", { class: "section" }, [
-      h("div", { class: "section-head" }, [
-        h("h2", { text: title }),
-        live ? h("button", { class: "btn", type: "button", onclick: function () { openSection(kind, null); } }, ["+ Add section"]) : null
-      ]),
+    return foldSection(kind + "-sections", [title, h("span", { class: "count", text: plural(list.length, "section") })],
+      [live ? h("button", { class: "btn", type: "button", onclick: function () { openSection(kind, null); } }, ["+ Add section"]) : null], [
       live ? h("p", { class: "section-note", text: "A new section shows here and stores items, but needs a site update to appear on the public page. The order here sets the order in this admin; the site keeps its layout." }) : null,
       ul
     ]);
@@ -1637,6 +1687,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       settings.sections.push({ id: null, brand: state.brand, kind: secEdit.kind, key: newKey(secEdit.kind, title), title: title, prices: prices, is_hidden: false, sort_order: max + 10 });
       settings.sections.sort(function (a, b) { return a.kind === b.kind ? a.sort_order - b.sort_order : (a.kind === "menu" ? -1 : 1); });
     }
+    setOpen(secEdit.kind + "-sections", true); // show the change
     secDlg.close();
     drawSettings();
   });
@@ -1703,8 +1754,9 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var err = $("set-err");
     err.hidden = true;
     function fail(text) { err.textContent = text; err.hidden = false; }
-    if (!s.label.trim()) { fail("Give the brand a name."); $("b-label").focus(); return; }
-    if (!PAGE_PATTERN.test(s.page.trim())) { fail("The site page should be a file on this site, like tommy-sugo.html."); $("b-page").focus(); return; }
+    function reveal(id) { var el = $(id); foldTo(el.closest(".section"), true); el.focus(); }
+    if (!s.label.trim()) { fail("Give the brand a name."); reveal("b-label"); return; }
+    if (!PAGE_PATTERN.test(s.page.trim())) { fail("The site page should be a file on this site, like tommy-sugo.html."); reveal("b-page"); return; }
 
     var ops = settingsOps();
     if (!ops.length) { toast("Nothing to save."); return; }
