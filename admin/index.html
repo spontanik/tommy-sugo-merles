@@ -123,6 +123,7 @@ textarea.input { min-height: 88px; resize: vertical; }
 .fold::before { content: ""; flex: none; width: 10px; height: 10px; margin: 0 6px 0 2px; border-right: 3px solid currentColor; border-bottom: 3px solid currentColor; transform: rotate(45deg) translate(-2px, -2px); transition: transform .15s; }
 .fold[aria-expanded="false"]::before { transform: rotate(-45deg); }
 .fold:hover .fold-title { text-decoration: underline; }
+.fold-extra { display: flex; gap: 8px; flex-wrap: wrap; }
 .fold-all { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
 .fold-all + .section, .fold-all + .notice { margin-top: 16px; }
 @media (prefers-reduced-motion: reduce) { .fold::before { transition: none; } }
@@ -430,15 +431,19 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     try { localStorage.setItem(OPEN_KEY, JSON.stringify(openSections)); } catch (e) {}
   }
 
-  // A section whose heading opens and closes its body. `title` is the heading's content; `extra` sits beside it.
+  // A section whose heading opens and closes its body. `title` is the heading's content; `extra` sits beside it
+  // (buttons such as + Add item) and folds away with the body, since it acts on what's inside.
   function foldSection(key, title, extra, body) {
     var open = isOpen(key);
     var bodyId = "fold-" + state.view + "-" + key.replace(/[^A-Za-z0-9_-]/g, "-");
     var btn = h("button", { class: "fold", type: "button", "aria-expanded": String(open), "aria-controls": bodyId, "data-fold": key });
     title.forEach(function (c) { if (c) btn.appendChild(typeof c === "string" ? h("span", { class: "fold-title", text: c }) : c); });
     var inner = h("div", { id: bodyId, hidden: !open }, body);
+    var tools = (extra || []).filter(Boolean);
+    var head = [h("h2", {}, [btn])];
+    if (tools.length) head.push(h("div", { class: "fold-extra", hidden: !open }, tools));
     var sec = h("section", { class: "section" + (open ? "" : " folded") }, [
-      h("div", { class: "section-head" }, [h("h2", {}, [btn])].concat(extra || [])),
+      h("div", { class: "section-head" }, head),
       inner
     ]);
     btn.addEventListener("click", function () { foldTo(sec, btn.getAttribute("aria-expanded") !== "true"); });
@@ -449,8 +454,11 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var btn = sec.querySelector(".fold");
     btn.setAttribute("aria-expanded", String(open));
     $(btn.getAttribute("aria-controls")).hidden = !open;
+    var tools = sec.querySelector(".fold-extra");
+    if (tools) tools.hidden = !open;
     sec.classList.toggle("folded", !open);
     setOpen(btn.getAttribute("data-fold"), open);
+    if ($("set-foot")) drawStatus(); // Settings: the save bar follows its sections
   }
 
   // Expand all / Collapse all, for the folding sections in the panel.
@@ -1167,7 +1175,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     box.appendChild(sectionList("menu", "Menu Sections"));
     box.appendChild(sectionList("shop", "Shop Sections"));
     if (s.live) {
-      box.appendChild(h("div", { class: "set-foot" }, [
+      box.appendChild(h("div", { class: "set-foot", id: "set-foot" }, [
         h("span", { class: "status", id: "set-status", role: "status" }),
         h("p", { class: "msg err", id: "set-err", role: "alert", hidden: true }),
         h("button", { class: "btn ghost", type: "button", onclick: cancelSettings }, ["Cancel"]),
@@ -1563,9 +1571,15 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     ]);
   }
 
+  // The save bar belongs to Brand, Menu Sections and Shop Sections: it shows while one of them is open, and always
+  // while there are unsaved changes, so an edit is never left behind a folded section.
+  var SAVED_BY_BAR = ["brand", "menu-sections", "shop-sections"];
   function drawStatus() {
+    var dirty = settingsDirty();
     var el = $("set-status");
-    if (el) el.textContent = settingsDirty() ? "Unsaved changes" : "";
+    if (el) el.textContent = dirty ? "Unsaved changes" : "";
+    var foot = $("set-foot");
+    if (foot) foot.hidden = !dirty && !SAVED_BY_BAR.some(isOpen);
   }
 
   function sectionList(kind, title) {
