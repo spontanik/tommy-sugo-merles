@@ -50,8 +50,13 @@ img { max-width: 100%; }
 
 .sauce { background: var(--sauce); color: var(--on-sauce); }
 .bunting { background-color: #000; background-image: url("bunting-tile.svg"); background-repeat: repeat-x; background-position: top left; }
-.notice { background: var(--shade); color: #000; font-size: 13px; font-weight: 500; text-align: center; padding-block: 8px; }
 .strip { font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-align: center; padding-block: 10px; }
+/* The strip's message stays centred; the other brand's button sits at the right, or under the message on a phone. */
+.strip .wrap { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 16px; }
+.strip .other-site { justify-self: end; color: inherit; text-decoration: none; white-space: nowrap; border: 2px solid currentColor; padding: 4px 10px; }
+@media (min-width: 1200px) { .strip .wrap { grid-template-columns: 1fr auto 1fr; } .strip .wrap > :first-child { grid-column: 2; } .strip .other-site { grid-column: 3; } }
+.strip .other-site:hover { text-decoration: underline; }
+@media (max-width: 760px) { .strip .wrap { grid-template-columns: 1fr; } .strip .wrap > * { grid-column: 1; justify-self: center; } .strip .other-site { white-space: normal; } }
 
 header.site { border-bottom: 2px solid var(--rule); }
 header.site .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-block: 16px; }
@@ -224,8 +229,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 </style>
 
-<div class="notice"><div class="wrap"><a href="index.html" data-site="home" style="color:#000;font-weight:700;">&larr; Both kitchens</a> · Website prototype for the Tommy Sugo team. Prices are the October 2026 till prices. Delivery areas, kitchen hours, event dates, venues, handles and photos are placeholders.</div></div>
-<div class="sauce strip"><div class="wrap">PIZZA NOW DELIVERS · ORDER ON UBER EATS &amp; MR D</div></div>
+<div class="sauce strip"><div class="wrap"><span>PIZZA NOW DELIVERS · ORDER ON UBER EATS &amp; MR D</span><a class="other-site" href="merles-schnitz.html" data-site="merles">Looking for Merle's? →</a></div></div>
 
 <header class="site">
   <div class="wrap">
