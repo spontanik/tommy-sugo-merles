@@ -5,11 +5,18 @@ import { catalogueRows } from "./yoco-catalogue.ts";
 const YOCO_API = "https://api.yoco.com";
 const ITEM_EXPAND = ["category", "location_availability", "price_overrides"];
 
-// Brands with a Yoco connection. Each has its own account: add Merle's here when it's ready.
-export const BRANDS = ["tommy"];
+// Brands with a Yoco connection.
+export const BRANDS = ["tommy", "merles"];
+
+// Merle's sells through Tommy Sugo's Yoco account, so it uses Tommy Sugo's key unless it's given one of its own.
+// Each brand still keeps its own catalogue copy, item links and webhook subscription.
+const SHARES_ACCOUNT_OF: Record<string, string> = { merles: "tommy" };
 
 // A key saved in the admin wins. Otherwise fall back to the edge function secret.
-const ENV_KEYS: Record<string, string[]> = { tommy: ["YOCO_API_KEY_TOMMY", "YOCO_API_KEY"] };
+const ENV_KEYS: Record<string, string[]> = {
+  tommy: ["YOCO_API_KEY_TOMMY", "YOCO_API_KEY"],
+  merles: ["YOCO_API_KEY_MERLES"],
+};
 
 export function adminClient(): SupabaseClient {
   const secretKeys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}");
@@ -36,12 +43,19 @@ export async function setSecret(db: SupabaseClient, brand: string, kind: string,
   if (error) throw new Error("Couldn't save the Yoco credentials.");
 }
 
-export async function getApiKey(db: SupabaseClient, brand: string) {
+type KeySource = "admin" | "edge-secret" | "shared";
+
+export async function getApiKey(db: SupabaseClient, brand: string): Promise<{ key: string | null; source: KeySource | null }> {
   const saved = await getSecret(db, brand, "api_key");
-  if (saved) return { key: saved, source: "admin" as const };
+  if (saved) return { key: saved, source: "admin" };
   for (const name of ENV_KEYS[brand] ?? []) {
     const value = Deno.env.get(name);
-    if (value) return { key: value, source: "edge-secret" as const };
+    if (value) return { key: value, source: "edge-secret" };
+  }
+  const owner = SHARES_ACCOUNT_OF[brand];
+  if (owner) {
+    const { key } = await getApiKey(db, owner);
+    if (key) return { key, source: "shared" };
   }
   return { key: null, source: null };
 }

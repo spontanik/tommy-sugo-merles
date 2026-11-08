@@ -28,6 +28,15 @@ export type ModifierGroup = {
 // What starts switched off on each menu item, until someone switches it on in the item editor.
 const OFF_BY_DEFAULT: Record<string, { variants: string[]; groups: string[] }> = {
   tommy: { variants: ["Medium"], groups: ["Package"] },
+  // A combo's fixed parts (scripts/yoco-create-merles-items.mjs): one choice, already made, so not worth showing.
+  merles: {
+    variants: [],
+    groups: [
+      "Combo: Schnitz and Chips", "Combo: Schnitz and Chips 2",
+      "Combo: Schnitz", "Combo: Schnitz 2", "Combo: Schnitz 3", "Combo: Schnitz 4",
+      "Combo: Large Chips", "Combo: Large Chips 2", "Combo: Salad",
+    ],
+  },
 };
 
 // deno-lint-ignore no-explicit-any
