@@ -8,6 +8,9 @@ the page if Supabase isn't configured or can't be reached.
 
 | Path | What it is |
 | --- | --- |
+| `js/sites.js` | Where each site lives (spontanik.co.za and its subdomains), and the links between them |
+| `vercel.json`, `.vercelignore` | Vercel: which page each address serves, and what's left out of the deployment |
+| `docs/domains-and-email.md` | Setting up the domains, Vercel, and email from the brand domains |
 | `admin/index.html` | Housemates: sign in, pick a brand, then edit its Menu, Shop and Settings (see below) |
 | `js/supabase-config.js` | Supabase project URL and publishable key (safe to publish) |
 | `js/catalog-config.js` | The fallback list of sections and price columns, used if the `brands` and `sections` tables can't be read, plus the price column labels |
@@ -31,12 +34,14 @@ the page if Supabase isn't configured or can't be reached.
 2. Put the project URL and publishable key in `js/supabase-config.js`.
 3. **Authentication → Sign In / Providers**: turn off "Allow new users to sign up". (Even if left on, only people in
    the `admins` table can change anything.)
-4. **Authentication → URL Configuration**: set the Site URL to the admin page,
-   `https://spontanik.github.io/tommy-sugo-merles/admin/` (change it if the site moves to its own domain), so invite and
-   password-reset emails land there.
+4. **Authentication → URL Configuration**: set the Site URL to the admin page, `https://admin.spontanik.co.za/`, so
+   invite and password-reset emails land there, and add each site to Redirect URLs (see
+   [docs/domains-and-email.md](docs/domains-and-email.md)).
 
 The live project is `tommy-sugo-merles` (ref `awazfdglfhmkejrctnkz`) in the Housemates Supabase organisation. The site
-is published by GitHub Pages from `main` of `spontanik/tommy-sugo-merles`: push to `main` and it redeploys.
+is published from `main` of `spontanik/tommy-sugo-merles`: push to `main` and it redeploys. Vercel serves it at
+`spontanik.co.za`, `tommy.`, `merles.` and `admin.` (see [docs/domains-and-email.md](docs/domains-and-email.md)), and
+GitHub Pages still serves the old `spontanik.github.io/tommy-sugo-merles` address, which early order emails link to.
 
 ## The admin (Housemates)
 

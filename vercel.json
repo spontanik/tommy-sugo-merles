@@ -1,0 +1,139 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www\\.spontanik\\.co\\.za"
+        }
+      ],
+      "status": 308,
+      "headers": {
+        "Location": "https://spontanik.co.za/$1"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "(www\\.)?merles\\.co\\.za"
+        }
+      ],
+      "status": 308,
+      "headers": {
+        "Location": "https://merles.spontanik.co.za/$1"
+      }
+    },
+    {
+      "src": "/tommy-sugo\\.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "tommy\\.spontanik\\.co\\.za"
+        }
+      ],
+      "status": 308,
+      "headers": {
+        "Location": "https://tommy.spontanik.co.za/"
+      }
+    },
+    {
+      "src": "/merles-schnitz\\.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "merles\\.spontanik\\.co\\.za"
+        }
+      ],
+      "status": 308,
+      "headers": {
+        "Location": "https://merles.spontanik.co.za/"
+      }
+    },
+    {
+      "src": "/tommy-sugo\\.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "(.+\\.)?spontanik\\.co\\.za"
+        }
+      ],
+      "status": 308,
+      "headers": {
+        "Location": "https://tommy.spontanik.co.za/"
+      }
+    },
+    {
+      "src": "/merles-schnitz\\.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "(.+\\.)?spontanik\\.co\\.za"
+        }
+      ],
+      "status": 308,
+      "headers": {
+        "Location": "https://merles.spontanik.co.za/"
+      }
+    },
+    {
+      "src": "/admin(/.*)?",
+      "has": [
+        {
+          "type": "host",
+          "value": "(tommy\\.|merles\\.)?spontanik\\.co\\.za"
+        }
+      ],
+      "status": 308,
+      "headers": {
+        "Location": "https://admin.spontanik.co.za/"
+      }
+    },
+    {
+      "src": "/index\\.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "(tommy|merles|admin)\\.spontanik\\.co\\.za"
+        }
+      ],
+      "status": 308,
+      "headers": {
+        "Location": "https://spontanik.co.za/"
+      }
+    },
+    {
+      "src": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "tommy\\.spontanik\\.co\\.za"
+        }
+      ],
+      "dest": "/tommy-sugo.html"
+    },
+    {
+      "src": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "merles\\.spontanik\\.co\\.za"
+        }
+      ],
+      "dest": "/merles-schnitz.html"
+    },
+    {
+      "src": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "admin\\.spontanik\\.co\\.za"
+        }
+      ],
+      "dest": "/admin/index.html"
+    }
+  ]
+}
