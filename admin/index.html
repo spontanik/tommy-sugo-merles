@@ -345,6 +345,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 
 <div class="toast" id="toast" role="status" hidden></div>
 
+<script src="../js/sites.js"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="../js/catalog-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -600,7 +601,9 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     } else {
       id.appendChild(h("img", { class: "logo", src: "../merles-logo.svg", alt: info.label }));
     }
-    $("view-site").href = "../" + info.page + (state.view === "menu" || state.view === "shop" ? "#" + state.view : "");
+    var hash = state.view === "menu" || state.view === "shop" ? "#" + state.view : "";
+    // On spontanik.co.za each brand has its own subdomain, so the page set in Settings only matters elsewhere.
+    $("view-site").href = window.Sites.live ? window.Sites.url(brand, hash) : "../" + info.page + hash;
     saveRoute();
   }
 

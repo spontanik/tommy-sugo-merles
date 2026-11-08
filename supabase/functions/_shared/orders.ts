@@ -2,7 +2,13 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.95.0";
 import { getApiKey, getSecret, yocoJson } from "./yoco.ts";
 
-export const SITE_URL = "https://spontanik.github.io/tommy-sugo-merles";
+// Each brand's site, where its order links and Yoco Checkout return. Only deploy the order functions with these once
+// the subdomains are live: until then, orders would link to addresses that don't open.
+const SITE_URLS: Record<string, string> = {
+  tommy: "https://tommy.spontanik.co.za",
+  merles: "https://merles.spontanik.co.za",
+};
+export const siteUrl = (brand: string) => SITE_URLS[brand] ?? "https://spontanik.co.za";
 export const CHECKOUT_API = "https://payments.yoco.com/api";
 
 const BRAND_NAMES: Record<string, string> = { tommy: "Tommy Sugo", merles: "Merle's" };
@@ -19,7 +25,7 @@ export const reply = (body: object, status = 200) =>
     headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "no-store" },
   });
 
-export const orderLink = (token: string, base = SITE_URL) => `${base}/order.html?t=${token}`;
+export const orderLink = (token: string, base: string) => `${base}/order.html?t=${token}`;
 
 export async function checkoutFetch(key: string, path: string, init: RequestInit = {}) {
   const res = await fetch(CHECKOUT_API + path, {
@@ -73,7 +79,7 @@ async function linesOf(db: SupabaseClient, orderId: string) {
 export async function sendOrderEmail(db: SupabaseClient, order: Order) {
   try {
     const shop = BRAND_NAMES[order.brand] ?? "";
-    const link = orderLink(order.access_token);
+    const link = orderLink(order.access_token, siteUrl(order.brand));
     const lines = await linesOf(db, order.id);
     const list = lines.map((l) => `${l.qty} × ${l.name} (${rand(l.qty * l.unit_price)})`);
     await sendEmail(db, order.brand, {

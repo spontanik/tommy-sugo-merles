@@ -51,10 +51,11 @@ a { color: var(--ink); }
 </head>
 <body>
 <main id="page" aria-live="polite">
-  <a class="back" id="back" href="index.html">← Back to the website</a>
+  <a class="back" id="back" href="index.html" data-site="home">← Back to the website</a>
   <p>Loading…</p>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/sites.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/account.js"></script>
 <script>
@@ -63,8 +64,8 @@ a { color: var(--ink); }
   var page = document.getElementById("page");
   var backLink = document.getElementById("back");
   var from = new URLSearchParams(location.search).get("from");
-  var HOMES = { tommy: ["tommy-sugo.html", "← Tommy Sugo"], merles: ["merles-schnitz.html", "← Merle's"] };
-  if (HOMES[from]) { backLink.href = HOMES[from][0]; backLink.textContent = HOMES[from][1]; }
+  var BACK = { tommy: "← Tommy Sugo", merles: "← Merle's" };
+  if (BACK[from]) { backLink.removeAttribute("data-site"); backLink.href = window.Sites.url(from); backLink.textContent = BACK[from]; }
   var NAMES = { tommy: "Tommy Sugo", merles: "Merle's" };
   var LABELS = { pending_payment: "Not paid", received: "Received", preparing: "Being prepared", ready: "Ready for collection", collected: "Collected", cancelled: "Cancelled" };
   var CURRENT = ["pending_payment", "received", "preparing", "ready"];

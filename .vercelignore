@@ -1,0 +1,5 @@
+# Not part of the website: kept out of Vercel deployments.
+.claude/
+docs/
+supabase/
+README.md

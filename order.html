@@ -41,6 +41,7 @@ p { margin: 0; }
 </head>
 <body>
 <main id="order" aria-live="polite"><p>Loading your order…</p></main>
+<script src="js/sites.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/account.js"></script>
 <script>
@@ -49,7 +50,6 @@ p { margin: 0; }
   var params = new URLSearchParams(location.search);
   var token = params.get("t") || "";
   var box = document.getElementById("order");
-  var HOMES = { tommy: "tommy-sugo.html", merles: "merles-schnitz.html" };
   var NAMES = { tommy: "Tommy Sugo", merles: "Merle's" };
   var STAGES = ["received", "preparing", "ready", "collected"];
   // The progress list always says plainly where the order is, whatever the voice.
@@ -142,7 +142,7 @@ p { margin: 0; }
     a.href = href;
     return a;
   }
-  function home(o) { return HOMES[o.brand] || "index.html"; }
+  function home(o) { return window.Sites.url(o.brand); }
 
   function summary(o) {
     var section = el("div", "box");
@@ -235,7 +235,7 @@ p { margin: 0; }
     box.textContent = "";
     box.appendChild(el("h1", null, "We Can't Show This Order."));
     box.appendChild(el("p", null, message));
-    box.appendChild(link("btn", "Go to the website", "index.html"));
+    box.appendChild(link("btn", "Go to the website", window.Sites.url("home")));
   }
 
   function load() {

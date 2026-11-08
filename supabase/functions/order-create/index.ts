@@ -4,7 +4,7 @@
 // Without one (or if it has run out) the order is placed without an account, as before.
 import { adminClient, BRANDS, getSecret } from "../_shared/yoco.ts";
 import { OrderError, priceOrder, type RequestedLine } from "../_shared/order-pricing.ts";
-import { checkoutFetch, CORS, orderLink, reply, SITE_URL } from "../_shared/orders.ts";
+import { checkoutFetch, CORS, orderLink, reply, siteUrl } from "../_shared/orders.ts";
 
 const LOCAL = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/;
 const MIN_CENTS = 200; // Yoco doesn't accept less
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
     // A test key can return to a local copy of the site, so checkout can be tried before it's published.
     const isTest = key.startsWith("sk_test");
-    const base = isTest && LOCAL.test(String(body.returnBase)) ? body.returnBase : SITE_URL;
+    const base = isTest && LOCAL.test(String(body.returnBase)) ? body.returnBase : siteUrl(brand);
     const accessToken = randomHex(32);
     const { data: order, error } = await db.from("orders").insert({
       brand,
