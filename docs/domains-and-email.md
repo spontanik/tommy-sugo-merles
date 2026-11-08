@@ -8,8 +8,10 @@ Where everything lives once it's set up:
 | `tommy.spontanik.co.za` | Tommy Sugo (`tommy-sugo.html`) |
 | `merles.spontanik.co.za` | Merle's (`merles-schnitz.html`) |
 | `admin.spontanik.co.za` | Housemates, the admin (`admin/index.html`) |
-| `merles.co.za` | Merle's emails come from here. Later it forwards to `merles.spontanik.co.za` |
-| `tommysugofood.co.za` | Tommy Sugo's emails come from here. It's still the Shopify store, and nothing here changes its website |
+| `merles.co.za` | Later: forwards to `merles.spontanik.co.za`, and Merle's emails could come from here |
+| `tommysugofood.co.za` | Later: Tommy Sugo's emails could come from here. It's still the Shopify store |
+
+For now all email is sent from `spontanik.co.za` (step 5).
 
 `order.html`, `account.html`, the images and scripts are shared, so they open at every address.
 
@@ -65,66 +67,60 @@ certificate for each one by itself. Check that all four open and each shows the 
 Supabase → project `tommy-sugo-merles` → **Authentication → URL Configuration**:
 
 - **Site URL**: `https://admin.spontanik.co.za/`
-- **Redirect URLs**: add
-  `https://spontanik.co.za/**`, `https://tommy.spontanik.co.za/**`, `https://merles.spontanik.co.za/**`,
-  `https://admin.spontanik.co.za/**`. Keep the `github.io` ones until nobody uses that address.
+- **Redirect URLs**: `https://spontanik.co.za/**`, `https://tommy.spontanik.co.za/**`,
+  `https://merles.spontanik.co.za/**`, `https://admin.spontanik.co.za/**`, and
+  `https://spontanik.github.io/tommy-sugo-merles/**` until nobody uses that address.
+
+Done on 2026-11-08. Before that there were no redirect URLs, so every link went to the Site URL.
 
 Account confirmations and password resets then go back to the address the person signed up on.
 
 ## 4. Deploy the order functions (only after step 2 works)
 
 Order emails and Yoco Checkout now return to the brand's own subdomain (`siteUrl` in
-`supabase/functions/_shared/orders.ts`). Deploy every function that uses that file:
+`supabase/functions/_shared/orders.ts`). The functions that build those links are `order-create`, `yoco-payment-webhook`
+and `order-admin` (Send email again). All of them run with verify_jwt off:
 
 ```bash
-supabase functions deploy order-create order-status order-admin my-orders yoco-payment-webhook yoco-admin --project-ref awazfdglfhmkejrctnkz --no-verify-jwt
+supabase functions deploy order-create yoco-payment-webhook order-admin --project-ref awazfdglfhmkejrctnkz --no-verify-jwt
 ```
+
+Done on 2026-11-08 (order-create v3, yoco-payment-webhook v2, order-admin v2).
 
 If these are deployed before `tommy.spontanik.co.za` opens, customers come back from paying to a page that doesn't load.
 (The payment still goes through, and the order is still saved.)
 
-## 5. Send email from the brand domains (Resend)
+## 5. Send email from spontanik.co.za (Resend)
 
-Resend's free plan covers 3 domains, 3,000 emails a month and 100 a day. That's enough for both brand domains plus
-`spontanik.co.za` if account emails come from there (step 6).
+For now both brands send from `spontanik.co.za`. The Resend team is **myeinv**, on the free plan: 3 domains, 3,000 emails
+a month, 100 a day. Its 3 domains are `spontanik.co.za`, `terrainhq.co.za` and `terrainhq.net`, so `merles.co.za` or
+`tommysugofood.co.za` need a free domain slot first (upgrade to Pro, $20 a month for 10, or a separate team for the brands).
 
-### Add the domains in Resend
+`spontanik.co.za` was added on 2026-11-08, region **Ireland (eu-west-1)**, with **Manual setup** (not Auto configure,
+which asks for access to the GoDaddy account). Its records at GoDaddy:
 
-1. Sign up at resend.com.
-2. **Domains → Add domain**: `merles.co.za`. Pick the region **Ireland (eu-west-1)**, the nearest to South Africa.
-3. Resend lists 3 or 4 DNS records. They look like the table below, but **copy the values from Resend**: the DKIM key is
-   different for every domain.
+| Type | Name | Value |
+| --- | --- | --- |
+| TXT | `resend._domainkey` | `p=MIGfMA0GCSq…` (the DKIM key Resend shows, different for every domain) |
+| CNAME | `send` | `send.forge.rmta.net` |
+| CNAME | `rsend` | `rsend-euw1.forge.rmta.net` |
 
-| Type | Name | Value | Priority |
-| --- | --- | --- | --- |
-| TXT | `resend._domainkey` | `p=MIGfMA0GCSq…` (from Resend) | |
-| MX | `send` | `feedback-smtp.eu-west-1.amazonses.com` | 10 |
-| TXT | `send` | `v=spf1 include:amazonses.com ~all` | |
-| TXT | `_dmarc` | `v=DMARC1; p=none;` (optional, recommended) | |
+These only add `send.`, `rsend.` and `resend._domainkey.` names, so they don't touch the website. Resend also suggests a
+`_dmarc` record; `spontanik.co.za` already has GoDaddy's (`p=quarantine`), which is fine because Resend signs as
+`spontanik.co.za`. In the dashboard, GoDaddy adds the domain itself, so the name is just `send`, not
+`send.spontanik.co.za`.
 
-4. Do the same for `tommysugofood.co.za`, and for `spontanik.co.za` if you choose it in step 6.
+The same three kinds of record work for any later domain. At domains.co.za (`tommysugofood.co.za`), check whether the name
+field wants the short name or the full one, and don't change the Shopify records.
 
-These records only add `send.` and `resend._domainkey.` names to each domain. They don't touch the website (`@`, `www`),
-so the Shopify store on `tommysugofood.co.za` keeps working.
+### Use it
 
-### Add the records
-
-- **merles.co.za and spontanik.co.za** (GoDaddy → DNS → Add new record): GoDaddy adds the domain itself, so the name is
-  just `send`, not `send.merles.co.za`.
-- **tommysugofood.co.za** (domains.co.za → the domain → **Manage DNS**): the same records. Check what the screen expects
-  in the name field. If the other records there are listed as full names (`www.tommysugofood.co.za`), type
-  `send.tommysugofood.co.za` and `resend._domainkey.tommysugofood.co.za`. Don't change the Shopify records.
-
-Then press **Verify** in Resend for each domain. It usually turns green within an hour.
-
-### Use them
-
-1. Resend → **API Keys → Create**: permission **Sending access**, domain `tommysugofood.co.za`. Make a separate key for
-   each domain, so one can be withdrawn without stopping the other.
-2. Housemates → **Tommy Sugo → Settings → Order Emails**: send from `Tommy Sugo <orders@tommysugofood.co.za>`, paste the
-   key, **Save**. Then use **Send email again** on a test order in the Orders tab to check it arrives.
-3. Merle's has no Order Emails card yet: its checkout is still a prototype. When Merle's takes real orders, it will send
-   from `Merle's <orders@merles.co.za>` with its own key.
+1. Resend → **API Keys → Create**: permission **Sending access**, domain `spontanik.co.za`. Make one key for order emails
+   and another for Supabase (step 6), so either can be withdrawn on its own.
+2. Housemates → **Tommy Sugo → Settings → Order Emails**: send from `Tommy Sugo <tommy@spontanik.co.za>`, paste the key,
+   **Save**. Then use **Send email again** on a test order in the Orders tab to check it arrives.
+3. Merle's has no Order Emails card yet: its checkout is still a prototype. When it takes real orders, it can send from
+   `Merle's <merles@spontanik.co.za>`.
 
 ## 6. Account emails (Supabase custom SMTP)
 
@@ -132,8 +128,8 @@ Customer account emails (confirm your account, reset your password) are sent by 
 functions. Supabase sends them from **one address for the whole project**, whichever brand the customer signed up on. So
 pick one:
 
-- **`hello@spontanik.co.za`** (recommended): neutral for both brands. Needs `spontanik.co.za` verified in Resend too.
-- `orders@tommysugofood.co.za`: then Merle's customers get account emails from Tommy Sugo.
+- **`hello@spontanik.co.za`** (recommended): neutral for both brands, and `spontanik.co.za` is already in Resend.
+- `tommy@spontanik.co.za`: then Merle's customers get account emails from Tommy Sugo.
 
 Supabase → **Authentication → Emails → SMTP Settings** → Enable custom SMTP:
 
