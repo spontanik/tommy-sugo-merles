@@ -158,6 +158,8 @@ textarea.input { min-height: 88px; resize: vertical; }
 /* Settings */
 .brand-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
 .set-foot { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; }
+/* Under a folded section, the bar uses that section's line rather than drawing a second one below it. */
+.section.folded + .set-foot { margin-top: 0; border-top: 0; }
 .set-foot .status { margin-right: auto; font-size: 14px; font-weight: 700; }
 .set-foot .msg.err { flex-basis: 100%; }
 
@@ -376,7 +378,10 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   // What came from the brands and sections tables. Empty until they load, or if they aren't there yet.
   var catalog = { ok: false, missing: false, brands: {}, sections: [] };
   var settings = null; // the Settings tab's unsaved draft
-  var YOCO_BRANDS = ["tommy"]; // brands connected to their own Yoco account; must match BRANDS in the edge functions
+  var YOCO_BRANDS = ["tommy", "merles"]; // brands connected to Yoco; must match BRANDS in the edge functions
+  // Merle's shares Tommy Sugo's Yoco account, so its catalogue copy holds both brands' items. Only these categories
+  // count as Merle's own when listing Yoco items that aren't on the website yet. Combo parts never go on the website.
+  var YOCO_OWN_CATEGORIES = { merles: /^MERLE'?S\b(?! COMBO PARTS)/i };
   var yocoState = null; // the Yoco part of Settings, which saves straight away rather than with the draft
   var yocoOnlyUnmatched = false;
   var YOCO_COLS = { price: "yoco_id" }; // the website prices that can follow a Yoco item
@@ -1456,6 +1461,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var save = h("button", { class: "btn", type: "submit", text: "Save key" });
     var keyLine = st.keySource === "admin" ? "Saved here, ending ••••" + (conn.api_key_hint || "")
       : st.keySource === "edge-secret" ? "Using the Supabase edge function secret"
+      : st.keySource === "shared" ? "Using Tommy Sugo's key: Merle's shares its Yoco account"
       : "No API key yet";
     var form = h("form", { class: "fld", novalidate: true, onsubmit: function (e) {
       e.preventDefault();
@@ -1540,7 +1546,10 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       h("input", { type: "checkbox", checked: yocoOnlyUnmatched, onchange: function () { yocoOnlyUnmatched = this.checked; drawYoco(); } }),
       h("span", { text: "Only show unmatched" })
     ]);
-    var missing = y.catalogue.filter(function (c) { return c.kind === "variant" && !c.is_deleted && !c.off_by_default && !used[c.yoco_id]; });
+    var own = YOCO_OWN_CATEGORIES[state.brand];
+    var missing = y.catalogue.filter(function (c) {
+      return c.kind === "variant" && !c.is_deleted && !c.off_by_default && !used[c.yoco_id] && (!own || own.test(c.category || ""));
+    });
 
     var list = h("div", {});
     var lastGroup = null, rows = null;

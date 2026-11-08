@@ -124,6 +124,30 @@ test("marks a brand's chosen modifier groups off by default", () => {
   assert.deepEqual(groups.map((g) => [g.name, g.off]), [["Package", true], ["Cheese", false]]);
 });
 
+test("a combo's parts are free products, with its fixed parts off and its choices on", () => {
+  const schnitz = { id: "s", name: "Schnitz and Chips", variants: [{ id: "sv", is_enabled: true, price: money(9500) }] };
+  const coke = { id: "k", name: "Coke", variants: [{ id: "kv", is_enabled: true, price: money(2500) }] };
+  const product = (id: string, name: string, variant: string, selected = false) =>
+    ({ id, name, pricing_strategy: "free", variant_id: variant, is_selected_by_default: selected });
+  const combo = {
+    id: "c",
+    name: "Solo Schnitz Combo",
+    variants: [{ id: "cv", is_enabled: true, price: money(13000) }],
+    modifier_groups: [
+      { id: "g1", name: "Combo: Schnitz and Chips", min_selections: 1, max_selections: 1, ordinal: 0,
+        modifiers: [product("m1", "Schnitz and Chips", "sv", true)] },
+      { id: "g2", name: "Cold Drink", min_selections: 1, max_selections: 1, ordinal: 1,
+        modifiers: [product("m2", "Coke", "kv")] },
+    ],
+  };
+  const row = catalogueRows([schnitz, coke, combo], "merles", null).find((r) => r.yoco_id === "cv")!;
+  assert.equal(row.price, 130);
+  assert.deepEqual(row.modifier_groups!.map((g) => [g.name, g.off, g.modifiers.map((m) => [m.name, m.price, m.selected])]), [
+    ["Combo: Schnitz and Chips", true, [["Schnitz and Chips", 0, true]]],
+    ["Cold Drink", false, [["Coke", 0, false]]],
+  ]);
+});
+
 test("builds each variant's groups in Yoco's order, with their selection rules", () => {
   const item = {
     id: "i",

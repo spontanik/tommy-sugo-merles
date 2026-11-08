@@ -25,6 +25,7 @@ the page if Supabase isn't configured or can't be reached.
 | `supabase/migrations/…_yoco_catalogue_sync.sql` | Yoco connection status, the catalogue copy, item links, and price triggers |
 | `supabase/functions/yoco-admin` | Used by the admin's Settings tab: credentials, location, sync, live updates |
 | `supabase/functions/yoco-webhook` | Receives item changes from Yoco, checks the signature, refreshes the item |
+| `scripts/yoco-create-merles-items.mjs` | One-off: creates Merle's menu items in the shared Yoco account (dry run unless `--create`) |
 | `supabase/seed.sql` | The items that were hard-coded in the pages on 2026-11-05 |
 
 ## Setting up Supabase
@@ -133,7 +134,7 @@ Keys are saved in Settings (Online Payments, Order Emails) and kept in Vault. A 
 
 ## Yoco product sync
 
-Tommy Sugo only for now. Each brand has its own Yoco account, so credentials and data are all per brand. To add Merle's: add it to `BRANDS` and `ENV_KEYS` in `supabase/functions/_shared/yoco.ts`, insert its `yoco_connections` row, and add it to `YOCO_BRANDS` in `admin/index.html`.
+Both brands. Merle's sells through Tommy Sugo's Yoco account (`SHARES_ACCOUNT_OF` in `supabase/functions/_shared/yoco.ts`): it uses Tommy Sugo's key unless one is saved under Merle's, but keeps its own catalogue copy, item links and live-updates subscription. Its own items sit in Yoco categories starting `MERLE'S`, which is how its Settings tells them apart from Tommy Sugo's. Its drinks follow Tommy Sugo's Coke and Still water. `scripts/yoco-create-merles-items.mjs` creates Merle's items in Yoco, copying Pizza Margherita's tax and location settings. Each combo is one Yoco item made up of other products: free product modifiers for its fixed parts (groups named `Combo: …`, switched off on the website) and for the customer's sauce and drink choices. The parts only it uses, Schnitz and Large Chips, are R0 items under `MERLE'S COMBO PARTS`.
 
 - **Direction:** the sync only reads from Yoco and never changes anything there.
 - **Yoco owns** the price and availability of any website item matched to it. A database trigger enforces this, so a save from the admin can't override a matched price. **The website keeps** names, descriptions, images, order, and what's hidden.
