@@ -158,6 +158,8 @@ textarea.input { min-height: 88px; resize: vertical; }
 /* Settings */
 .brand-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
 .set-foot { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 40px; padding-top: 16px; border-top: 2px solid #000; }
+/* Under a folded section, the bar uses that section's line rather than drawing a second one below it. */
+.section.folded + .set-foot { margin-top: 0; border-top: 0; }
 .set-foot .status { margin-right: auto; font-size: 14px; font-weight: 700; }
 .set-foot .msg.err { flex-basis: 100%; }
 
