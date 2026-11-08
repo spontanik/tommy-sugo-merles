@@ -34,9 +34,15 @@ Do the steps in this order. Step 4 is the only one that can break something if i
    Vercel's GitHub app access to it (**Adjust GitHub App Permissions**).
 2. Framework preset **Other**, root directory `./`, no build command. **Deploy**.
 3. Open the `something.vercel.app` address it gives you and check the site and `/admin/` work.
-4. **Settings → Domains**: add `spontanik.co.za`. When Vercel offers to add `www.spontanik.co.za` as a redirect, accept.
-5. Add `tommy.spontanik.co.za`, `merles.spontanik.co.za` and `admin.spontanik.co.za`, each connected to Production.
-   A route in `vercel.json` does nothing for a domain that isn't added here.
+4. **Settings → Domains → Add Existing**: add `spontanik.co.za`, `www.spontanik.co.za`, `tommy.spontanik.co.za`,
+   `merles.spontanik.co.za` and `admin.spontanik.co.za`, all **connected to Production**. A route in `vercel.json` does
+   nothing for a domain that isn't added here.
+
+   Untick **Redirect apex domains to www** when adding `spontanik.co.za` (it's ticked by default). The main page lives
+   on `spontanik.co.za`, and `vercel.json` already sends `www.` there, so Vercel's redirect the other way would loop.
+
+Done on 2026-11-08: the project is `tommy-sugo-merles` in the `terrainhq` team, with all five domains connected to
+Production.
 
 Pushing to `main` now deploys to both GitHub Pages and Vercel. Leave GitHub Pages on: order emails already sent link to
 the `github.io` address.
@@ -46,16 +52,16 @@ the `github.io` address.
 GoDaddy → **My Products → spontanik.co.za → DNS**. Right now it shows GoDaddy's parking page.
 
 1. Delete the two **A** records for `@` (`3.33.130.190` and `15.197.148.33`) and the **CNAME** for `www`.
-2. Add the records Vercel shows next to each domain under Settings → Domains. They usually look like this, but Vercel
-   sometimes gives a project its own IP or CNAME: **use Vercel's values**.
+2. Add these records. They're the values Vercel shows for this project under Settings → Domains → View DNS
+   configuration (the older `76.76.21.21` and `cname.vercel-dns.com` also still work).
 
 | Type | Name | Value |
 | --- | --- | --- |
-| A | `@` | `76.76.21.21` |
-| CNAME | `www` | `cname.vercel-dns.com` |
-| CNAME | `tommy` | `cname.vercel-dns.com` |
-| CNAME | `merles` | `cname.vercel-dns.com` |
-| CNAME | `admin` | `cname.vercel-dns.com` |
+| A | `@` | `216.150.1.1` |
+| CNAME | `www` | `4992525cc032706b.vercel-dns-016.com` |
+| CNAME | `tommy` | `4992525cc032706b.vercel-dns-016.com` |
+| CNAME | `merles` | `4992525cc032706b.vercel-dns-016.com` |
+| CNAME | `admin` | `4992525cc032706b.vercel-dns-016.com` |
 
 DNS takes between minutes and a few hours. When all the domains show **Valid Configuration**, Vercel gets an HTTPS
 certificate for each one by itself. Check that all four open and each shows the right page.
@@ -152,8 +158,8 @@ Until this is set, only the Supabase project's team members receive account emai
 
 1. Vercel → Settings → Domains: add `merles.co.za` and `www.merles.co.za`.
 2. GoDaddy → merles.co.za → DNS: replace the parked `@` A records and the `www` CNAME with
-   the values Vercel shows (usually **A `@` → `76.76.21.21`** and **CNAME `www` → `cname.vercel-dns.com`**). Leave the
-   Resend records alone.
+   **A `@` → `216.150.1.1`** and **CNAME `www` → `4992525cc032706b.vercel-dns-016.com`** (check Vercel shows the same).
+   Leave the Resend records alone.
 
 `vercel.json` already sends both to `merles.spontanik.co.za`.
 
