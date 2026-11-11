@@ -8,8 +8,9 @@
    customer chooses is its own line in `chosen`, since those lines have no stepper on the page.
    Page copy comes from window.ORDER_COPY. With copy.liveCheckout set, the order goes to the order-create function and
    the customer pays on Yoco's page. Otherwise checkout is a prototype: nothing is saved or charged.
-   With live checkout and accounts (js/account.js) loaded, the customer either signs in or creates an account, or
-   chooses No account, and the order is then kept on this device only. A signed-in order goes on their account. */
+   With live checkout and accounts (js/account.js) loaded, checkout starts as a guest: name, email and cell, and the
+   order is kept on this device (and emailed). "Have an account? Sign in" opens sign-in or create-account instead, and
+   a signed-in order goes on their account. Someone already signed in skips straight to their saved details. */
 (function () {
   var form = document.getElementById("shop-form");
   if (!form) return;
@@ -26,6 +27,7 @@
     ".pill:disabled{opacity:.45;cursor:not-allowed}" +
     ".cart-lines li .line-name{flex:1;min-width:0}" +
     ".line-remove{min-height:44px;margin:-12px 0;padding:0 0 0 4px;background:none;border:0;color:inherit;font:inherit;font-size:14px;text-decoration:underline;cursor:pointer}" +
+    ".acct-toggle{align-self:flex-start;min-height:44px;padding:0;background:none;border:0;color:inherit;font:inherit;font-size:14px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-align:left}" +
     ".order-bar{position:sticky;bottom:0;z-index:10;background:var(--surface);color:var(--ink);border-top:3px solid var(--ink);padding-bottom:env(safe-area-inset-bottom,0px)}" +
     ".order-bar-in{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:12px;padding-bottom:12px;font-weight:700}" +
     'main[data-view="shop"]:not([hidden]) ~ .order-bar{display:none}' +
@@ -369,11 +371,11 @@
     optDlg.showModal();
   }
 
-  // ---------- With an account, or without ----------
+  // ---------- As a guest, or with an account ----------
   var A = window.Account;
   var accounts = !!(copy.liveCheckout && A && A.enabled() && $("acct"));
   // profile: their saved name and cell (null while loading); editing: they tapped Change to type other ones.
-  var acct = { use: "account", session: null, profile: null, editing: false };
+  var acct = { use: "device", session: null, profile: null, editing: false };
 
   function drawAccount() {
     if (!accounts) return;
@@ -381,11 +383,9 @@
     var needAuth = acct.use === "account" && !signed;
     // Signed in, their saved details are shown rather than asked for again, unless they're missing or being changed.
     var summary = acct.use === "account" && signed && !acct.editing;
-    document.querySelectorAll("[data-acct]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(b.getAttribute("data-acct") === acct.use));
-    });
     $("acct-pitch").hidden = !needAuth;
     $("acct-auth").hidden = !needAuth;
+    $("acct-guest").hidden = !needAuth;
     $("acct-signed").hidden = !(acct.use === "account" && signed);
     $("acct-device").hidden = acct.use !== "device";
     document.querySelectorAll("[data-details]").forEach(function (f) { f.hidden = needAuth || summary; });
@@ -421,6 +421,7 @@
     out.style.margin = "0";
     out.addEventListener("click", function () {
       A.signOut().then(function () {
+        acct.use = "device";
         acct.session = null;
         acct.profile = null;
         acct.editing = false;
@@ -458,11 +459,16 @@
   if (accounts) {
     $("acct").hidden = false;
     $("acct-pitch").textContent = A.PITCH;
-    A.authForm($("acct-auth"), { prefix: "co-", onSignedIn: signedIn });
+    A.authForm($("acct-auth"), { prefix: "co-", onSignedIn: signedIn, start: "signin" });
     document.querySelectorAll("[data-acct]").forEach(function (b) {
       b.addEventListener("click", function () {
         acct.use = b.getAttribute("data-acct");
         drawAccount();
+        // Keep keyboard focus on what's now showing: the sign-in form, or the guest fields.
+        var next = acct.use === "account"
+          ? Array.prototype.filter.call($("acct-auth").querySelectorAll("input"), function (i) { return i.offsetParent; })[0]
+          : $("shop-name");
+        if (next) next.focus();
       });
     });
     A.session().then(function (s) { if (s) signedIn(s); }).catch(function () { /* stays signed out */ });
@@ -495,7 +501,7 @@
     var email = $("shop-email");
     var problem = "";
     if (!renderCart()) problem = copy.errEmpty;
-    else if (accounts && acct.use === "account" && !acct.session) problem = "Create an account or sign in above, or choose No account.";
+    else if (accounts && acct.use === "account" && !acct.session) problem = "Sign in above, or continue as a guest.";
     else if (accounts && acct.use === "account" && !acct.profile && !acct.editing) problem = "Just a moment, we're loading your details.";
     else if (mode === "delivery" && !$("shop-address").value.trim()) problem = copy.errAddress;
     else if (!$("shop-name").value.trim()) problem = copy.errName;

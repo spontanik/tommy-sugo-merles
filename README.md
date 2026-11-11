@@ -128,7 +128,9 @@ Tommy Sugo takes real orders. Merle's checkout is still a prototype (`liveChecko
 
 ### Customer accounts
 
-At checkout the customer picks **With an account** (sign in, or create one with name, email, cell number and password) or **No account**.
+Checkout starts as a guest: name, email and cell number, no account needed. **Have an account? Sign in** opens sign-in
+(or create an account with name, email, cell number and password), and **Continue as a guest instead** goes back.
+Someone already signed in sees their saved details.
 
 - Orders placed while signed in are linked to the account (`orders.customer_id`). Their profile is in `public.customers`, filled from the sign-up by a trigger. Customers can read and edit only their own row.
 - Every order page saves its link in that browser, so `account.html` can list orders placed without an account, and a signed-in customer can add them to their account.

@@ -678,17 +678,14 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             <div class="fld" id="get-collect" hidden><label class="lbl" for="shop-collect">Collect from</label><select id="shop-collect" class="field"><option>The truck at [next event]</option><option data-kitchen>The dark kitchen, [AREA]</option></select></div>
             <p id="get-note" class="desc" style="font-size: 14px;" hidden></p>
             <div id="acct" class="stack" style="gap: 16px;" hidden>
-              <fieldset>
-                <legend class="lbl">Your details</legend>
-                <div class="btns">
-                  <button type="button" class="pill" data-acct="account" aria-pressed="true">With an account</button>
-                  <button type="button" class="pill" data-acct="device" aria-pressed="false">No account</button>
-                </div>
-              </fieldset>
-              <p id="acct-pitch" class="desc" style="font-size: 14px; border-left: 4px solid var(--sauce); padding-left: 12px;"></p>
-              <div id="acct-auth"></div>
+              <div id="acct-device" class="stack" style="gap: 0;">
+                <p class="desc" style="font-size: 14px; margin: 0;">No account needed. We'll email you a link to follow your order.</p>
+                <button type="button" class="acct-toggle" data-acct="account">Have an account? Sign in</button>
+              </div>
+              <p id="acct-pitch" class="desc" style="font-size: 14px; border-left: 4px solid var(--sauce); padding-left: 12px;" hidden></p>
+              <div id="acct-auth" hidden></div>
+              <button type="button" class="acct-toggle" id="acct-guest" data-acct="device" hidden>Continue as a guest instead</button>
               <p id="acct-signed" class="desc" style="font-size: 14px;" hidden></p>
-              <p id="acct-device" class="desc" style="font-size: 14px;" hidden>We'll keep this order on this device only. You can create an account later and add it from <a href="account.html?from=tommy">Your Orders</a>.</p>
             </div>
             <div class="fld" data-details><label class="lbl" for="shop-name">Your name</label><input id="shop-name" class="field" type="text" autocomplete="name"></div>
             <div class="fld" data-details><label class="lbl" for="shop-email">Email</label><input id="shop-email" class="field" type="email" autocomplete="email"></div>

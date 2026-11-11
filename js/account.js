@@ -78,8 +78,8 @@
     var code = (error && (error.code || "")) + " " + (error && error.message || "");
     if (/invalid_credentials|Invalid login/i.test(code)) return "That email and password don't match.";
     if (/email_not_confirmed|Email not confirmed/i.test(code)) return "Your account isn't confirmed yet. Click the link we emailed you, or send it again below.";
-    if (/signup_disabled|Signups not allowed/i.test(code)) return "Accounts aren't open yet. Please choose No account for now.";
-    if (/email_address_not_authorized/i.test(code)) return "We can't send email to that address yet. Please choose No account for now.";
+    if (/signup_disabled|Signups not allowed/i.test(code)) return "Accounts aren't open yet. Please continue as a guest for now.";
+    if (/email_address_not_authorized/i.test(code)) return "We can't send email to that address yet. Please continue as a guest for now.";
     if (/user_already_exists|already registered/i.test(code)) return "There's already an account with that email. Sign in instead.";
     if (/weak_password|Password should/i.test(code)) return "Use a password of at least 8 characters.";
     if (/rate_limit|rate limit/i.test(code)) return "Too many tries just now. Please wait a few minutes and try again.";
