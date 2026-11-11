@@ -122,6 +122,13 @@ nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .card-body { padding: 24px; display: flex; flex-direction: column; gap: 4px; }
 .row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-family: var(--poster); font-size: 24px; line-height: 1.2; font-weight: 600; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
 .row h3 { margin: 0; font-size: inherit; font-weight: inherit; }
+/* Nothing on the menu, the shop cards or the cart may spill past its border on a narrow screen: a long word breaks
+   rather than pushing out, the name shrinks to fit, and prices stay whole on one line. */
+.frame, .product, .cart { overflow-wrap: anywhere; }
+.row > :first-child { min-width: 0; }
+.row > span + span { flex: none; white-space: nowrap; overflow-wrap: normal; }
+/* Small phones: pizza names step down a little so names like Franschhoek fit their column whole. */
+@media (max-width: 400px) { .frame .pz .name { font-size: 21px; } }
 .row.small { font-family: var(--sans); font-size: 18px; line-height: 1.35; font-weight: 500; letter-spacing: 0; }
 .row.small span:last-child { font-family: var(--poster); font-weight: 600; font-size: 20px; }
 .desc { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink-muted); }
