@@ -136,9 +136,14 @@ a { color: var(--ink); }
   }
 
   // ---------- Signed out ----------
+  // Orders still on the go come first, above sign-in, so someone checking on a guest order sees it straight away.
+  // Finished ones stay below, under On this device.
   function signedOut() {
     clear();
     page.appendChild(el("h1", null, "Your Orders"));
+    var current = el("div", null);
+    current.hidden = true;
+    page.appendChild(current);
     if (!A.enabled()) {
       page.appendChild(el("p", "notice", "Accounts couldn't load. Your orders on this device are below."));
     } else {
@@ -159,10 +164,17 @@ a { color: var(--ink); }
     page.appendChild(device);
     (function draw() {
       A.lookupDevice().then(function (orders) {
+        var now = orders.filter(function (o) { return CURRENT.indexOf(o.status) >= 0; });
+        var past = orders.filter(function (o) { return CURRENT.indexOf(o.status) < 0; });
+        var top = orderLists(now, "");
+        current.textContent = "";
+        current.appendChild(top.node);
+        current.hidden = !now.length;
         holder.textContent = "";
-        var lists = orderLists(orders, "No orders on this device yet.");
-        holder.appendChild(lists.node);
-        if (lists.live) timer = setTimeout(draw, 30000);
+        holder.appendChild(orderLists(past, "No orders on this device yet.").node);
+        // With only current orders, there's nothing left to list down here.
+        device.hidden = !past.length && now.length > 0;
+        if (top.live) timer = setTimeout(draw, 30000);
       }).catch(function (e) { holder.textContent = ""; holder.appendChild(failed(e)); });
     })();
   }
