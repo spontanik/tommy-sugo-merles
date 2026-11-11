@@ -7,8 +7,14 @@
      [data-price-of="Item name"]      a price elsewhere on the page (e.g. featured cards) kept in sync with the menu
      [data-section-title="key"]       a section's heading, swapped for the title set in the admin
      [data-section="key other-key"]   hidden with the section, or once all the sections listed are hidden
-   Section titles and price columns come from the brands and sections tables, falling back to catalog-config.js.
-   New sections and section order don't reach the page: each slot and its illustration is drawn by hand. */
+     [data-section-block="key"]       a section's heading and items together: the unit that moves when sections are reordered
+     [data-section-flow]              where blocks are laid out in the admin's order. If it has .col children, the blocks
+                                      are spread over those columns, balanced by length. Otherwise they swap places.
+     <template data-section-template="menu|shop" data-prices="…">  inside a flow: the block drawn for a section added
+                                      in the admin that has no place of its own on the page yet
+     [data-section-group]             a run of flows that stays together (Tommy Sugo's pizza), placed by its first section
+   Section titles, price columns and order come from the brands and sections tables, falling back to catalog-config.js
+   and the page as written. A section with no items on show is hidden. */
 (function () {
   var conf = window.SITE_SUPABASE || {};
   var brand = document.body.getAttribute("data-brand");
@@ -16,11 +22,12 @@
 
   var cfg = window.CATALOG_CONFIG.brands[brand];
   var sections = { menu: cfg.menu, shop: cfg.shop };
-  var gone = {}; // section keys that are hidden or deleted
+  var gone = {}; // section keys that are hidden or deleted, or have nothing on show
+  var order = null; // each kind's live section keys, in the admin's order. Null if the sections table can't be read.
 
   var style = document.createElement("style");
   style.textContent =
-    "[data-section][hidden]{display:none!important}" +
+    "[data-section][hidden],[data-section-block][hidden]{display:none!important}" +
     ".item-thumb{display:block;width:100%;max-height:200px;object-fit:cover;margin-bottom:8px}" +
     ".pz .item-thumb{grid-column:1/-1}" +
     ".product.sold-out .ill{opacity:.45}" +
@@ -202,17 +209,133 @@
         if (keys.indexOf(s.key) < 0) gone[s.key] = true;
       });
       live.forEach(function (s) {
+        var usual = fromConfig.filter(function (c) { return c.key === s.key; })[0] || addBlock(kind, s.key);
         drawTitle(s);
-        if (kind === "menu") drawColumns(s, fromConfig.filter(function (c) { return c.key === s.key; })[0]);
+        if (kind === "menu") drawColumns(s, usual);
       });
       sections[kind] = live;
+      order = order || {};
+      order[kind] = keys;
     });
+    hideGone();
+  }
+
+  function hideGone() {
     document.querySelectorAll("[data-section]").forEach(function (box) {
       box.hidden = box.getAttribute("data-section").split(" ").every(function (k) { return gone[k]; });
+    });
+    document.querySelectorAll("[data-section-block]").forEach(function (block) {
+      block.hidden = !!gone[block.getAttribute("data-section-block")];
     });
     Object.keys(gone).forEach(function (key) {
       // Emptied as well as hidden, so nothing in a hidden section can stay in the cart.
       document.querySelectorAll('[data-menu-items="' + key + '"],[data-shop-items="' + key + '"]').forEach(function (slot) { slot.textContent = ""; });
+    });
+  }
+
+  // A section added in the admin, with no place on the page: drawn from the flow's template, after its last block
+  // for now. arrange() then moves it to its place. Returns the price columns the template is written for.
+  function addBlock(kind, key) {
+    var hook = kind === "menu" ? "data-menu-items" : "data-shop-items";
+    if (document.querySelector("[" + hook + '="' + key + '"]')) return null;
+    var tpl = document.querySelector('template[data-section-template="' + kind + '"]');
+    if (!tpl) return null;
+    var block = tpl.content.firstElementChild.cloneNode(true);
+    ["data-section-block", "data-section", "data-section-title", hook].forEach(function (a) {
+      if (block.hasAttribute(a)) block.setAttribute(a, key);
+      block.querySelectorAll("[" + a + "]").forEach(function (n) { n.setAttribute(a, key); });
+    });
+    var flow = tpl.parentNode, blocks = blocksIn(flow), last = blocks[blocks.length - 1];
+    if (last) last.parentNode.insertBefore(block, last.nextSibling);
+    else (flow.querySelector(".col") || flow).appendChild(block);
+    return { prices: tpl.getAttribute("data-prices") };
+  }
+
+  function blocksIn(flow) {
+    return Array.prototype.filter.call(flow.querySelectorAll("[data-section-block]"), function (b) {
+      return b.parentNode.closest("[data-section-flow]") === flow;
+    });
+  }
+
+  // ---------- Section order ----------
+  // Puts the sections in the admin's order. Sections with nothing on show are hidden first, so the columns balance
+  // what's actually there.
+  function arrange(menuRows, shopRows) {
+    if (!order) return;
+    var count = {}, weight = {};
+    menuRows.concat(shopRows).forEach(function (r) {
+      count[r.section] = (count[r.section] || 0) + 1;
+      // Roughly how tall the item draws: a line, two with a description or image, a bit more with an Add button.
+      weight[r.section] = (weight[r.section] || 2.5) + ((r.description || "").trim() || r.image_url ? 2 : 1) + (r.is_orderable ? 0.5 : 0);
+    });
+    order.menu.concat(order.shop).forEach(function (key) { if (!count[key]) gone[key] = true; });
+    hideGone();
+
+    function rank(block) {
+      var key = block.getAttribute("data-section-block");
+      var kind = block.querySelector("[data-shop-items]") || block.hasAttribute("data-shop-items") ? "shop" : "menu";
+      var i = order[kind].indexOf(key);
+      return i < 0 ? Infinity : i;
+    }
+    function sorted(nodes, rankOf) {
+      return nodes.map(function (n, i) { return { n: n, r: rankOf(n), i: i }; })
+        .sort(function (a, b) { return a.r - b.r || a.i - b.i; })
+        .map(function (x) { return x.n; });
+    }
+
+    document.querySelectorAll("[data-section-flow]").forEach(function (flow) {
+      var blocks = blocksIn(flow);
+      var want = sorted(blocks, rank);
+      var cols = Array.prototype.filter.call(flow.children, function (c) { return c.classList.contains("col"); });
+      if (cols.length) fillColumns(cols, want, weight); else placeInOrder(blocks, want);
+    });
+
+    // Groups keep their flows together, and go where their first section is.
+    var parents = [];
+    document.querySelectorAll("[data-section-group]").forEach(function (g) {
+      if (parents.indexOf(g.parentNode) < 0) parents.push(g.parentNode);
+    });
+    parents.forEach(function (parent) {
+      var groups = Array.prototype.filter.call(parent.children, function (c) { return c.hasAttribute("data-section-group"); });
+      placeInOrder(groups, sorted(groups, function (g) {
+        return Math.min.apply(null, [Infinity].concat(Array.prototype.map.call(g.querySelectorAll("[data-section-block]"), rank)));
+      }));
+    });
+  }
+
+  // Puts `want` into the places `now` holds, one for one, leaving everything around them where it is.
+  function placeInOrder(now, want) {
+    var marks = now.map(function (n) {
+      var m = document.createComment("");
+      n.parentNode.insertBefore(m, n);
+      return m;
+    });
+    marks.forEach(function (m, i) { m.parentNode.replaceChild(want[i], m); });
+  }
+
+  // Newspaper columns: in order, down the first column, then the next, each ending where the running total is
+  // closest to its share. A note at the foot of a column (anything that isn't a block) stays at the foot.
+  function fillColumns(cols, want, weight) {
+    var shown = want.filter(function (b) { return !b.hidden; });
+    function w(b) { return weight[b.getAttribute("data-section-block")] || 2.5; }
+    var total = shown.reduce(function (sum, b) { return sum + w(b); }, 0);
+    var per = cols.map(function () { return []; });
+    var c = 0, done = 0;
+    shown.forEach(function (b) {
+      var target = (c + 1) * total / cols.length;
+      if (c < cols.length - 1 && per[c].length && Math.abs(done + w(b) - target) > Math.abs(done - target)) c++;
+      per[c].push(b);
+      done += w(b);
+    });
+    per[cols.length - 1] = per[cols.length - 1].concat(want.filter(function (b) { return b.hidden; }));
+    cols.forEach(function (col, i) {
+      var foot = Array.prototype.filter.call(col.children, function (n) { return !n.hasAttribute("data-section-block"); })[0] || null;
+      per[i].forEach(function (b, k) {
+        col.insertBefore(b, foot);
+        // The space above a heading is only for headings that follow another section.
+        var head = b.firstElementChild;
+        if (head && !b.hidden) head.classList.toggle("gap-top", k > 0);
+      });
     });
   }
 
@@ -337,6 +460,7 @@
     drawMenu(res[0]);
     drawExtras(res[0]);
     drawShop(res[1]);
+    arrange(res[0], res[1]);
     document.dispatchEvent(new CustomEvent("catalog:rendered"));
   }).catch(function (err) {
     console.warn("Live menu unavailable, showing the built-in menu.", err);
