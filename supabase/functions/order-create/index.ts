@@ -1,5 +1,6 @@
 // Called by the checkout on a brand page. Public, so nothing from the request is trusted: prices come from the database.
-// Deploy with verify_jwt off. Saves the order as awaiting payment and returns Yoco's payment page.
+// Deploy with verify_jwt off. Saves the order as awaiting payment, reserves its counted shop items, and returns Yoco's
+// payment page. The reservation holds until the order is paid, cancelled, or left unpaid for UNPAID_MINUTES.
 // A signed-in customer sends their session as the Authorization bearer, and the order is linked to their account.
 // Without one (or if it has run out) the order is placed without an account, as before.
 import { adminClient, BRANDS, getSecret } from "../_shared/yoco.ts";
@@ -8,6 +9,7 @@ import { checkoutFetch, CORS, orderLink, reply, siteUrl } from "../_shared/order
 
 const LOCAL = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/;
 const MIN_CENTS = 200; // Yoco doesn't accept less
+const UNPAID_MINUTES = 30; // an unpaid order's stock is released after this (also in the expire-unpaid-orders job)
 const clean = (value: unknown, max: number) => String(value ?? "").trim().slice(0, max);
 
 function randomHex(bytes: number) {
@@ -45,6 +47,10 @@ Deno.serve(async (req) => {
     const key = await getSecret(db, brand, "checkout_key");
     if (!key) return reply({ ok: false, error: "Online payments aren't switched on yet. Please order in person or call us." });
 
+    // Release stock held by orders nobody paid for, so it counts as available for this one.
+    const expired = await db.rpc("expire_unpaid_orders", { p_minutes: UNPAID_MINUTES });
+    if (expired.error) console.error(JSON.stringify({ outcome: "couldn't expire unpaid orders", reason: expired.error.message }));
+
     const requested: RequestedLine[] = body.lines;
     if (!Array.isArray(requested)) throw new OrderError("Add something to your order first.");
     const ids = (kind: string) => [...new Set(requested.filter((l) => l?.kind === kind).map((l) => String(l.itemId)))];
@@ -75,7 +81,19 @@ Deno.serve(async (req) => {
     }).select("id, number").single();
     if (error) throw new Error("Couldn't save your order.");
     const saved = await db.from("order_lines").insert(lines.map((l) => ({ ...l, order_id: order.id })));
-    if (saved.error) throw new Error("Couldn't save your order.");
+    if (saved.error) {
+      await db.from("orders").delete().eq("id", order.id);
+      throw new Error("Couldn't save your order.");
+    }
+
+    // Before going to payment: take the counted shop items off the shelf, all or nothing. If someone else got there
+    // first, the order is dropped and the customer is told what's left.
+    const held = await db.rpc("reserve_order_stock", { p_order_id: order.id });
+    if (held.error) {
+      await db.from("orders").delete().eq("id", order.id);
+      if (held.error.hint === "out_of_stock") throw new OrderError(held.error.message);
+      throw new Error("Couldn't reserve stock: " + held.error.message);
+    }
 
     try {
       const link = orderLink(accessToken, base);
@@ -104,7 +122,8 @@ Deno.serve(async (req) => {
       }).eq("id", order.id);
       return reply({ ok: true, redirectUrl: checkout.redirectUrl });
     } catch (e) {
-      await db.from("orders").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", order.id);
+      await db.from("orders").update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancel_reason: "unpaid" }).eq("id", order.id);
+      await db.rpc("return_order_stock", { p_order_id: order.id });
       console.error(JSON.stringify({ order: order.id, reason: (e as Error).message }));
       return reply({ ok: false, error: "We couldn't start your payment. You haven't been charged. Please try again." });
     }

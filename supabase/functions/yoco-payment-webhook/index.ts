@@ -41,14 +41,23 @@ Deno.serve(async (req) => {
       return new Response("ok");
     }
     // Only the first delivery of this event moves the order on, so retries can't send a second email or Yoco order.
+    // An order that was released for not being paid in time is taken back: the customer has paid for it.
     const { data: paid, error: updateError } = await db.from("orders").update({
       status: "received",
       paid_at: new Date().toISOString(),
       payment_id: payment.id,
       payment_mode: payment.mode === "live" ? "live" : "test",
-    }).eq("id", order.id).eq("status", "pending_payment").select("*").maybeSingle();
+      cancelled_at: null,
+      cancel_reason: null,
+    }).eq("id", order.id).or("status.eq.pending_payment,and(status.eq.cancelled,cancel_reason.eq.unpaid)")
+      .select("*").maybeSingle();
     if (updateError) throw new Error("Couldn't update the order.");
     if (paid) {
+      // The stock was reserved when the order was made. This only does anything if that reservation had expired:
+      // it takes the items again, as far as there are any (it never goes below 0). Logged, not retried.
+      if (order.status === "cancelled") console.warn(JSON.stringify({ event: event.id, order: order.id, outcome: "paid after its reservation expired" }));
+      const stock = await db.rpc("take_order_stock", { p_order_id: paid.id });
+      if (stock.error) console.error(JSON.stringify({ event: event.id, order: paid.id, outcome: "stock not taken", reason: stock.error.message }));
       await sendOrderEmail(db, paid);
       if (paid.payment_mode === "live") await recordInYoco(db, paid);
     }

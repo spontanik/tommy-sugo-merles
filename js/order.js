@@ -1,8 +1,12 @@
-/* The order for a brand page: one cart holding menu items (for collection) and shop items.
+/* The order for a brand page: one cart holding menu items (for collection) and shop items. Items are added on the
+   Menu and Shop views; the cart and checkout are their own view, #cart (Your Order), reached from the header's cart
+   icon and the "View order" bar.
    Rules:
-     - Menu items are collection only, so any food in the cart makes the whole order a collection from the kitchen.
+     - Menu items are collection only, so any food in the cart makes the whole order a collection from the kitchen,
+       and the Delivery / Collect choice isn't shown at all. Shop items (frozen pizzas, sauce) can come along.
      - Delivery is only offered when the cart holds nothing but shop items.
-     - Sold-out shop items have no stepper, so they can't get into the cart.
+     - Sold-out shop items have no stepper, so they can't get into the cart. A shop item with [data-stock] (see
+       catalog.js) can't go above that many; the server checks the same when the order is placed.
    Anything with [data-product] and a stepper counts as a line; [data-food] marks the menu items (see catalog.js).
    A menu item with [data-options] has Yoco variants or modifiers: it opens a dialog first, and each combination the
    customer chooses is its own line in `chosen`, since those lines have no stepper on the page.
@@ -25,12 +29,13 @@
   var style = document.createElement("style");
   style.textContent =
     ".pill:disabled{opacity:.45;cursor:not-allowed}" +
+    ".stepper button:disabled,.stepper button:disabled:hover{opacity:.35;cursor:not-allowed;background:transparent;color:inherit}" +
     ".cart-lines li .line-name{flex:1;min-width:0}" +
     ".line-remove{min-height:44px;margin:-12px 0;padding:0 0 0 4px;background:none;border:0;color:inherit;font:inherit;font-size:14px;text-decoration:underline;cursor:pointer}" +
     ".acct-toggle{align-self:flex-start;min-height:44px;padding:0;background:none;border:0;color:inherit;font:inherit;font-size:14px;font-weight:700;text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-align:left}" +
     ".order-bar{position:sticky;bottom:0;z-index:10;background:var(--surface);color:var(--ink);border-top:3px solid var(--ink);padding-bottom:env(safe-area-inset-bottom,0px)}" +
     ".order-bar-in{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:12px;padding-bottom:12px;font-weight:700}" +
-    'main[data-view="shop"]:not([hidden]) ~ .order-bar{display:none}' +
+    'main[data-view="cart"]:not([hidden]) ~ .order-bar{display:none}' +
     ".opt-dlg{width:min(520px,calc(100vw - 32px));max-height:calc(100vh - 32px);padding:0;background:var(--surface);color:var(--ink);border:3px solid var(--ink)}" +
     ".opt-dlg::backdrop{background:rgba(0,0,0,.6)}" +
     ".opt-dlg form{display:flex;flex-direction:column;gap:20px;padding:24px}" +
@@ -53,13 +58,18 @@
   var bar = document.createElement("div");
   bar.className = "order-bar";
   bar.hidden = true;
-  bar.innerHTML = '<div class="wrap order-bar-in"><span aria-live="polite"></span><a class="btn" href="#shop">View order</a></div>';
+  bar.innerHTML = '<div class="wrap order-bar-in"><span aria-live="polite"></span><a class="btn" href="#cart">View order</a></div>';
   document.body.appendChild(bar);
   var barText = bar.querySelector("span");
 
   function products() { return Array.prototype.slice.call(document.querySelectorAll("[data-product]")); }
   function qtyOf(p) { var o = p.querySelector("output"); return o ? parseInt(o.textContent, 10) || 0 : 0; }
-  function setQty(p, q) { p.querySelector("output").textContent = String(Math.max(0, Math.min(MAX_QTY, q))); }
+  // The most of one item an order can hold: 20, or fewer when the shop has fewer left.
+  function maxOf(p) {
+    var stock = p.getAttribute("data-stock");
+    return stock === null ? MAX_QTY : Math.min(MAX_QTY, Math.max(0, parseInt(stock, 10) || 0));
+  }
+  function setQty(p, q) { p.querySelector("output").textContent = String(Math.max(0, Math.min(maxOf(p), q))); }
   function rand(n) { return "R" + (n % 1 ? n.toFixed(2) : n); }
   function plural(n) { return n + (n === 1 ? " item" : " items"); }
 
@@ -70,6 +80,9 @@
       b.setAttribute("aria-pressed", String(name === mode));
       if (name === "delivery") b.disabled = hasFood;
     });
+    // With food in the order there's nothing to choose: it's collected from the kitchen.
+    var how = $("get-how");
+    if (how) how.hidden = hasFood;
     $("get-delivery").hidden = mode !== "delivery";
     $("get-collect").hidden = mode !== "collect";
     var note = $("get-note");
@@ -130,6 +143,8 @@
     products().forEach(function (p) {
       var q = qtyOf(p);
       if (p.hasAttribute("data-food")) p.classList.toggle("has-qty", q > 0);
+      var more = p.querySelector('[data-step="1"]');
+      if (more) more.disabled = q >= maxOf(p);
       if (!q) return;
       count += q;
       if (p.hasAttribute("data-food")) hasFood = true; else hasShop = true;
@@ -476,11 +491,6 @@
     A.onChange(function (event, s) { if (s && !acct.session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) signedIn(s); });
     drawAccount();
   }
-
-  // The cart sits below the shop's hero (and, on small screens, below its products): go straight to it.
-  bar.querySelector("a").addEventListener("click", function () {
-    setTimeout(function () { $("cart-h").scrollIntoView(); }, 0);
-  });
 
   document.querySelectorAll("[data-get]").forEach(function (b) {
     b.addEventListener("click", function () {

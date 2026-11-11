@@ -107,15 +107,22 @@ To remove someone: `delete from public.admins where user_id = (select id from au
 
 ## Ordering
 
-One cart per brand page, holding menu items and shop items:
+One cart per brand page, holding menu items and shop items. Items are added on the Menu and Shop views; the cart and
+checkout are their own view, **Your Order** (`#cart`), opened from the cart icon in the header or the "View order" bar.
 
 - Tick **Order online for collection** on a menu item in the admin to give it an Add button. Merle's items are on by default; Tommy Sugo's are off until ticked. An item with no Collect price gets no button.
 - An item linked to Yoco offers Yoco's variants and modifiers when added, using Yoco's required and maximum selections. Each combination is its own line in the cart.
 - The item editor has a switch for each variant, modifier group and modifier, per item. Medium variants and the Package group start off (`OFF_BY_DEFAULT` in `_shared/yoco-catalogue.ts`), and everything else starts on.
 - At a brand connected to Yoco, a menu item only shows while it's linked to a Yoco item that still exists. The database enforces this (`menu_items.yoco_listed`). Shop items aren't covered.
-- Menu items are collection only. Any food in the cart makes the whole order a collection from the kitchen, and shop items in that order are collected with it.
+- Menu items are collection only. Any food in the cart makes the whole order a collection from the kitchen: the Delivery / Collect choice isn't shown, and shop items (frozen pizzas, sauce) in that order are collected with it.
 - Delivery is only offered when the cart holds nothing but shop items. Those orders can also choose Collect.
 - Sold-out shop items can't be added. Add buttons only appear with live data, so the static fallback can't take food orders.
+- **Stock:** a shop item's **Stock** in the admin is how many are left to sell online. The shop shows "12 in stock", 0 shows as sold out, and the cart can't go above what's left; `order-create` checks the same. Blank means the item isn't counted.
+- **Reserving stock:** before the customer is sent to pay, `order-create` reserves the order's counted shop items with `reserve_order_stock`: all of them or none, with the rows locked, so two people can't both get the last one. If someone else got there first the order is dropped and the customer sees "Only 1 Margherita, frozen left". The shown stock is what's free right now. The reservation holds until:
+  - **paid:** it stays taken;
+  - **cancelled by staff:** `return_order_stock` puts it back;
+  - **not paid within 30 minutes:** `expire_unpaid_orders` cancels the order (`cancel_reason = 'unpaid'`) and puts the stock back. It runs before every new order, and every 5 minutes from the `expire-unpaid-orders` pg_cron job (`20261111000200_expire_unpaid_schedule.sql`). The order page tells the customer it wasn't paid in time, and the admin doesn't list it. If the payment arrives after all, the webhook revives the order and takes the stock again (`take_order_stock`, never below 0).
+  - Each of these happens once per order (`orders.stock_taken`).
 
 ### Checkout
 
@@ -149,7 +156,7 @@ Both brands. Merle's sells through Tommy Sugo's Yoco account (`SHARES_ACCOUNT_OF
 - **Set up in the admin, under Tommy Sugo → Settings:** add the API key (or use the edge function secret), pick a location if there are several, Sync now, Match Items, then turn on live updates. These save straight away, separately from Save settings.
 - **Credentials:** a key saved in the admin is encrypted in Supabase Vault and can't be read back. If there isn't one, the functions use the edge function secret `YOCO_API_KEY_TOMMY` or `YOCO_API_KEY`. The webhook signing secret is saved to Vault automatically.
 - **Unavailable items:** when Yoco disables or deletes a matched item, its price goes blank: "–" with no Add button on the menu, "Sold out" in the shop. It comes back when Yoco re-enables it.
-- **Not synced:** stock counts (not available from Yoco's API, so "Sold out" stays manual) and new Yoco items (listed in Settings, never published automatically).
+- **Not synced:** stock counts (not available from Yoco's API, so stock is kept in the admin; see Ordering) and new Yoco items (listed in Settings, never published automatically).
 
 Both functions are deployed with `verify_jwt` off: `yoco-admin` checks the caller is in `admins`, and `yoco-webhook` checks Yoco's signature. To test the catalogue and signature logic:
 

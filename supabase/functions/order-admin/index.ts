@@ -43,8 +43,16 @@ Deno.serve(async (req) => {
       }
       return await move(["ready"], { status: "collected", collected_at: new Date().toISOString() });
     }
-    case "cancel":
-      return await move(["pending_payment", "received", "preparing", "ready"], { status: "cancelled", cancelled_at: new Date().toISOString() });
+    case "cancel": {
+      const { data, error } = await db.from("orders").update({ status: "cancelled", cancelled_at: new Date().toISOString(), cancel_reason: "staff" })
+        .eq("id", order.id).in("status", ["pending_payment", "received", "preparing", "ready"]).select("id").maybeSingle();
+      if (error) return reply({ ok: false, error: "Couldn't update the order." });
+      if (!data) return reply({ ok: false, error: "Someone else has just updated this order." });
+      // Only once it's really cancelled: the order's reserved shop items go back on the shelf.
+      const back = await db.rpc("return_order_stock", { p_order_id: order.id });
+      if (back.error) console.error(JSON.stringify({ order: order.id, outcome: "stock not returned", reason: back.error.message }));
+      return reply({ ok: true });
+    }
     case "resend_email":
       if (order.status === "pending_payment") return reply({ ok: false, error: "This order hasn't been paid." });
       await sendOrderEmail(db, order);

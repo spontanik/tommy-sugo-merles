@@ -74,7 +74,7 @@ function priceMenuLine(line: RequestedLine, row: Row) {
 }
 
 function priceShopLine(row: Row) {
-  if (!row || row.is_hidden || row.is_sold_out) {
+  if (!row || row.is_hidden || row.is_sold_out || row.stock === 0) {
     throw new OrderError(`${row?.name ?? "An item in your order"} isn't available right now. Please remove it.`);
   }
   if (row.price === null) throw new OrderError(`${row.name} doesn't have a price yet. Please remove it.`);
@@ -105,5 +105,14 @@ export function priceOrder(requested: RequestedLine[], menuRows: Row[], shopRows
       modifier_ids: priced.modifierIds,
     };
   });
+  // A counted shop item can't sell more than what's left, across every line it's on.
+  const wanted = new Map<string, number>();
+  for (const l of lines) if (l.kind === "shop") wanted.set(l.item_id, (wanted.get(l.item_id) ?? 0) + l.qty);
+  for (const [id, qty] of wanted) {
+    const row = shop.get(id);
+    if (row.stock !== null && row.stock !== undefined && qty > row.stock) {
+      throw new OrderError(`Only ${row.stock} ${row.cart_name || row.name} left. Please change how many you're ordering.`);
+    }
+  }
   return { lines, totalCents };
 }

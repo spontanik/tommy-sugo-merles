@@ -309,6 +309,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
         </div>
       </div>
       <div class="fld" data-shop-only><label for="f-alt">Image description</label><input class="input" id="f-alt"><p class="hint">For screen readers, e.g. “A jar of Tommy Sugo sauce”.</p></div>
+      <div class="fld" data-shop-only><label for="f-stock">Stock</label><input class="input" id="f-stock" type="number" inputmode="numeric" min="0" step="1"><p class="hint">How many are left to sell online. It goes down by itself as soon as an order is placed (held while the customer pays), and back up if the order isn't paid within 30 minutes or you cancel it. Leave it blank to not count; 0 shows as sold out.</p></div>
       <div class="fld" data-shop-only><label for="f-cart">Name in cart (optional)</label><input class="input" id="f-cart"><p class="hint">How it reads in the order, e.g. “Margherita, frozen”. Blank uses the name.</p></div>
       <div class="fld"><label for="f-section">Section</label><select class="input" id="f-section"></select></div>
       <label class="check"><input type="checkbox" id="f-hidden"><span>Hide from the site<small>Keeps the item here so you can bring it back later.</small></span></label>
@@ -735,7 +736,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       $("panel").appendChild(h("p", { class: "empty-row", text: "Online orders aren't switched on for " + brandInfo(brand).label + " yet." }));
       return;
     }
-    var res = await db.from("orders").select(ORDER_COLUMNS).eq("brand", brand).neq("status", "pending_payment")
+    // Paid orders only: unpaid ones, and ones released for not being paid in time, aren't the kitchen's business.
+    var res = await db.from("orders").select(ORDER_COLUMNS).eq("brand", brand).not("paid_at", "is", null)
       .order("created_at", { ascending: false }).limit(100);
     if (seq !== loadSeq) return;
     if (res.error) {
@@ -782,7 +784,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     if (ORDER_ACTIVE.indexOf(o.status) >= 0) {
       var cancel = h("button", { class: "btn ghost", type: "button", text: "Cancel order", onclick: function () {
         if (!confirm("Cancel order #" + o.number + "? This doesn't refund the customer: do that in Yoco.")) return;
-        runOrderAct(cancel, "cancel", o.id, null, "Order #" + o.number + " cancelled. Remember to refund it in Yoco.");
+        runOrderAct(cancel, "cancel", o.id, null, "Order #" + o.number + " cancelled, and its shop items are back in stock. Remember to refund it in Yoco.");
       } });
       actions.appendChild(cancel);
     }
@@ -876,6 +878,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
           var name = h("div", { class: "name" }, [r.name,
             r.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null,
             r.is_sold_out ? h("span", { class: "tag sold", text: "Sold out" }) : null,
+            r.stock !== null && r.stock !== undefined ? h("span", { class: "tag" + (r.stock > 0 ? "" : " sold"), text: r.stock > 0 ? r.stock + " in stock" : "Out of stock" }) : null,
             r.is_orderable ? h("span", { class: "tag", text: "Order online" }) : null,
             r.yoco_id ? h("span", { class: "tag", text: "Yoco" }) : null,
             r.yoco_listed === false ? h("span", { class: "tag sold", text: "Not on menu: no Yoco item" }) : null]);
@@ -972,6 +975,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     $("f-cart").value = row ? row.cart_name || "" : "";
     $("f-hidden").checked = row ? row.is_hidden : false;
     $("f-sold").checked = row ? !!row.is_sold_out : false;
+    $("f-stock").value = row && row.stock !== null && row.stock !== undefined ? row.stock : "";
     // Merle's offers its whole menu for collection; Tommy Sugo's items are ticked one by one.
     $("f-orderable").checked = row ? !!row.is_orderable : state.brand === "merles";
     $("f-delete").hidden = !row;
@@ -1111,6 +1115,9 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       data.image_alt = $("f-alt").value.trim();
       data.cart_name = $("f-cart").value.trim() || null;
       data.is_sold_out = $("f-sold").checked;
+      var stock = $("f-stock").value.trim();
+      if (stock !== "" && !/^\d+$/.test(stock)) { err.textContent = "Stock needs to be a whole number, like 12, or blank."; err.hidden = false; return; }
+      data.stock = stock === "" ? null : Number(stock);
     } else {
       data.is_orderable = $("f-orderable").checked;
       // Clear price columns that the chosen section doesn't use.

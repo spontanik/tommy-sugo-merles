@@ -32,6 +32,7 @@
     ".pz .item-thumb{grid-column:1/-1}" +
     ".product.sold-out .ill{opacity:.45}" +
     ".product .sold{font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px}" +
+    ".product .stock{margin:0;font-weight:700;font-size:14px}" +
     ".order-opts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}" +
     ".order-opt{display:flex;align-items:center;gap:8px}" +
     ".pill.order-add{min-height:44px;padding:0 14px;font-size:14px}" +
@@ -166,17 +167,21 @@
 
   function shopItem(it) {
     var label = it.cart_name || it.name;
-    // A shop item linked to Yoco has no price while Yoco has it disabled or deleted.
-    var soldOut = it.is_sold_out || (it.yoco_id && !money(it.price));
+    // A shop item linked to Yoco has no price while Yoco has it disabled or deleted. Counted stock at 0 is sold out too.
+    var counted = it.stock !== null && it.stock !== undefined;
+    var soldOut = it.is_sold_out || (it.yoco_id && !money(it.price)) || (counted && it.stock <= 0);
     var a = el("article", "product" + (soldOut ? " sold-out" : ""));
     a.setAttribute("data-product", label);
     a.setAttribute("data-item-id", it.id);
     a.setAttribute("data-item-kind", "shop");
     if (money(it.price)) a.setAttribute("data-price", String(Number(it.price)));
+    // order.js won't let the order go above this.
+    if (counted) a.setAttribute("data-stock", String(it.stock));
     if (it.image_url) a.appendChild(img(it.image_url, "ill", it.image_alt));
     var body = el("div", "product-body");
     body.appendChild(el("h3", null, it.name));
     if (it.description) body.appendChild(el("p", "desc", it.description));
+    if (counted && !soldOut) body.appendChild(el("p", "stock", it.stock + " in stock"));
     var foot = el("div", "product-foot");
     foot.appendChild(el("span", "price", money(it.price) || "TBC"));
     if (soldOut) {
@@ -444,7 +449,10 @@
       (map[sec.key] || []).forEach(function (it) {
         var a = shopItem(it);
         var o = a.querySelector("output");
-        if (o && qty[a.getAttribute("data-product")]) o.textContent = qty[a.getAttribute("data-product")];
+        // Never more than is in stock now.
+        var keep = qty[a.getAttribute("data-product")];
+        var stock = a.getAttribute("data-stock");
+        if (o && keep) o.textContent = String(stock === null ? keep : Math.min(Number(keep), Number(stock)));
         grid.appendChild(a);
       });
     });
