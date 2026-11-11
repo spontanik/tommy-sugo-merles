@@ -48,9 +48,10 @@ GitHub Pages still serves the old `spontanik.github.io/tommy-sugo-merles` addres
 
 One sign-in for both brands. The switch in the top bar picks the brand, and each brand has three tabs:
 
-- **Menu** and **Shop**: edit, add, hide, reorder and delete items, upload images, mark shop items sold out.
-- **Settings**: the brand's name and site page, and its menu and shop sections (title, price columns, order, hidden).
-  Changes stay on the screen until **Save settings**.
+- **Menu** and **Shop**: the brand's sections, each holding its items. Add, edit (title, price columns, hidden),
+  reorder and delete sections, and edit, add, hide, reorder and delete the items in them, upload images, mark shop
+  items sold out. Every change saves straight away.
+- **Settings**: the brand's name and site page (kept on screen until **Save settings**), and the Yoco connection.
 
 The place you're in is in the URL, so a link opens it directly: `#tommy/menu`, `#tommy/shop`, `#merles/settings` and so
 on. Without one, the admin reopens where you last were (saved in the browser under `housemates-admin`).
@@ -69,7 +70,7 @@ Items point at a section by its key, so the database enforces three rules:
 - A section can only be deleted when it has no items.
 - Changing a section's price columns clears prices in the columns it no longer uses. Settings warns before saving.
 
-If these tables aren't there yet, the admin and the site fall back to `js/catalog-config.js`, and Settings is read-only.
+If these tables aren't there yet, the admin and the site fall back to `js/catalog-config.js`, and sections can't be changed.
 
 ## Adding someone to the admin
 
@@ -94,9 +95,14 @@ To remove someone: `delete from public.admins where user_id = (select id from au
 - Section titles and price columns come from the `sections` table. Headings marked `data-section-title="section-key"`
   pick up the title. Anything marked `data-section="section-key"` is hidden when that section is (list several keys to
   hide it only when all of them are).
-- A new section shows in the admin and stores items, but doesn't appear on the public page until a site update adds
-  its slot and illustration: a `data-menu-items` / `data-shop-items` element, plus the two hooks above. Section order
-  in Settings only changes the admin. The site keeps its layout.
+- **Order.** Each section's heading and items sit together in a `data-section-block="section-key"` element, inside a
+  `data-section-flow`. `catalog.js` puts the blocks in the admin's order. A flow with `.col` columns is filled like a
+  newspaper, down each column in turn, balanced by roughly how long each section is; a note at the foot of a column
+  stays there. Tommy Sugo's pizza sections and its other sections are two `data-section-group`s: each stays together and
+  goes where its first section is, so the pizza sections always sit under the one Pizza heading.
+- **New sections** appear on the site straight away, drawn from the flow's `<template data-section-template>`: the
+  title and items in the brand's style, without an illustration or intro. To give one its own, add its block to the page.
+- **Empty sections** are left off the site: a section is hidden when none of its items are showing.
 - Intros and illustrations are still in the HTML.
 
 ## Ordering

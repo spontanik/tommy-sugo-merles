@@ -124,21 +124,24 @@ textarea.input { min-height: 88px; resize: vertical; }
 .fold[aria-expanded="false"]::before { transform: rotate(-45deg); }
 .fold:hover .fold-title { text-decoration: underline; }
 .fold-extra { display: flex; gap: 8px; flex-wrap: wrap; }
+/* Beside a section's heading: what acts on its items (folds away), then what acts on the section (always there). */
+.head-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-left: auto; }
+.sec-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.panel-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+.panel-top .fold-all { margin-top: 0; margin-left: auto; }
+.panel-top + .section, .panel-top + .notice, .panel-top + .section-note { margin-top: 16px; }
 .fold-all { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
 .fold-all + .section, .fold-all + .notice { margin-top: 16px; }
 @media (prefers-reduced-motion: reduce) { .fold::before { transition: none; } }
 .rows { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
 .row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto auto; gap: 16px; align-items: center; padding: 12px; background: var(--raised); }
-.row.sec-row { grid-template-columns: minmax(0, 1fr) auto auto; }
 .row.is-hidden .thumb { opacity: .5; }
 .thumb { width: 64px; height: 64px; background: #fff; object-fit: contain; display: block; }
 .thumb.empty { display: grid; place-items: center; background: var(--shade); color: #000; font-size: 11px; font-weight: 500; text-align: center; line-height: 1.2; }
 .main { min-width: 0; }
 .main .name { display: flex; gap: 4px 8px; align-items: center; flex-wrap: wrap; font-family: var(--item-font); font-weight: var(--item-weight); letter-spacing: var(--item-track); font-size: 18px; line-height: 1.25; }
-.main .sec-name { display: flex; gap: 4px 8px; align-items: center; flex-wrap: wrap; font-weight: 700; }
 .main .desc { margin: 2px 0 0; color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .main .sub { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
-.count-cell { font-size: 14px; color: var(--muted); white-space: nowrap; }
 .tag { font-family: var(--sans); font-size: 11px; font-weight: 700; line-height: 1.4; text-transform: uppercase; letter-spacing: .1em; padding: 2px 6px; background: var(--shade); color: #000; white-space: nowrap; }
 .tag.sold { background: #000; color: #f2f2f2; }
 .prices { display: flex; flex-wrap: wrap; gap: 8px 12px; font-size: 14px; text-align: right; }
@@ -151,7 +154,6 @@ textarea.input { min-height: 88px; resize: vertical; }
   .row { grid-template-columns: 64px minmax(0, 1fr); }
   .prices { grid-column: 1 / -1; text-align: left; }
   .actions { grid-column: 1 / -1; }
-  .row.sec-row { grid-template-columns: minmax(0, 1fr) auto; }
   .brand-id .name { font-size: 36px; }
 }
 
@@ -438,16 +440,21 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   }
 
   // A section whose heading opens and closes its body. `title` is the heading's content; `extra` sits beside it
-  // (buttons such as + Add item) and folds away with the body, since it acts on what's inside.
-  function foldSection(key, title, extra, body) {
+  // (buttons such as + Add item) and folds away with the body, since it acts on what's inside. `fixed` sits after it
+  // and stays while folded (moving or editing the section itself).
+  function foldSection(key, title, extra, body, fixed) {
     var open = isOpen(key);
     var bodyId = "fold-" + state.view + "-" + key.replace(/[^A-Za-z0-9_-]/g, "-");
     var btn = h("button", { class: "fold", type: "button", "aria-expanded": String(open), "aria-controls": bodyId, "data-fold": key });
     title.forEach(function (c) { if (c) btn.appendChild(typeof c === "string" ? h("span", { class: "fold-title", text: c }) : c); });
     var inner = h("div", { id: bodyId, hidden: !open }, body);
     var tools = (extra || []).filter(Boolean);
+    var always = (fixed || []).filter(Boolean);
     var head = [h("h2", {}, [btn])];
-    if (tools.length) head.push(h("div", { class: "fold-extra", hidden: !open }, tools));
+    if (tools.length || always.length) head.push(h("div", { class: "head-tools" }, [
+      tools.length ? h("div", { class: "fold-extra", hidden: !open }, tools) : null,
+      always.length ? h("div", { class: "sec-tools" }, always) : null
+    ]));
     var sec = h("section", { class: "section" + (open ? "" : " folded") }, [
       h("div", { class: "section-head" }, head),
       inner
@@ -665,15 +672,10 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       return;
     }
     if (view === "settings") {
-      var all = await Promise.all([
-        loadCatalog(),
-        db.from("menu_items").select("section,price_deliver").eq("brand", brand),
-        db.from("shop_items").select("section").eq("brand", brand)
-      ]);
+      await loadCatalog();
       if (seq !== loadSeq) return;
       drawChrome();
-      if (all[1].error || all[2].error) { $("panel").textContent = ""; toast("Couldn't load settings: " + (all[1].error || all[2].error).message, true); return; }
-      startSettings(all[1].data, all[2].data);
+      startSettings();
       yocoState = null;
       drawSettings();
       loadYoco();
@@ -834,14 +836,38 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     return CFG.priceLabels[sec.prices];
   }
 
+  // Shown above a brand's sections, where its page lays them out in a way the order alone doesn't explain.
+  var LAYOUT_NOTES = {
+    tommy: { menu: "The pizza sections stay together under Pizza, which goes where the first of them is." }
+  };
+
+  // An item the public page draws: not hidden, and at a Yoco brand, still linked to a Yoco item.
+  function onShow(r) { return !r.is_hidden && r.yoco_listed !== false; }
+
   function draw(focusKey) {
     var kind = state.view;
     var box = $("panel");
     box.textContent = "";
+    var live = isLive(state.brand);
     var sections = sectionsFor(state.brand, kind);
-    if (!sections.length) box.appendChild(h("p", { class: "empty-row", text: "No sections yet. Add one in Settings." }));
-    sections.forEach(function (sec) {
+    var top = h("div", { class: "panel-top" }, [
+      live ? h("button", { class: "btn", type: "button", onclick: function () { openSection(kind, null); } }, ["+ Add section"]) : null,
+      sections.length > 1 ? foldAllBar() : null
+    ]);
+    if (top.children.length) box.appendChild(top);
+    if (!live) {
+      box.appendChild(h("p", { class: "notice", text: catalog.missing
+        ? "Sections can't be changed yet: the brands and sections tables aren't in the database. Until that migration is applied, the sections below come from js/catalog-config.js."
+        : "Sections can't be changed right now: the brands and sections tables couldn't be read. The sections below come from js/catalog-config.js." }));
+    } else {
+      var note = (LAYOUT_NOTES[state.brand] || {})[kind];
+      box.appendChild(h("p", { class: "section-note", text: "Sections show on the site in this order. " + (note ? note + " " : "") + "A section with nothing showing is left off the site." }));
+    }
+    if (!sections.length) box.appendChild(h("p", { class: "empty-row", text: "No sections yet." }));
+    sections.forEach(function (sec, si) {
       var items = state.rows.filter(function (r) { return r.section === sec.key; });
+      var showing = items.filter(onShow).length;
+      var focusId = "sec:" + sec.key;
       var list = null;
       if (items.length) {
         list = h("ul", { class: "rows" });
@@ -866,14 +892,39 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
             prices, actions]));
         });
       }
+      var priceText = kind === "shop" ? PRICE_TEXT.single : PRICE_TEXT[sec.prices];
       box.appendChild(foldSection(sec.key, [sec.title,
           h("span", { class: "count", text: plural(items.length, "item") }),
-          sec.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null],
+          sec.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : !showing ? h("span", { class: "tag", text: "Not on the site" }) : null],
         [h("button", { class: "btn", type: "button", "aria-label": "Add item to " + sec.title, onclick: function () { openEdit(null, sec.key); } }, ["+ Add item"])],
-        [list || h("p", { class: "empty-row", text: "Nothing in this section yet." })]));
+        [
+          h("p", { class: "section-note", text: "Prices: " + priceText + "." }),
+          list || h("p", { class: "empty-row", text: "Nothing in this section yet." })
+        ],
+        live ? [
+          h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move section " + sec.title + " up", "data-focus": focusId + ":up", disabled: si === 0, onclick: function () { moveSection(si, -1, focusId + ":up"); } }, ["↑"]),
+          h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move section " + sec.title + " down", "data-focus": focusId + ":down", disabled: si === sections.length - 1, onclick: function () { moveSection(si, 1, focusId + ":down"); } }, ["↓"]),
+          h("button", { class: "btn ghost", type: "button", "aria-label": "Edit section " + sec.title, onclick: function () { openSection(kind, sec); } }, ["Edit section"])
+        ] : null));
     });
-    if (sections.length > 1) box.insertBefore(foldAllBar(), box.firstChild);
     refocus(focusKey);
+  }
+
+  // Swaps a section with its neighbour, renumbers the brand's sections of this kind 10, 20, 30… and saves what changed.
+  async function moveSection(index, dir, focusKey) {
+    var list = sectionsFor(state.brand, state.view);
+    var j = index + dir;
+    if (j < 0 || j >= list.length) return;
+    var tmp = list[index]; list[index] = list[j]; list[j] = tmp;
+    var changes = [];
+    list.forEach(function (s, k) { var want = (k + 1) * 10; if (s.sort_order !== want) { s.sort_order = want; changes.push(s); } });
+    catalog.sections.sort(function (a, b) { return a.sort_order - b.sort_order; });
+    draw(focusKey);
+    var results = await Promise.all(changes.map(function (s) {
+      return db.from("sections").update({ sort_order: s.sort_order }).eq("id", s.id);
+    }));
+    var bad = results.filter(function (x) { return x.error; })[0];
+    if (bad) { toast("Couldn't save the new order: " + bad.error.message, true); load(); }
   }
 
   async function move(sectionKey, index, dir, focusKey) {
@@ -1095,36 +1146,14 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   });
 
   // ---------- Settings tab ----------
-  // Edits stay in this draft until "Save settings". `saved` tracks what the database holds, row by row, so a save
-  // that fails partway can be retried without redoing the parts that worked.
-  function sectionFields(s) {
-    return { title: s.title, prices: s.prices, is_hidden: !!s.is_hidden, sort_order: s.sort_order };
-  }
-
-  function startSettings(menuRows, shopRows) {
-    var live = isLive(state.brand);
+  // Edits to the brand stay in this draft until "Save settings". Sections are edited on the Menu and Shop tabs.
+  function startSettings() {
     var info = brandInfo(state.brand);
-    var counts = { menu: {}, shop: {} }, priced = {};
-    menuRows.forEach(function (r) {
-      counts.menu[r.section] = (counts.menu[r.section] || 0) + 1;
-      var p = priced[r.section] = priced[r.section] || [];
-      p.push(r);
-    });
-    shopRows.forEach(function (r) { counts.shop[r.section] = (counts.shop[r.section] || 0) + 1; });
-    var sections = sectionsFor(state.brand, "menu").concat(sectionsFor(state.brand, "shop"));
-    var saved = {};
-    sections.forEach(function (s) { saved[s.id || s.key] = sectionFields(s); });
     settings = {
-      live: live,
+      live: isLive(state.brand),
       label: info.label,
       page: info.page,
-      savedBrand: { label: info.label, page: info.page },
-      sections: sections.map(function (s) { return Object.assign({}, s); }),
-      saved: saved,
-      deleted: [],
-      counts: counts,
-      priced: priced,
-      error: null
+      savedBrand: { label: info.label, page: info.page }
     };
   }
 
@@ -1142,10 +1171,6 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     if (settingsDirty()) { e.preventDefault(); e.returnValue = ""; }
   });
 
-  function sectionsOfKind(kind) {
-    return settings.sections.filter(function (s) { return s.kind === kind; });
-  }
-
   // Price columns a change drops: in the old layout but not the new one.
   function droppedCols(from, to) {
     if (!from || !to || from === to) return [];
@@ -1153,12 +1178,13 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     return CFG.priceLabels[from].filter(function (c) { return keep.indexOf(c[0]) < 0; });
   }
 
+  // What a section's change of price columns would clear, from the items on screen.
   function dropSummary(sec, to) {
-    var was = sec.id ? settings.saved[sec.id] : null;
-    var cols = droppedCols(was && was.prices, to);
+    var cols = droppedCols(sec.prices, to);
     if (!cols.length) return null;
-    var rows = settings.priced[sec.key] || [];
-    var affected = rows.filter(function (r) { return cols.some(function (c) { return r[c[0]] != null; }); }).length;
+    var affected = state.rows.filter(function (r) {
+      return r.section === sec.key && cols.some(function (c) { return r[c[0]] != null; });
+    }).length;
     return { names: cols.map(function (c) { return c[1]; }).join(", "), affected: affected };
   }
 
@@ -1168,20 +1194,19 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var s = settings;
     if (!s.live) {
       box.appendChild(h("p", { class: "notice", text: catalog.missing
-        ? "Settings can't be changed yet: the brands and sections tables aren't in the database. Until that migration is applied, the sections below come from js/catalog-config.js."
-        : "Settings can't be changed right now: the brands and sections tables couldn't be read. The sections below come from js/catalog-config.js." }));
+        ? "Settings can't be changed yet: the brands table isn't in the database."
+        : "Settings can't be changed right now: the brands table couldn't be read." }));
     }
     var label = h("input", { class: "input", id: "b-label", value: s.label, required: true, disabled: !s.live, oninput: function () { s.label = this.value; drawStatus(); } });
     var page = h("input", { class: "input", id: "b-page", value: s.page, required: true, disabled: !s.live, oninput: function () { s.page = this.value; drawStatus(); } });
     box.appendChild(foldAllBar());
+    box.appendChild(h("p", { class: "section-note", text: "Menu and shop sections are on the Menu and Shop tabs, with their items." }));
     box.appendChild(foldSection("brand", ["Brand"], null, [
       h("div", { class: "brand-fields" }, [
         h("div", { class: "fld" }, [h("label", { for: "b-label", text: "Name" }), label]),
         h("div", { class: "fld" }, [h("label", { for: "b-page", text: "Site page" }), page, h("p", { class: "hint", text: "The brand's file on the site. It's what View site opens." })])
       ])
     ]));
-    box.appendChild(sectionList("menu", "Menu Sections"));
-    box.appendChild(sectionList("shop", "Shop Sections"));
     if (s.live) {
       box.appendChild(h("div", { class: "set-foot", id: "set-foot" }, [
         h("span", { class: "status", id: "set-status", role: "status" }),
@@ -1583,9 +1608,9 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     ]);
   }
 
-  // The save bar belongs to Brand, Menu Sections and Shop Sections: it shows while one of them is open, and always
-  // while there are unsaved changes, so an edit is never left behind a folded section.
-  var SAVED_BY_BAR = ["brand", "menu-sections", "shop-sections"];
+  // The save bar belongs to Brand: it shows while that's open, and always while there are unsaved changes, so an edit
+  // is never left behind a folded section.
+  var SAVED_BY_BAR = ["brand"];
   function drawStatus() {
     var dirty = settingsDirty();
     var el = $("set-status");
@@ -1594,52 +1619,13 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     if (foot) foot.hidden = !dirty && !SAVED_BY_BAR.some(isOpen);
   }
 
-  function sectionList(kind, title) {
-    var list = sectionsOfKind(kind);
-    var live = settings.live;
-    var ul = h("ul", { class: "rows" });
-    list.forEach(function (sec, i) {
-      var n = settings.counts[kind][sec.key] || 0;
-      var text = kind === "shop" ? PRICE_TEXT.single : PRICE_TEXT[sec.prices];
-      var focusId = sec.key + ":" + kind;
-      ul.appendChild(h("li", { class: "row sec-row" }, [
-        h("div", { class: "main" }, [
-          h("div", { class: "sec-name" }, [sec.title, sec.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null]),
-          h("p", { class: "sub", text: "Prices: " + text })
-        ]),
-        h("div", { class: "count-cell", text: plural(n, "item") }),
-        live ? h("div", { class: "actions" }, [
-          h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move " + sec.title + " up", "data-focus": focusId + ":up", disabled: i === 0, onclick: function () { moveSection(kind, i, -1, focusId + ":up"); } }, ["↑"]),
-          h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move " + sec.title + " down", "data-focus": focusId + ":down", disabled: i === list.length - 1, onclick: function () { moveSection(kind, i, 1, focusId + ":down"); } }, ["↓"]),
-          h("button", { class: "btn", type: "button", "aria-label": "Edit " + sec.title, onclick: function () { openSection(kind, sec); } }, ["Edit"])
-        ]) : null
-      ]));
-    });
-    return foldSection(kind + "-sections", [title, h("span", { class: "count", text: plural(list.length, "section") })],
-      [live ? h("button", { class: "btn", type: "button", onclick: function () { openSection(kind, null); } }, ["+ Add section"]) : null], [
-      live ? h("p", { class: "section-note", text: "A new section shows here and stores items, but needs a site update to appear on the public page. The order here sets the order in this admin; the site keeps its layout." }) : null,
-      ul
-    ]);
-  }
-
-  function moveSection(kind, index, dir, focusKey) {
-    var list = sectionsOfKind(kind);
-    var j = index + dir;
-    if (j < 0 || j >= list.length) return;
-    var tmp = list[index]; list[index] = list[j]; list[j] = tmp;
-    list.forEach(function (s, k) { s.sort_order = (k + 1) * 10; });
-    settings.sections.sort(function (a, b) { return a.kind === b.kind ? a.sort_order - b.sort_order : (a.kind === "menu" ? -1 : 1); });
-    drawSettings();
-    refocus(focusKey);
-  }
-
   function slugify(title) {
     return title.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
       .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "section";
   }
 
   function newKey(kind, title) {
-    var taken = settings.sections.concat(settings.deleted).filter(function (s) { return s.kind === kind; }).map(function (s) { return s.key; });
+    var taken = sectionsFor(state.brand, kind).map(function (s) { return s.key; });
     var base = slugify(title), key = base, n = 2;
     while (taken.indexOf(key) >= 0) { key = base + "-" + n; n++; }
     return key;
@@ -1659,7 +1645,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var drop = secEdit.sec && secEdit.kind === "menu" ? dropSummary(secEdit.sec, $("s-prices").value) : null;
     warn.hidden = !drop;
     if (drop) {
-      warn.textContent = "This drops " + drop.names + ". Prices in those columns will be cleared when you save settings" +
+      warn.textContent = "This drops " + drop.names + ". Prices in those columns will be cleared when you save" +
         (drop.affected ? " (" + plural(drop.affected, "item") + " affected)." : ". No items have one at the moment.");
     }
   }
@@ -1673,6 +1659,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     $("s-shop-note").hidden = kind !== "shop";
     $("s-hidden-row").hidden = !sec;
     $("s-hidden").checked = sec ? !!sec.is_hidden : false;
+    $("s-save").disabled = false;
 
     var sel = $("s-prices");
     sel.textContent = "";
@@ -1681,7 +1668,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       sel.appendChild(h("option", { value: p, text: PRICE_TEXT[p], selected: p === current }));
     });
 
-    var n = sec ? settings.counts[kind][sec.key] || 0 : 0;
+    var n = sec ? state.rows.filter(function (r) { return r.section === sec.key; }).length : 0;
     $("s-delete").hidden = !sec;
     $("s-delete").disabled = n > 0;
     $("s-delete-note").hidden = !(sec && n > 0);
@@ -1697,38 +1684,52 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   $("sec-close").addEventListener("click", function () { secDlg.close(); });
   $("s-cancel").addEventListener("click", function () { secDlg.close(); });
 
-  $("sec-form").addEventListener("submit", function (e) {
+  $("sec-form").addEventListener("submit", async function (e) {
     e.preventDefault();
     var title = $("s-title").value.trim();
     var err = $("s-err");
+    err.hidden = true;
     if (!title) { err.textContent = "Give the section a title."; err.hidden = false; return; }
-    var prices = secEdit.kind === "menu" ? $("s-prices").value : null;
-    if (secEdit.sec) {
-      secEdit.sec.title = title;
-      secEdit.sec.prices = prices;
-      secEdit.sec.is_hidden = $("s-hidden").checked;
+    var sec = secEdit.sec, kind = secEdit.kind;
+    var prices = kind === "menu" ? $("s-prices").value : null;
+    var res, key;
+    if (sec) {
+      var patch = {};
+      if (title !== sec.title) patch.title = title;
+      if (prices !== sec.prices) patch.prices = prices;
+      if ($("s-hidden").checked !== !!sec.is_hidden) patch.is_hidden = $("s-hidden").checked;
+      if (!Object.keys(patch).length) { secDlg.close(); return; }
+      var drop = patch.prices ? dropSummary(sec, prices) : null;
+      if (drop && drop.affected && !confirm("This clears the " + drop.names + " prices of " + plural(drop.affected, "item") + " in " + sec.title + " for good. Save?")) return;
+      key = sec.key;
+      $("s-save").disabled = true;
+      res = await db.from("sections").update(patch).eq("id", sec.id);
     } else {
-      var list = sectionsOfKind(secEdit.kind);
-      var max = list.reduce(function (m, s) { return Math.max(m, s.sort_order); }, 0);
-      settings.sections.push({ id: null, brand: state.brand, kind: secEdit.kind, key: newKey(secEdit.kind, title), title: title, prices: prices, is_hidden: false, sort_order: max + 10 });
-      settings.sections.sort(function (a, b) { return a.kind === b.kind ? a.sort_order - b.sort_order : (a.kind === "menu" ? -1 : 1); });
+      var max = sectionsFor(state.brand, kind).reduce(function (m, s) { return Math.max(m, s.sort_order); }, 0);
+      key = newKey(kind, title);
+      $("s-save").disabled = true;
+      res = await db.from("sections").insert({ brand: state.brand, kind: kind, key: key, title: title, prices: prices, is_hidden: false, sort_order: max + 10 });
     }
-    setOpen(secEdit.kind + "-sections", true); // show the change
+    $("s-save").disabled = false;
+    if (res.error) { err.textContent = "Couldn't save: " + res.error.message; err.hidden = false; return; }
     secDlg.close();
-    drawSettings();
+    toast(sec ? "Saved " + title + "." : "Added " + title + ". Add items to it to show it on the site.");
+    setOpen(key, true); // show the section that changed
+    load();
   });
 
-  $("s-delete").addEventListener("click", function () {
+  $("s-delete").addEventListener("click", async function () {
     var sec = secEdit.sec;
     if (!sec) return;
-    if (!confirm("Delete the section “" + sec.title + "”? This happens when you save settings.")) return;
-    settings.sections.splice(settings.sections.indexOf(sec), 1);
-    if (sec.id) settings.deleted.push(sec);
+    if (!confirm("Delete the section “" + sec.title + "” for good?")) return;
+    var res = await db.from("sections").delete().eq("id", sec.id);
+    if (res.error) { $("s-err").textContent = "Couldn't delete: " + res.error.message; $("s-err").hidden = false; return; }
     secDlg.close();
-    drawSettings();
+    toast("Deleted " + sec.title + ".");
+    load();
   });
 
-  // What the draft needs to send to the database: deletes first, so a new section can't clash with an old one.
+  // What the draft needs to send to the database.
   function settingsOps() {
     var s = settings, ops = [];
     var brandPatch = {};
@@ -1740,32 +1741,6 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
         done: function () { Object.assign(s.savedBrand, brandPatch); }
       });
     }
-    s.deleted.forEach(function (sec) {
-      ops.push({
-        run: function () { return db.from("sections").delete().eq("id", sec.id); },
-        done: function () { s.deleted.splice(s.deleted.indexOf(sec), 1); delete s.saved[sec.id]; }
-      });
-    });
-    s.sections.forEach(function (sec) {
-      var now = sectionFields(sec);
-      if (!sec.id) {
-        ops.push({
-          run: function () {
-            return db.from("sections").insert(Object.assign({ brand: sec.brand, kind: sec.kind, key: sec.key }, now)).select().single();
-          },
-          done: function (res) { sec.id = res.data.id; s.saved[sec.id] = now; }
-        });
-        return;
-      }
-      var was = s.saved[sec.id], patch = {};
-      Object.keys(now).forEach(function (k) { if (now[k] !== was[k]) patch[k] = now[k]; });
-      if (Object.keys(patch).length) {
-        ops.push({
-          run: function () { return db.from("sections").update(patch).eq("id", sec.id); },
-          done: function () { s.saved[sec.id] = now; }
-        });
-      }
-    });
     return ops;
   }
 
@@ -1786,14 +1761,6 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 
     var ops = settingsOps();
     if (!ops.length) { toast("Nothing to save."); return; }
-
-    var drops = [];
-    s.sections.forEach(function (sec) {
-      if (sec.kind !== "menu" || !sec.id) return;
-      var d = dropSummary(sec, sec.prices);
-      if (d && d.affected) drops.push("• " + sec.title + ": " + d.names + " (" + plural(d.affected, "item") + ")");
-    });
-    if (drops.length && !confirm("These prices will be cleared for good:\n\n" + drops.join("\n") + "\n\nSave settings?")) return;
 
     var btn = $("set-save");
     btn.disabled = true;
