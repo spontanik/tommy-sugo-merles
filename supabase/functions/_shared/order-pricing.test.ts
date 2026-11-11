@@ -62,6 +62,25 @@ test("refuses shop items with no price or sold out", () => {
   refused(() => priceOrder([{ kind: "shop", itemId: "j", qty: 1 }], [], [{ ...jar, is_sold_out: true }]), /isn't available/);
 });
 
+test("keeps counted shop items within their stock, across lines, and ignores uncounted ones", () => {
+  const shop = (qty: number[], stock: number | null) =>
+    priceOrder(qty.map((q) => ({ kind: "shop", itemId: "j", qty: q })) as never, [], [{ ...jar, stock }]);
+  assert.equal(shop([3], 3).totalCents, 24000);
+  assert.equal(shop([20], null).totalCents, 160000);
+  refused(() => shop([4], 3), /Only 3 Sauce jar left/);
+  refused(() => shop([2, 2], 3), /Only 3 Sauce jar left/);
+  refused(() => shop([1], 0), /isn't available/);
+});
+
+test("lets frozen items ride along with a menu order", () => {
+  const { lines } = priceOrder(
+    [{ kind: "menu", itemId: "x", qty: 1 }, { kind: "shop", itemId: "j", qty: 2 }],
+    [plain],
+    [{ ...jar, stock: 5 }],
+  );
+  assert.deepEqual(lines.map((l) => [l.kind, l.qty]), [["menu", 1], ["shop", 2]]);
+});
+
 test("refuses bad quantities, empty orders and unknown kinds", () => {
   for (const qty of [0, -1, 1.5, 21]) refused(() => order({ qty }), /up to 20/);
   refused(() => priceOrder([], [], []), /Add something/);

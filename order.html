@@ -178,6 +178,12 @@ p { margin: 0; }
     box.appendChild(el("p", "tag", (NAMES[o.brand] || "") + " · Order #" + o.number));
     if (o.test) box.appendChild(el("p", "test", "Test order: no money was taken and the kitchen shouldn't make this."));
 
+    if (o.status === "cancelled" && o.expired) {
+      box.appendChild(el("h1", null, "This Order Wasn't Paid in Time."));
+      box.appendChild(el("p", null, "We hold your items for 30 minutes while you pay. This order wasn't paid, so we've released them and you haven't been charged. Please order again."));
+      box.appendChild(summary(o));
+      return;
+    }
     if (o.status === "cancelled") {
       box.appendChild(el("h1", null, "This Order Was Cancelled."));
       box.appendChild(el("p", null, "If you've paid and have questions, please contact us with your order number."));
@@ -190,6 +196,7 @@ p { margin: 0; }
       box.appendChild(el("p", null, stopped
         ? (paid === "failed" ? "The payment didn't go through, and the kitchen hasn't received this order." : "You left the payment page, and the kitchen hasn't received this order.")
         : "This usually takes a few seconds. Keep this page open."));
+      if (stopped) box.appendChild(el("p", "muted", "We're holding your items for 30 minutes from when you placed the order."));
       if (stopped && o.payUrl) {
         var again = el("a", "btn", "Try paying again");
         again.href = o.payUrl;
