@@ -15,7 +15,11 @@ the page if Supabase isn't configured or can't be reached.
 | `js/supabase-config.js` | Supabase project URL and publishable key (safe to publish) |
 | `js/catalog-config.js` | The fallback list of sections and price columns, used if the `brands` and `sections` tables can't be read, plus the price column labels |
 | `js/catalog.js` | Loads live items into the public pages, with Add buttons on orderable menu items |
-| `js/order.js` | The cart and checkout rules on both brand pages (`window.ORDER_COPY` in each page holds its wording) |
+| `index.html` | The landing page: the two brand doors, then Events, Trucks & Catering and The Shop |
+| `events.html` | Events, Trucks & Catering for both brands (spontanik.co.za/events.html), with the enquiry form. Photos in `images/events/` (sources in `SOURCES.txt`) |
+| `shop.html` | The combined Shop (spontanik.co.za/shop.html): both brands' shop items in one order |
+| `js/cart.js` | The order itself, kept in cookies on spontanik.co.za so one order follows the customer across the brand sites and the Shop |
+| `js/order.js` | The cart and checkout rules on the brand pages and the Shop (`window.ORDER_COPY` in each page holds its wording) |
 | `js/account.js` | Customer accounts and the orders kept on this device, shared by the checkout, `order.html` and `account.html` |
 | `account.html` | Your Orders: sign in or create an account, current and previous orders, profile and specials |
 | `supabase/migrations/…_menu_and_shop.sql` | Tables, row-level security, the `item-images` storage bucket |
@@ -107,8 +111,14 @@ To remove someone: `delete from public.admins where user_id = (select id from au
 
 ## Ordering
 
-One cart per brand page, holding menu items and shop items. Items are added on the Menu and Shop views; the cart and
-checkout are their own view, **Your Order** (`#cart`), opened from the cart icon in the header or the "View order" bar.
+**One order across both brands.** The order lives in `js/cart.js`, in cookies set for the whole spontanik.co.za domain
+(browser storage is per address, cookies can be shared), so a customer can add Tommy Sugo pizza on tommy., Merle's schnitz
+on merles. and frozen items on the combined Shop, and check out once on any of them. Each line keeps its brand, and
+with both brands in the order the cart names them ("Merle's · Schnitz and Chips"). Everything is collected from the one
+kitchen with one collection code. On a local copy the cookies belong to that one address, which works the same way.
+On the brand pages, items are added on the Menu and Shop views; the cart and checkout are their own view, **Your Order**
+(`#cart`), opened from the cart icon in the header or the "View order" bar. The Shop page has its order beside the
+products.
 
 - Tick **Order online for collection** on a menu item in the admin to give it an Add button. Merle's items are on by default; Tommy Sugo's are off until ticked. An item with no Collect price gets no button.
 - An item linked to Yoco offers Yoco's variants and modifiers when added, using Yoco's required and maximum selections. Each combination is its own line in the cart.
@@ -126,7 +136,15 @@ checkout are their own view, **Your Order** (`#cart`), opened from the cart icon
 
 ### Checkout
 
-Tommy Sugo takes real orders. Merle's checkout is still a prototype (`liveCheckout` in `window.ORDER_COPY` switches it per page).
+Tommy Sugo, Merle's and the combined Shop all take real orders (`liveCheckout` in `window.ORDER_COPY` switches it per page).
+Merle's sells through Tommy Sugo's Yoco account, so every payment, the payment webhook and the order emails use Tommy
+Sugo's checkout key and email settings (`accountOf` in `_shared/orders.ts`). Merle's keeps its own Yoco API key and
+location for recording sales.
+
+- `orders.brands` says which brands are in an order; each `order_lines.brand` says whose the line is. A single-brand
+  order has `brand` set to that brand; one holding both is filed under the account it's paid through (`tommy`).
+- The admin's **Orders** tab shows the selected brand's orders (including mixed ones) or, with **Both stores**, every
+  order for the one kitchen. Each order then carries brand tags, and a mixed order's lines say whose they are.
 
 1. `order-create` prices the cart again from the database, saves the order as awaiting payment, and sends the customer to Yoco Checkout.
 2. `yoco-payment-webhook` confirms the payment. Only this moves an order on: the customer returning to the site proves nothing. It emails the customer their link and collection code, and records live orders in Yoco.

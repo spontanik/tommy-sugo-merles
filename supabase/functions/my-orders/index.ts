@@ -12,10 +12,10 @@ const MAX_TOKENS = 30;
 const MAX_ORDERS = 50;
 const UNPAID_FOR = 24 * 60 * 60 * 1000; // an unpaid order is only worth showing for a day
 
-const COLUMNS = "number, brand, status, total, payment_mode, created_at, access_token, order_lines(name, qty, position)";
+const COLUMNS = "number, brand, brands, status, total, payment_mode, created_at, access_token, order_lines(name, qty, position)";
 
 type Row = {
-  number: number; brand: string; status: string; total: number; payment_mode: string | null;
+  number: number; brand: string; brands: string[] | null; status: string; total: number; payment_mode: string | null;
   created_at: string; access_token: string; order_lines: { name: string; qty: number; position: number }[];
 };
 
@@ -23,6 +23,7 @@ function summary(o: Row) {
   return {
     number: o.number,
     brand: o.brand,
+    brands: o.brands?.length ? o.brands : [o.brand],
     status: o.status,
     total: Number(o.total),
     test: o.payment_mode === "test",

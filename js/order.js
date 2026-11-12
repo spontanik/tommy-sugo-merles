@@ -7,9 +7,12 @@
      - Delivery is only offered when the cart holds nothing but shop items.
      - Sold-out shop items have no stepper, so they can't get into the cart. A shop item with [data-stock] (see
        catalog.js) can't go above that many; the server checks the same when the order is placed.
-   Anything with [data-product] and a stepper counts as a line; [data-food] marks the menu items (see catalog.js).
+   The order itself lives in js/cart.js, shared by Tommy Sugo, Merle's and the combined Shop, so one order can hold both
+   brands and follows the customer between the sites. This script shows it and changes it.
+   Anything with [data-product] and a stepper is a plain item; [data-food] marks the menu items (see catalog.js), and
+   [data-brand] on an item (the combined Shop) says whose it is, otherwise the page's body[data-brand].
    A menu item with [data-options] has Yoco variants or modifiers: it opens a dialog first, and each combination the
-   customer chooses is its own line in `chosen`, since those lines have no stepper on the page.
+   customer chooses is its own line in the order, since those lines have no stepper on the page.
    Page copy comes from window.ORDER_COPY. With copy.liveCheckout set, the order goes to the order-create function and
    the customer pays on Yoco's page. Otherwise checkout is a prototype: nothing is saved or charged.
    With live checkout and accounts (js/account.js) loaded, checkout starts as a guest: name, email and cell, and the
@@ -22,9 +25,12 @@
   var $ = function (id) { return document.getElementById(id); };
   var PRICE_TBC = "TBC";
   var MAX_QTY = 20;
-  var wanted = "delivery"; // what the customer picked; food in the cart overrides it
+  // What the customer picked; food in the cart overrides it. A page without a Delivery choice is collection only.
+  var wanted = document.querySelector('[data-get="delivery"]') ? "delivery" : "collect";
   var mode = wanted;
-  var chosen = []; // lines from the options dialog: { key, itemId, label, each, qty, variantId, modifierIds }
+  var C = window.Cart;
+  var BRAND = document.body.getAttribute("data-brand"); // "tommy", "merles", or "both" on the combined Shop
+  var NAMES = { tommy: "Tommy Sugo", merles: "Merle's" };
 
   var style = document.createElement("style");
   style.textContent =
@@ -63,13 +69,47 @@
   var barText = bar.querySelector("span");
 
   function products() { return Array.prototype.slice.call(document.querySelectorAll("[data-product]")); }
-  function qtyOf(p) { var o = p.querySelector("output"); return o ? parseInt(o.textContent, 10) || 0 : 0; }
+  function brandOf(el) { return el.getAttribute("data-brand") || BRAND; }
+  // What the order needs to know about a plain item on the page.
+  function itemOf(p) {
+    var price = p.getAttribute("data-price"), stock = p.getAttribute("data-stock");
+    return {
+      brand: brandOf(p),
+      kind: p.getAttribute("data-item-kind") || (p.hasAttribute("data-food") ? "menu" : "shop"),
+      id: p.getAttribute("data-item-id") || "name:" + p.getAttribute("data-product"),
+      name: p.getAttribute("data-product"),
+      each: price === null ? null : Number(price),
+      stock: stock === null ? null : Number(stock)
+    };
+  }
+  function qtyOf(p) { var i = itemOf(p); return C.qty(i.brand, i.kind, i.id); }
   // The most of one item an order can hold: 20, or fewer when the shop has fewer left.
   function maxOf(p) {
     var stock = p.getAttribute("data-stock");
     return stock === null ? MAX_QTY : Math.min(MAX_QTY, Math.max(0, parseInt(stock, 10) || 0));
   }
-  function setQty(p, q) { p.querySelector("output").textContent = String(Math.max(0, Math.min(maxOf(p), q))); }
+  function setQty(p, q) { C.setQty(itemOf(p), Math.max(0, Math.min(maxOf(p), q))); }
+
+  // The page's steppers and "in order" counts follow the order, which may have changed on another site.
+  function syncPage() {
+    products().forEach(function (p) {
+      var item = itemOf(p);
+      if (p.hasAttribute("data-item-id")) C.refresh(item); // keep its name, price and stock current
+      var q = C.qty(item.brand, item.kind, item.id);
+      var out = p.querySelector("output");
+      if (out) out.textContent = String(q);
+      if (p.hasAttribute("data-food")) p.classList.toggle("has-qty", q > 0);
+      var more = p.querySelector('[data-step="1"]');
+      if (more) more.disabled = q >= maxOf(p);
+    });
+    var all = C.lines();
+    document.querySelectorAll("[data-options]").forEach(function (box) {
+      var id = box.getAttribute("data-option-item"), brand = brandOf(box);
+      var n = all.reduce(function (sum, l) { return l.brand === brand && l.kind === "menu" && l.id === id && l.variantId ? sum + l.qty : sum; }, 0);
+      box.classList.toggle("has-qty", n > 0);
+      box.querySelector(".order-count").textContent = n ? n + " in order" : "";
+    });
+  }
   function rand(n) { return "R" + (n % 1 ? n.toFixed(2) : n); }
   function plural(n) { return n + (n === 1 ? " item" : " items"); }
 
@@ -126,32 +166,16 @@
     var lines = $("cart-lines");
     lines.textContent = "";
     var count = 0, total = 0, allPriced = true, hasFood = false, hasShop = false;
-    chosen.forEach(function (line) {
-      count += line.qty;
-      total += line.qty * line.each;
-      hasFood = true;
-      lines.appendChild(cartLine(line.qty + " × " + line.label, line.label, rand(line.qty * line.each), function () {
-        chosen.splice(chosen.indexOf(line), 1);
-      }));
-    });
-    document.querySelectorAll("[data-options]").forEach(function (box) {
-      var id = box.getAttribute("data-option-item");
-      var n = chosen.reduce(function (sum, line) { return line.itemId === id ? sum + line.qty : sum; }, 0);
-      box.classList.toggle("has-qty", n > 0);
-      box.querySelector(".order-count").textContent = n ? n + " in order" : "";
-    });
-    products().forEach(function (p) {
-      var q = qtyOf(p);
-      if (p.hasAttribute("data-food")) p.classList.toggle("has-qty", q > 0);
-      var more = p.querySelector('[data-step="1"]');
-      if (more) more.disabled = q >= maxOf(p);
-      if (!q) return;
-      count += q;
-      if (p.hasAttribute("data-food")) hasFood = true; else hasShop = true;
-      var each = p.getAttribute("data-price");
-      if (each === null) allPriced = false; else total += q * Number(each);
-      var label = p.getAttribute("data-product");
-      lines.appendChild(cartLine(q + " × " + label, label, each === null ? PRICE_TBC : rand(q * Number(each)), function () { setQty(p, 0); }));
+    syncPage();
+    var all = C.lines();
+    // With both brands in the order (or another brand's items on this page), each line says whose it is.
+    var named = all.some(function (l) { return l.brand !== all[0].brand || (BRAND !== "both" && l.brand !== BRAND); }) || BRAND === "both";
+    all.forEach(function (l) {
+      count += l.qty;
+      if (l.kind === "menu") hasFood = true; else hasShop = true;
+      if (l.each === null) allPriced = false; else total += l.qty * l.each;
+      var label = (named ? (NAMES[l.brand] || l.brand) + " · " : "") + l.name;
+      lines.appendChild(cartLine(l.qty + " × " + label, label, l.each === null ? PRICE_TBC : rand(l.qty * l.each), function () { C.remove(l.key); }));
     });
     var totalText = count && allPriced ? rand(total) : PRICE_TBC;
     lines.hidden = count === 0;
@@ -364,21 +388,18 @@
       // "Standard" and the like are the assumed choice, so they don't need spelling out in the cart.
       var shown = mods.filter(function (m) { return Number(m.price) || !m.selected; }).map(function (m) { return m.name; });
       var parts = (variants.length > 1 && picked.label ? [picked.label] : []).concat(shown);
-      var key = [itemId, picked.id].concat(mods.map(function (m) { return m.id; }).sort()).join("|");
-      var line = chosen.filter(function (l) { return l.key === key; })[0];
-      if (line) {
-        line.qty = Math.min(MAX_QTY, line.qty + qty);
-      } else {
-        chosen.push({
-          key: key,
-          itemId: itemId,
-          label: itemName + (parts.length ? " · " + parts.join(", ") : ""),
-          each: eachPrice(),
-          qty: qty,
-          variantId: picked.id,
-          modifierIds: mods.map(function (m) { return m.id; })
-        });
-      }
+      var brand = brandOf(box);
+      C.add({
+        key: [brand, itemId, picked.id].concat(mods.map(function (m) { return m.id; }).sort()).join("|"),
+        brand: brand,
+        kind: "menu",
+        id: itemId,
+        qty: qty,
+        variantId: picked.id,
+        modifierIds: mods.map(function (m) { return m.id; }),
+        name: itemName + (parts.length ? " · " + parts.join(", ") : ""),
+        each: eachPrice()
+      });
       optDlg.close();
       renderCart();
     });
@@ -518,7 +539,7 @@
     else if (!email.value.trim() || !email.checkValidity()) problem = "Add an email address so we can send your confirmation.";
     if (!problem && copy.liveCheckout) {
       if (mode === "delivery") problem = copy.errDeliveryLive;
-      else if (products().some(function (p) { return qtyOf(p) && p.getAttribute("data-price") === null; })) problem = copy.errUnpriced;
+      else if (C.lines().some(function (l) { return l.each === null; })) problem = copy.errUnpriced;
     }
     if (problem) { err.textContent = problem; err.hidden = false; return; }
     if (copy.liveCheckout) { placeOrder(email.value.trim()); return; }
@@ -530,14 +551,11 @@
 
   // What's sent is only what was chosen: the server works out every price again from the database.
   function orderLines() {
-    var lines = chosen.map(function (l) {
-      return { kind: "menu", itemId: l.itemId, qty: l.qty, variantId: l.variantId, modifierIds: l.modifierIds };
+    return C.lines().map(function (l) {
+      var line = { brand: l.brand, kind: l.kind, itemId: l.id, qty: l.qty };
+      if (l.variantId) { line.variantId = l.variantId; line.modifierIds = l.modifierIds; }
+      return line;
     });
-    products().forEach(function (p) {
-      var q = qtyOf(p);
-      if (q) lines.push({ kind: p.getAttribute("data-item-kind"), itemId: p.getAttribute("data-item-id"), qty: q });
-    });
-    return lines;
   }
 
   var submit = form.querySelector('button[type="submit"]');
@@ -572,6 +590,7 @@
       });
     }).then(function (r) { return r.json(); }).then(function (res) {
       if (!res.ok) throw new Error(res.error);
+      C.clear(); // the order is saved now: it lives on its own page, not in the cart
       location.href = res.redirectUrl;
     }).catch(function (e) {
       submitting(false);
@@ -582,13 +601,16 @@
 
   $("shop-again").addEventListener("click", function () {
     form.reset();
-    products().forEach(function (p) { if (p.querySelector("output")) setQty(p, 0); });
-    chosen = [];
-    wanted = "delivery";
+    C.clear();
+    wanted = document.querySelector('[data-get="delivery"]') ? "delivery" : "collect";
     renderCart();
     $("shop-done").hidden = true;
     $("shop-order").hidden = false;
   });
+
+  // Coming back to this page (another tab, the other brand's site, or the Back button) shows the order as it is now.
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) renderCart(); });
+  window.addEventListener("pageshow", function () { renderCart(); });
 
   renderCart();
 })();

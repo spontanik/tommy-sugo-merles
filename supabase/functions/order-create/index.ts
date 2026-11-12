@@ -3,9 +3,11 @@
 // payment page. The reservation holds until the order is paid, cancelled, or left unpaid for UNPAID_MINUTES.
 // A signed-in customer sends their session as the Authorization bearer, and the order is linked to their account.
 // Without one (or if it has run out) the order is placed without an account, as before.
+// One order can hold both brands (each line says its brand), collected from the one kitchen and paid in one go through
+// Tommy Sugo's Yoco account. body.brand is the page it came from: "tommy", "merles", or "both" (the combined shop).
 import { adminClient, BRANDS, getSecret } from "../_shared/yoco.ts";
 import { OrderError, priceOrder, type RequestedLine } from "../_shared/order-pricing.ts";
-import { checkoutFetch, CORS, orderLink, reply, siteUrl } from "../_shared/orders.ts";
+import { accountOf, checkoutFetch, CORS, orderLink, reply, siteUrl } from "../_shared/orders.ts";
 
 const LOCAL = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/;
 const MIN_CENTS = 200; // Yoco doesn't accept less
@@ -29,8 +31,14 @@ Deno.serve(async (req) => {
 
   const body = await req.json().catch(() => null);
   if (!body) return reply({ ok: false, error: "Something went wrong. Please try again." }, 400);
-  const brand = body.brand;
-  if (!BRANDS.includes(brand)) return reply({ ok: false, error: "Online ordering isn't available here yet." });
+  const page = String(body.brand ?? "");
+  if (!BRANDS.includes(page) && page !== "both") return reply({ ok: false, error: "Online ordering isn't available here yet." });
+  const pageBrand = BRANDS.includes(page) ? page : undefined;
+  const lineBrands = Array.isArray(body.lines) ? body.lines.map((l: { brand?: unknown }) => l?.brand ?? pageBrand) : [];
+  if (lineBrands.some((b: unknown) => !BRANDS.includes(String(b)))) return reply({ ok: false, error: "Please refresh the page and add your items again." });
+  const brands: string[] = [...new Set(lineBrands as string[])].sort();
+  // A single-brand order is that brand's; one holding both is filed under the account they're paid through.
+  const brand = brands.length === 1 ? brands[0] : accountOf(brands[0] ?? "tommy");
 
   const name = clean(body.name, 100);
   const email = clean(body.email, 200);
@@ -44,7 +52,7 @@ Deno.serve(async (req) => {
     ? (await db.auth.getUser(bearer).catch(() => null))?.data?.user?.id ?? null
     : null;
   try {
-    const key = await getSecret(db, brand, "checkout_key");
+    const key = await getSecret(db, accountOf(brand), "checkout_key");
     if (!key) return reply({ ok: false, error: "Online payments aren't switched on yet. Please order in person or call us." });
 
     // Release stock held by orders nobody paid for, so it counts as available for this one.
@@ -57,19 +65,20 @@ Deno.serve(async (req) => {
     const uuid = /^[0-9a-f-]{36}$/i;
     if (requested.some((l) => !uuid.test(String(l?.itemId)))) throw new OrderError("Please refresh the page and add your items again.");
     const [menu, shop] = await Promise.all([
-      db.from("menu_items").select("*").eq("brand", brand).in("id", ids("menu")),
-      db.from("shop_items").select("*").eq("brand", brand).in("id", ids("shop")),
+      db.from("menu_items").select("*").in("brand", brands).in("id", ids("menu")),
+      db.from("shop_items").select("*").in("brand", brands).in("id", ids("shop")),
     ]);
     if (menu.error || shop.error) throw new Error("Couldn't read the menu.");
-    const { lines, totalCents } = priceOrder(requested, menu.data, shop.data);
+    const { lines, totalCents } = priceOrder(requested, menu.data, shop.data, pageBrand);
     if (totalCents < MIN_CENTS) throw new OrderError("Online orders need to be at least R2.");
 
     // A test key can return to a local copy of the site, so checkout can be tried before it's published.
     const isTest = key.startsWith("sk_test");
-    const base = isTest && LOCAL.test(String(body.returnBase)) ? body.returnBase : siteUrl(brand);
+    const base = isTest && LOCAL.test(String(body.returnBase)) ? body.returnBase : siteUrl(brands.length > 1 ? "both" : brand);
     const accessToken = randomHex(32);
     const { data: order, error } = await db.from("orders").insert({
       brand,
+      brands,
       access_token: accessToken,
       collection_code: randomCode(),
       customer_name: name,

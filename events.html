@@ -1,0 +1,555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Events, Trucks &amp; Catering · Tommy Sugo &amp; Merle's</title>
+<meta name="description" content="Hire the Tommy Sugo pizza truck and Merle's schnitz truck, together or on their own, or have the whole event catered: grazing tables, plated dinners, buffets and potjies.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;700&family=Montserrat:wght@500;700;800&family=Oswald:wght@600;700&display=swap">
+<style>
+/* Events, trucks and catering for both brands, on the main address (spontanik.co.za/events.html). It sits between
+   the two brands, like the landing page: Tommy Sugo's black and sauce red with Merle's paper and grey. Photos are in
+   the gallery only; everything else is type and colour. The brand sites' On the Circuit, Catering and Functions pages
+   live here now (their old addresses forward here). */
+:root {
+  --black: #000000;
+  --paper: #f2f2f2;
+  --shade: #d3d2d2;
+  --muted-on-black: #d3d2d2;
+  --muted-on-paper: #4a4a48;
+  --sauce: #ec1c24;
+  --poster: Oswald, "Arial Narrow", Impact, sans-serif;
+  --sans: Archivo, "Helvetica Neue", Arial, sans-serif;
+  --merles-poster: Impact, Anton, "Arial Narrow", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body { margin: 0; background: var(--paper); color: var(--black); font-family: var(--sans); font-size: 17px; line-height: 1.55; }
+img { max-width: 100%; display: block; }
+h1, h2, h3 { text-wrap: balance; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--sauce); outline-offset: 3px; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 720px) { .wrap { padding-left: 40px; padding-right: 40px; } }
+.tag { margin: 0; font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.red { color: var(--sauce); }
+.section-h { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(32px, 5vw, 52px); line-height: 1.05; text-transform: uppercase; letter-spacing: 0.01em; }
+.lede { margin: 0; font-size: 19px; max-width: 620px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 26px; font-family: var(--poster); font-size: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; cursor: pointer; border: 2px solid var(--sauce); background: var(--sauce); color: var(--black); }
+.btn:hover { background: var(--paper); border-color: var(--paper); }
+.btn-line { background: transparent; color: var(--paper); border-color: var(--paper); }
+.btn-line:hover { background: var(--paper); color: var(--black); }
+.btns { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* Header: pinned, so Enquire is always one tap away. */
+.bar { position: sticky; top: 0; z-index: 20; background: var(--black); color: var(--paper); border-bottom: 4px solid var(--sauce); }
+.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; min-height: 68px; flex-wrap: wrap; padding-block: 8px; }
+.brandmark { color: var(--paper); text-decoration: none; font-family: var(--poster); font-weight: 700; font-size: 20px; letter-spacing: 0.04em; text-transform: uppercase; }
+.brandmark span { color: var(--sauce); }
+.bar nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; }
+.bar nav a { color: var(--paper); text-decoration: none; font-family: var(--poster); font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; min-height: 44px; display: inline-flex; align-items: center; }
+.bar nav a:hover, .bar nav a[aria-current] { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+.bar nav a.btn { color: var(--black); min-height: 44px; font-size: 15px; padding: 0 18px; }
+@media (max-width: 640px) { .bar nav .hide-sm { display: none; } }
+
+/* Hero: words on black. */
+.hero { background: var(--black); color: var(--paper); }
+.hero .wrap { padding-block: 80px 88px; }
+@media (max-width: 880px) { .hero .wrap { padding-block: 48px 56px; } }
+.hero h1 { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(44px, 7vw, 88px); line-height: 0.98; text-transform: uppercase; max-width: 15ch; }
+.hero .copy { display: flex; flex-direction: column; gap: 22px; align-items: flex-start; }
+.hero .lede { color: var(--muted-on-black); }
+
+/* Section headings. */
+.head { display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px; }
+
+/* The three things we do. */
+.offer { padding-block: 88px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 28px; }
+.card { background: #fff; border: 2px solid var(--black); border-top: 8px solid var(--sauce); display: flex; flex-direction: column; }
+.card .body { padding: 24px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.card h3 { margin: 0; font-family: var(--poster); font-weight: 700; font-size: 30px; line-height: 1.05; text-transform: uppercase; }
+.card p { margin: 0; color: var(--muted-on-paper); }
+.card ul { margin: 4px 0 0; padding-left: 20px; }
+.card li { margin: 2px 0; }
+
+/* Packages: a starting point for each brand, in that brand's colours. Tommy Sugo's truck on black and sauce red,
+   Merle's functions on paper and grey. */
+.packages { padding-block: 0 88px; }
+.pack-group { padding: clamp(20px, 4vw, 36px); display: flex; flex-direction: column; gap: 20px; }
+.pack-group + .pack-group { margin-top: 28px; }
+.pack-brand { margin: 0; font-size: clamp(26px, 3.4vw, 36px); line-height: 1.05; }
+.pack-intro { margin: -8px 0 0; }
+.pack-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 20px; }
+.pack { padding: 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pack h4 { margin: 0; font-size: 26px; line-height: 1.1; }
+.pack p { margin: 0; }
+.pack .price { margin-top: auto; padding-top: 14px; border-top: 2px solid currentColor; font-weight: 700; font-size: 19px; }
+.pack-group.t { background: var(--black); color: var(--paper); border-top: 8px solid var(--sauce); }
+.pack-group.t .pack-brand, .pack-group.t .pack h4 { font-family: var(--poster); font-weight: 700; text-transform: uppercase; }
+.pack-group.t .pack-brand { color: var(--sauce); }
+.pack-group.t .pack-intro { color: var(--muted-on-black); }
+.pack-group.t .pack { border: 2px solid var(--paper); }
+.pack-group.t .pack p:not(.tag):not(.price) { color: var(--muted-on-black); }
+.pack-group.t .pack.hot { background: var(--sauce); color: var(--black); border-color: var(--sauce); }
+.pack-group.t .pack.hot p:not(.tag):not(.price) { color: var(--black); }
+.pack-group.t .pack .tag { color: var(--sauce); }
+.pack-group.t .pack.hot .tag { color: var(--black); }
+.pack-group.m { background: var(--shade); color: var(--black); border-top: 8px solid var(--black); }
+.pack-group.m .pack-brand, .pack-group.m .pack h4 { font-family: var(--merles-poster); font-weight: 400; }
+.pack-group.m .pack { background: var(--paper); border: 3px solid var(--black); }
+.pack-group.m .pack .tag { font-family: Montserrat, var(--sans); font-weight: 800; letter-spacing: 0.2em; }
+.pack-group.m .pack p:not(.tag):not(.price) { color: var(--muted-on-paper); }
+.pack-group.m .pack.hot { background: var(--black); color: var(--paper); }
+.pack-group.m .pack.hot p:not(.tag):not(.price) { color: var(--shade); }
+
+/* On the circuit: where the Tommy Sugo truck is next, and a vote for the next town. */
+.circuit { padding-block: 88px; }
+.dates { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 20px; }
+.date { background: #fff; border: 2px solid var(--black); padding: 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.date h3 { margin: 0; font-family: var(--poster); font-weight: 700; font-size: 28px; line-height: 1.05; text-transform: uppercase; }
+.date dl { margin: 0; display: grid; gap: 8px; }
+.date dt { font-family: var(--poster); font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.date dd { margin: 0; color: var(--muted-on-paper); }
+.date.more { background: var(--black); color: var(--paper); border-color: var(--black); justify-content: center; }
+.date.more p:not(.tag) { margin: 0; color: var(--muted-on-black); }
+.vote { margin-top: 40px; background: var(--sauce); color: var(--black); padding: clamp(24px, 5vw, 48px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px 48px; align-items: center; }
+@media (max-width: 880px) { .vote { grid-template-columns: minmax(0, 1fr); } }
+.vote h3 { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(30px, 4vw, 44px); line-height: 1.02; text-transform: uppercase; }
+.vote p { margin: 8px 0 0; }
+.vote form { display: flex; flex-direction: column; gap: 14px; }
+.vote .field { background: #fff; }
+.vote .btn { background: var(--black); color: var(--paper); border-color: var(--black); align-self: flex-start; }
+.vote .btn:hover { background: var(--paper); color: var(--black); border-color: var(--paper); }
+.vote .done { border: 3px solid var(--black); padding: 24px; }
+.vote .done h4 { margin: 0; font-family: var(--poster); font-size: 28px; text-transform: uppercase; }
+
+/* Mix and match: the three kitchens behind one event. */
+.mix { background: var(--black); color: var(--paper); padding-block: 88px; }
+.mix .lede { color: var(--muted-on-black); }
+.trio { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 0; border: 4px solid var(--paper); }
+.trio > div { padding: 28px; display: flex; flex-direction: column; gap: 12px; }
+.trio > div + div { border-left: 4px solid var(--paper); }
+@media (max-width: 919px) { .trio > div + div { border-left: 0; border-top: 4px solid var(--paper); } }
+.trio h3 { margin: 0; font-size: 34px; line-height: 1; }
+.trio .t { background: var(--black); }
+.trio .t h3 { font-family: var(--poster); font-weight: 700; text-transform: uppercase; color: var(--sauce); }
+.trio .m { background: var(--paper); color: var(--black); }
+.trio .m h3 { font-family: var(--merles-poster); font-weight: 400; }
+.trio .g { background: var(--sauce); color: var(--black); }
+.trio .g h3 { font-family: var(--poster); font-weight: 700; text-transform: uppercase; }
+.trio p { margin: 0; }
+.trio a { color: inherit; font-weight: 700; }
+
+/* Gallery: real photos, a mosaic on wide screens and two across on a phone. */
+.gallery { padding-block: 88px; }
+.mosaic { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 200px; grid-auto-flow: dense; gap: 8px; }
+.mosaic img { width: 100%; height: 100%; object-fit: cover; }
+.mosaic .w { grid-column: span 2; }
+.mosaic .t { grid-row: span 2; }
+@media (max-width: 760px) { .mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 150px; } }
+
+/* How it works. */
+.how { background: #fff; border-block: 2px solid var(--black); padding-block: 80px; }
+.how ol { list-style: none; margin: 32px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 32px; counter-reset: step; }
+.how li { counter-increment: step; display: flex; flex-direction: column; gap: 8px; }
+.how li::before { content: counter(step); width: 48px; height: 48px; display: grid; place-items: center; background: var(--black); color: var(--paper); font-family: var(--poster); font-weight: 700; font-size: 24px; }
+.how h3 { margin: 0; font-family: var(--poster); font-size: 24px; text-transform: uppercase; }
+.how p { margin: 0; color: var(--muted-on-paper); }
+
+/* Enquiry form. */
+.enquire { padding-block: 88px 104px; }
+.enquire .wrap { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
+@media (max-width: 880px) { .enquire .wrap { grid-template-columns: minmax(0, 1fr); } }
+.enquire aside { display: flex; flex-direction: column; gap: 16px; }
+.formbox { background: #fff; border: 4px solid var(--black); padding: clamp(20px, 4vw, 36px); display: flex; flex-direction: column; gap: 18px; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 560px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
+.fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lbl { font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.field { width: 100%; min-height: 48px; border: 2px solid var(--black); background: var(--paper); color: var(--black); padding: 10px 14px; font: inherit; border-radius: 0; }
+textarea.field { min-height: 120px; resize: vertical; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.checks { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+.check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border: 2px solid var(--black); background: var(--paper); cursor: pointer; font-weight: 700; }
+.check input { width: 18px; height: 18px; margin: 0; accent-color: var(--black); }
+.err { margin: 0; font-weight: 700; color: var(--sauce); }
+.done { display: flex; flex-direction: column; gap: 12px; }
+.done h3 { margin: 0; font-family: var(--poster); font-size: 36px; text-transform: uppercase; }
+
+footer { background: var(--black); color: var(--paper); border-top: 8px solid var(--sauce); padding-block: 48px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px 48px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+footer a { color: var(--paper); font-weight: 700; min-height: 44px; display: inline-flex; align-items: center; }
+footer small { color: var(--muted-on-black); }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brandmark" href="index.html" data-site="home">Tommy Sugo <span>×</span> Merle's</a>
+    <nav aria-label="Main">
+      <a href="events.html" data-site="events" aria-current="page">Events</a>
+      <a href="#circuit" class="hide-sm">On the Circuit</a>
+      <a href="shop.html" data-site="shop" class="hide-sm">Shop</a>
+      <a href="tommy-sugo.html" data-site="tommy" class="hide-sm">Tommy Sugo</a>
+      <a href="merles-schnitz.html" data-site="merles" class="hide-sm">Merle's</a>
+      <a class="btn" href="#enquire">Enquire</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="wrap">
+      <div class="copy">
+        <p class="tag red">Events · Trucks · Catering</p>
+        <h1 id="hero-h">Two Trucks. One Kitchen. Your Event.</h1>
+        <p class="lede">Hire the Tommy Sugo pizza truck and the Merle's schnitz truck, together or on their own, or let the team cater the whole day: grazing tables, salad bars, plated dinners and potjies.</p>
+        <div class="btns">
+          <a class="btn" href="#enquire">Make an Enquiry</a>
+          <a class="btn btn-line" href="#offer">What We Do</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="offer" id="offer" aria-labelledby="offer-h">
+    <div class="wrap">
+      <div class="head">
+        <p class="tag red">What we do</p>
+        <h2 class="section-h" id="offer-h">Trucks, Events and Catering, in One Booking</h2>
+        <p class="lede">One team, one quote. Pick one, or put them together.</p>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <div class="body">
+            <p class="tag red">Truck hire</p>
+            <h3>Hire a Truck</h3>
+            <p>The Tommy Sugo pizza truck, the Merle's schnitz truck, or both side by side. We arrive, set up, feed your guests and pack down.</p>
+            <ul>
+              <li>Hand-rolled pizza from the truck's oven</li>
+              <li>Merle's crumbed schnitz, chips and sauces</li>
+              <li>Private parties, weddings, office days</li>
+            </ul>
+          </div>
+        </article>
+        <article class="card">
+          <div class="body">
+            <p class="tag red">Festivals &amp; events</p>
+            <h3>Both Trucks at Your Event</h3>
+            <p>Festivals, markets, launches and sports days. Pizza and schnitz side by side means more choice and a shorter queue.</p>
+            <ul>
+              <li>One booking for both trucks</li>
+              <li>Day, night and multi-day events</li>
+              <li>Built for festival crowds</li>
+            </ul>
+          </div>
+        </article>
+        <article class="card">
+          <div class="body">
+            <p class="tag red">Catering</p>
+            <h3>Catering, Your Way</h3>
+            <p>Grazing tables, salad bars, buffets and plated dinners, cooked and served by our team. Add pizza or schnitz, or keep it classic.</p>
+            <ul>
+              <li>Grazing and charcuterie tables</li>
+              <li>Fresh salads, plated mains, potjies</li>
+              <li>Staff to set up, serve and clear</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="packages" id="packages" aria-labelledby="packages-h">
+    <div class="wrap">
+      <div class="head">
+        <p class="tag red">Packages</p>
+        <h2 class="section-h" id="packages-h">Pick Your Party Size</h2>
+        <p class="lede">A place to start. Every quote is built for your crowd, and you can put the two together.</p>
+      </div>
+      <div class="pack-group t">
+        <h3 class="pack-brand">Tommy Sugo · the pizza truck</h3>
+        <p class="pack-intro">We bring everything: the truck, the team, the gear. You bring the people.</p>
+        <div class="pack-row">
+          <article class="pack">
+            <p class="tag">20–60 guests</p>
+            <h4>The Small Slice</h4>
+            <p>The truck, pizza on rotation and a crew of three. Birthdays, office days, garden parties.</p>
+            <p class="price">From [R000] per head</p>
+          </article>
+          <article class="pack">
+            <p class="tag">60–150 guests</p>
+            <h4>The Big Cheese</h4>
+            <p>Pizza plus falafel and shawarma, with Greek, green, potato or coleslaw salads on the side.</p>
+            <p class="price">From [R000] per head</p>
+          </article>
+          <article class="pack hot">
+            <p class="tag">150+ guests or a weekend</p>
+            <h4>The Whole Pizza</h4>
+            <p>Full board. Breakfast shakshuka, pizza by day, a braai or potjie by night. Built with you, served in waves so nobody waits.</p>
+            <p class="price">Quoted per event</p>
+          </article>
+        </div>
+      </div>
+      <div class="pack-group m">
+        <h3 class="pack-brand">Merle's · functions, delivered hot</h3>
+        <p class="pack-intro">Office lunches, birthdays, launches and long Saturdays. Merle cooks it, we deliver it hot.</p>
+        <div class="pack-row">
+          <article class="pack">
+            <p class="tag">10–30 people</p>
+            <h4>The Office Schnitz</h4>
+            <p>Schnitz rolls, chips and sauces in platters. Delivered for team lunch.</p>
+            <p class="price">From [R—] per head</p>
+          </article>
+          <article class="pack">
+            <p class="tag">30–80 people</p>
+            <h4>The Party Schnitz</h4>
+            <p>The signatures, cut into sharing platters, with Merle's 3 Classic Salad and milkshakes.</p>
+            <p class="price">From [R—] per head</p>
+          </article>
+          <article class="pack hot">
+            <p class="tag">80+ people</p>
+            <h4>Full of Schnitz</h4>
+            <p>Big days and launches. A menu built with Merle, delivered in waves so nobody waits.</p>
+            <p class="price">Quoted per event</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mix" aria-labelledby="mix-h">
+    <div class="wrap">
+      <div class="head">
+        <p class="tag red">Mix and match</p>
+        <h2 class="section-h" id="mix-h">Pizza, Schnitz, or the Whole Spread</h2>
+        <p class="lede">Every event gets one menu, built from any of the three.</p>
+      </div>
+      <div class="trio">
+        <div class="t">
+          <h3>Tommy Sugo</h3>
+          <p>Hand-rolled thin-base pizza and the 7-hour Roma tomato sauce, plus shawarma and falafel pitas, pasta and potjies.</p>
+          <a href="tommy-sugo.html" data-site="tommy" data-site-hash="#menu">See Tommy Sugo's menu →</a>
+        </div>
+        <div class="m">
+          <h3>Merle's</h3>
+          <p>Proper crumbed chicken schnitz on German rolls or with Skinny fries, Merle's Peri-mayo, MMMbop and Mushroom sauce, and a veggie schnitz too.</p>
+          <a href="merles-schnitz.html" data-site="merles" data-site-hash="#menu">See Merle's menu →</a>
+        </div>
+        <div class="g">
+          <h3>Catering</h3>
+          <p>Grazing and charcuterie tables, salad bars, plated mains and desserts for weddings, functions and long-table dinners.</p>
+          <a href="#enquire">Ask for a catering menu →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="circuit" id="circuit" aria-labelledby="circuit-h">
+    <div class="wrap">
+      <div class="head">
+        <p class="tag red">On the circuit</p>
+        <h2 class="section-h" id="circuit-h">Have Truck, Will Travel</h2>
+        <p class="lede">From September to April the Tommy Sugo truck follows the festival season, with the full menu on board. If you can hear the music, you're close.</p>
+      </div>
+      <div class="dates">
+        <article class="date">
+          <p class="tag red">12–15 Nov</p>
+          <h3>The Gathering</h3>
+          <dl>
+            <div><dt>Where</dt><dd>POD Place of Dreams, Karoo</dd></div>
+            <div><dt>Serving</dt><dd>Pizza all day. Shakshuka and Brekkie pizza from sunrise.</dd></div>
+          </dl>
+        </article>
+        <article class="date">
+          <p class="tag red">[Dates]</p>
+          <h3>[Festival name]</h3>
+          <dl>
+            <div><dt>Where</dt><dd>[Venue], [Town]</dd></div>
+            <div><dt>Serving</dt><dd>[Pizza, falafel, shawarma]</dd></div>
+          </dl>
+        </article>
+        <article class="date more">
+          <p class="tag red">Every season</p>
+          <h3>More dates drop weekly.</h3>
+          <p>Check our socials for confirmed lineups each season. We post the truck's next stop the moment it's booked.</p>
+        </article>
+      </div>
+      <div class="vote">
+        <div>
+          <h3>No truck near you? What a crust-astrophe.</h3>
+          <p>Tell us your town. Enough votes and the truck pays you a visit.</p>
+        </div>
+        <div>
+          <form id="vote-form">
+            <div class="row2">
+              <div class="fld"><label class="lbl" for="vote-town">Your town</label><input id="vote-town" class="field" type="text" placeholder="e.g. Prince Albert" required></div>
+              <div class="fld"><label class="lbl" for="vote-email">Email</label><input id="vote-email" class="field" type="email" placeholder="you@example.com" required></div>
+            </div>
+            <button class="btn" type="submit">Call the Truck</button>
+          </form>
+          <div class="done" id="vote-done" role="status" hidden>
+            <h4>Vote counted.</h4>
+            <p>In the live site this would email you when the truck is headed your way.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery" aria-labelledby="gallery-h">
+    <div class="wrap">
+      <div class="head">
+        <p class="tag red">What it looks like</p>
+        <h2 class="section-h" id="gallery-h">From the Truck and the Table</h2>
+      </div>
+      <div class="mosaic">
+        <img class="w t" src="images/events/ts-08.jpg" alt="A grazing table of cheeses, cured meats, fruit and tomatoes" loading="lazy">
+        <img src="images/events/web-truck-festival.jpg" alt="The Tommy Sugo truck serving at a summer festival" loading="lazy">
+        <img src="images/events/ts-22.jpg" alt="The chef at work in the kitchen" loading="lazy">
+        <img src="images/events/web-pizza-salami.jpg" alt="A Tommy Sugo salami pizza, fresh from the oven" loading="lazy">
+        <img src="images/events/ts-20.jpg" alt="Bowls of fresh salad ready for service" loading="lazy">
+        <img class="w" src="images/events/ts-27.jpg" alt="Guests at a long candle-lit dinner table" loading="lazy">
+        <img src="images/events/ts-25.jpg" alt="A plated main course with roast vegetables" loading="lazy">
+        <img class="t" src="images/events/ts-01.jpg" alt="The team setting out a grazing table" loading="lazy">
+        <img src="images/events/web-truck-team.jpg" alt="The Tommy Sugo team in front of the truck" loading="lazy">
+        <img src="images/events/web-potjies.jpg" alt="Potjies cooking over the fire" loading="lazy">
+        <img class="w" src="images/events/ts-02.jpg" alt="The team behind a long grazing table" loading="lazy">
+        <img src="images/events/web-festival-night.jpg" alt="A festival at night, lit up in orange and red" loading="lazy">
+        <img src="images/events/ts-16.jpg" alt="Plating salads for a catered event" loading="lazy">
+        <img src="images/events/web-guests.jpg" alt="Guests enjoying pizza at an outdoor event" loading="lazy">
+        <img src="images/events/ts-23.jpg" alt="A plated dish with green beans and carrots" loading="lazy">
+        <img class="w" src="images/events/web-truck-event.jpg" alt="The Tommy Sugo truck at an outdoor event, guests gathered around" loading="lazy">
+        <img src="images/events/ts-14.jpg" alt="A grazing table with bread, dips and fresh vegetables" loading="lazy">
+        <img src="images/events/web-catering-serve.jpg" alt="The team serving guests at a catered event" loading="lazy">
+        <img class="w t" src="images/events/web-truck.jpg" alt="The Tommy Sugo food truck, black with the red seal, parked under trees" loading="lazy">
+        <img src="images/events/web-truck-crowd.jpg" alt="Guests ordering at the Tommy Sugo food truck at an outdoor event" loading="lazy">
+        <img src="images/events/ts-10.jpg" alt="Long grazing tables laid out at an outdoor catered event" loading="lazy">
+        <img class="w" src="images/events/web-truck-queue.jpg" alt="A busy crowd around the Tommy Sugo truck at a festival" loading="lazy">
+        <img src="images/events/ts-04.jpg" alt="The team laying out a grazing table at an event" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <section class="how" aria-labelledby="how-h">
+    <div class="wrap">
+      <p class="tag red">How it works</p>
+      <h2 class="section-h" id="how-h">Three Steps to Fed</h2>
+      <ol>
+        <li><h3>Tell us about it</h3><p>The date, where it is, how many people, and whether you're thinking trucks, catering or both.</p></li>
+        <li><h3>Get a menu and quote</h3><p>We put together a menu from Tommy Sugo, Merle's and our catering, with one quote for all of it.</p></li>
+        <li><h3>We bring the lot</h3><p>The trucks, the food and the team. We set up, serve and clear, and you enjoy your event.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="enquire" id="enquire" aria-labelledby="enquire-h">
+    <div class="wrap">
+      <aside>
+        <p class="tag red">Make an enquiry</p>
+        <h2 class="section-h" id="enquire-h">Let's Feed Your Event</h2>
+        <p class="lede" style="color: var(--muted-on-paper);">Send us the details and we'll come back with a menu and a quote. Nothing is booked until you confirm.</p>
+      </aside>
+      <div>
+        <form id="enquiry" class="formbox" novalidate>
+          <div class="row2">
+            <div class="fld"><label class="lbl" for="e-name">Your name</label><input id="e-name" class="field" autocomplete="name" required></div>
+            <div class="fld"><label class="lbl" for="e-email">Email</label><input id="e-email" class="field" type="email" autocomplete="email" required></div>
+          </div>
+          <div class="row2">
+            <div class="fld"><label class="lbl" for="e-phone">Cell number</label><input id="e-phone" class="field" type="tel" autocomplete="tel"></div>
+            <div class="fld"><label class="lbl" for="e-date">Date</label><input id="e-date" class="field" type="date"></div>
+          </div>
+          <div class="row2">
+            <div class="fld"><label class="lbl" for="e-where">Where</label><input id="e-where" class="field" placeholder="Venue, or the delivery address"></div>
+            <div class="fld"><label class="lbl" for="e-guests">Guests</label><input id="e-guests" class="field" type="number" inputmode="numeric" min="1" placeholder="About how many"></div>
+          </div>
+          <div class="row2">
+            <div class="fld"><label class="lbl" for="e-kind">Occasion</label>
+              <select id="e-kind" class="field"><option>Festival or market</option><option>Wedding</option><option>Office lunch</option><option>Birthday or party</option><option>Launch or corporate</option><option>Something else</option></select></div>
+            <div class="fld"><label class="lbl" for="e-time">Serve at</label>
+              <select id="e-time" class="field"><option>Breakfast</option><option selected>Lunch</option><option>Afternoon</option><option>Dinner</option><option>Late night</option><option>All weekend</option></select></div>
+          </div>
+          <fieldset>
+            <legend class="lbl">What are you after?</legend>
+            <div class="checks">
+              <label class="check"><input type="checkbox" name="want" value="Tommy Sugo truck">Tommy Sugo truck</label>
+              <label class="check"><input type="checkbox" name="want" value="Merle's truck">Merle's truck</label>
+              <label class="check"><input type="checkbox" name="want" value="Merle's platters, delivered">Merle's platters, delivered</label>
+              <label class="check"><input type="checkbox" name="want" value="Catering">Catering</label>
+              <label class="check"><input type="checkbox" name="want" value="Not sure yet">Not sure yet</label>
+            </div>
+          </fieldset>
+          <div class="fld"><label class="lbl" for="e-note">Tell us more</label><textarea id="e-note" class="field" placeholder="Timings, dietary needs, vegan, gluten-free and veggie schnitz counts, anything else"></textarea></div>
+          <p class="err" id="e-err" role="alert" hidden></p>
+          <button class="btn" type="submit" style="align-self: flex-start;">Send Enquiry</button>
+        </form>
+        <div class="formbox done" id="enquiry-done" role="status" hidden>
+          <p class="tag red">Enquiry sent</p>
+          <h3>Thanks. We'll Be in Touch.</h3>
+          <p>We'll come back to you at <strong id="e-done-email"></strong> with a menu and a quote.</p>
+          <button class="btn" type="button" id="enquiry-again" style="align-self: flex-start;">Send Another</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Footer">
+      <a href="index.html" data-site="home">Home</a>
+      <a href="tommy-sugo.html" data-site="tommy">Tommy Sugo</a>
+      <a href="merles-schnitz.html" data-site="merles">Merle's</a>
+      <a href="shop.html" data-site="shop">Shop</a>
+      <a href="#circuit">On the Circuit</a>
+      <a href="#enquire">Enquire</a>
+    </nav>
+    <small>© 2026 Tommy Sugo &amp; Merle's</small>
+  </div>
+</footer>
+
+<script src="js/sites.js"></script>
+<script>
+(function () {
+  // Like the brand pages' enquiry forms, this doesn't send anywhere yet: it checks the details and says thanks.
+  var form = document.getElementById("enquiry");
+  var done = document.getElementById("enquiry-done");
+  var err = document.getElementById("e-err");
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var email = document.getElementById("e-email");
+    var problem = !document.getElementById("e-name").value.trim() ? "Add your name."
+      : !email.value.trim() || !email.checkValidity() ? "Add an email address so we can reply."
+      : !form.querySelector('input[name="want"]:checked') ? "Tick what you're after, or Not sure yet."
+      : "";
+    if (problem) { err.textContent = problem; err.hidden = false; return; }
+    err.hidden = true;
+    document.getElementById("e-done-email").textContent = email.value.trim();
+    form.hidden = true;
+    done.hidden = false;
+    done.setAttribute("tabindex", "-1");
+    done.focus();
+  });
+  document.getElementById("enquiry-again").addEventListener("click", function () {
+    form.reset();
+    done.hidden = true;
+    form.hidden = false;
+  });
+
+  // On the circuit: a vote for the next town. Like the enquiry, it doesn't send anywhere yet.
+  document.getElementById("vote-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    this.hidden = true;
+    document.getElementById("vote-done").hidden = false;
+  });
+})();
+</script>
+</body>
+</html>

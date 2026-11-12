@@ -9,9 +9,19 @@ const SITE_URLS: Record<string, string> = {
   merles: "https://merles.spontanik.co.za",
 };
 export const siteUrl = (brand: string) => SITE_URLS[brand] ?? "https://spontanik.co.za";
+
+// Both brands take payments, receive the payment webhook and send order emails through Tommy Sugo's setup (Merle's
+// sells through Tommy Sugo's Yoco account). An order holding both brands is filed under that account's brand.
+const PAYS_THROUGH: Record<string, string> = { tommy: "tommy", merles: "tommy" };
+export const accountOf = (brand: string) => PAYS_THROUGH[brand] ?? "tommy";
+export const brandsPaidThrough = (account: string) => Object.keys(PAYS_THROUGH).filter((b) => PAYS_THROUGH[b] === account);
 export const CHECKOUT_API = "https://payments.yoco.com/api";
 
 const BRAND_NAMES: Record<string, string> = { tommy: "Tommy Sugo", merles: "Merle's" };
+// "Tommy Sugo", or "Tommy Sugo & Merle's" for an order holding both.
+// deno-lint-ignore no-explicit-any
+export const shopName = (order: any) =>
+  ((order.brands?.length ? order.brands : [order.brand]) as string[]).map((b) => BRAND_NAMES[b] ?? b).join(" & ");
 
 export const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -78,11 +88,11 @@ async function linesOf(db: SupabaseClient, orderId: string) {
 // Never throws: a failed email shouldn't lose a paid order. The Orders tab shows the problem and can send it again.
 export async function sendOrderEmail(db: SupabaseClient, order: Order) {
   try {
-    const shop = BRAND_NAMES[order.brand] ?? "";
+    const shop = shopName(order);
     const link = orderLink(order.access_token, siteUrl(order.brand));
     const lines = await linesOf(db, order.id);
     const list = lines.map((l) => `${l.qty} × ${l.name} (${rand(l.qty * l.unit_price)})`);
-    await sendEmail(db, order.brand, {
+    await sendEmail(db, accountOf(order.brand), {
       to: order.customer_email,
       subject: `${shop} order #${order.number}: your collection code is ${order.collection_code}`,
       text: [

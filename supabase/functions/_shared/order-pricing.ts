@@ -4,6 +4,7 @@
 export class OrderError extends Error {}
 
 export type RequestedLine = {
+  brand?: string; // which brand's item it is: an order can hold both brands
   kind: "menu" | "shop";
   itemId: string;
   qty: number;
@@ -13,6 +14,7 @@ export type RequestedLine = {
 
 export type PricedLine = {
   position: number;
+  brand: string;
   kind: "menu" | "shop";
   item_id: string;
   name: string;
@@ -81,7 +83,8 @@ function priceShopLine(row: Row) {
   return { name: row.cart_name || row.name, each: cents(row.price), variantId: null, modifierIds: [] };
 }
 
-export function priceOrder(requested: RequestedLine[], menuRows: Row[], shopRows: Row[]) {
+// fallbackBrand is the brand for lines that don't say (from a page that only sells one brand).
+export function priceOrder(requested: RequestedLine[], menuRows: Row[], shopRows: Row[], fallbackBrand?: string) {
   if (!Array.isArray(requested) || !requested.length) throw new OrderError("Add something to your order first.");
   if (requested.length > MAX_LINES) throw new OrderError("That's a very big order. Please call us instead.");
   const menu = new Map(menuRows.map((r) => [r.id, r]));
@@ -92,10 +95,14 @@ export function priceOrder(requested: RequestedLine[], menuRows: Row[], shopRows
       throw new OrderError(`You can order up to ${MAX_QTY} of each item.`);
     }
     if (line.kind !== "menu" && line.kind !== "shop") throw new OrderError("Something in your order wasn't recognised.");
-    const priced = line.kind === "menu" ? priceMenuLine(line, menu.get(line.itemId)) : priceShopLine(shop.get(line.itemId));
+    const brand = line.brand ?? fallbackBrand;
+    // An item only counts for the brand it belongs to.
+    const pick = (row: Row) => (row && row.brand === brand ? row : undefined);
+    const priced = line.kind === "menu" ? priceMenuLine(line, pick(menu.get(line.itemId))) : priceShopLine(pick(shop.get(line.itemId)));
     totalCents += priced.each * line.qty;
     return {
       position,
+      brand: brand as string,
       kind: line.kind,
       item_id: line.itemId,
       name: priced.name,

@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
 
   const db = adminClient();
   const { data: order, error } = await db.from("orders")
-    .select("id, number, brand, status, cancel_reason, collection_code, customer_name, collect_from, total, payment_mode, checkout_url, order_lines(name, qty, unit_price, position)")
+    .select("id, number, brand, brands, status, cancel_reason, collection_code, customer_name, collect_from, total, payment_mode, checkout_url, order_lines(name, qty, unit_price, position)")
     .eq("access_token", token).maybeSingle();
   if (error) return reply({ ok: false, error: "Couldn't load your order. Please try again." }, 500);
   if (!order) return reply({ ok: false, error: "We can't find that order." }, 404);
@@ -21,6 +21,7 @@ Deno.serve(async (req) => {
     order: {
       number: order.number,
       brand: order.brand,
+      brands: order.brands?.length ? order.brands : [order.brand],
       status: order.status,
       // Released because it wasn't paid in time, rather than cancelled by staff.
       expired: order.status === "cancelled" && order.cancel_reason === "unpaid",
