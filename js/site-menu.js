@@ -118,3 +118,14 @@
   // Compact means the Menu button is showing: at least one link is tucked away.
   window.SiteMenu = { compact: function () { return header.classList.contains("compact"); } };
 })();
+
+// The header is pinned to the top of the page (header.site in each page's styles). Keep --head-h at its height, so
+// jumps to a spot on the page stop below it rather than underneath.
+(function () {
+  var header = document.querySelector("header.site");
+  if (!header) return;
+  function measure() { document.documentElement.style.setProperty("--head-h", header.offsetHeight + "px"); }
+  measure();
+  if (window.ResizeObserver) new ResizeObserver(measure).observe(header);
+  else window.addEventListener("resize", measure);
+})();

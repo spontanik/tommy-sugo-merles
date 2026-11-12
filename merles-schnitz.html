@@ -1,9 +1,24 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body data-brand="merles">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+/* Meet Tommy Sugo: a banner for the other brand, in Tommy Sugo's own look (sauce red, black, Oswald, the seal). Every
+   view has it above the footer except Your Order, so checkout stays focused. */
+.cross-brand { padding-block: 0 96px; }
+main[data-view="cart"]:not([hidden]) ~ .cross-brand { display: none; }
+.cross-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px 48px; align-items: center; padding: 40px clamp(24px, 5vw, 64px); background: #ec1c24; color: #000000; }
+.cross-logo { width: clamp(120px, 18vw, 184px); height: auto; display: block; }
+.cross-copy { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; min-width: 0; }
+.cross-tag { margin: 0; font-family: Oswald, "Arial Narrow", Impact, sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+.cross-h { margin: 0; font-family: Oswald, "Arial Narrow", Impact, sans-serif; font-weight: 700; font-size: clamp(32px, 5vw, 52px); line-height: 1.05; letter-spacing: 0.02em; overflow-wrap: anywhere; }
+.cross-text { margin: 0; font-size: 17px; font-weight: 500; line-height: 1.5; max-width: 52ch; }
+.cross-btn { display: inline-flex; align-items: center; min-height: 48px; margin-top: 8px; padding: 0 24px; background: #000000; color: #ffffff; border: 2px solid #000000; font-family: Oswald, "Arial Narrow", Impact, sans-serif; font-size: 17px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; }
+.cross-btn:hover { background: #ffffff; color: #000000; }
+.cross-btn:focus-visible { outline: 3px solid #000000; outline-offset: 3px; }
+@media (max-width: 640px) { .cross-card { grid-template-columns: minmax(0, 1fr); padding: 32px 24px; } }
+</style></head><body data-brand="merles">
 <title>Merle's Schnitz Website</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@500;700;800&family=Oswald:wght@600;700&display=swap">
 <style>
 /* Printed-menu look from the Merle's Schnitz system: black ink on paper, square corners, one notched frame per page. Deliberately single-theme (Paper), with black bands. */
 :root {
@@ -32,14 +47,14 @@ img { max-width: 100%; }
 .band { background-color: var(--ink); color: var(--on-fill); }
 .tracks { background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MiIgaGVpZ2h0PSI0MiIgdmlld0JveD0iMCAwIDUyIDQyIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkNoaWNrZW4gdHJhY2sgcGF0dGVybiB0aWxlIj48cmVjdCB3aWR0aD0iNTIiIGhlaWdodD0iNDIiIGZpbGw9IiMwMDAiPjwvcmVjdD48cGF0aCBmaWxsPSJub25lIiBzdHJva2U9IiMxYzFjMWEiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGQ9Ik0xMyAzdjE3TTEgOUwxMyAyMEwyNSA5IE0zOSAzdjE3TTI3IDlMMzkgMjBMNTEgOSBNMCAyNHYxN00tMTIgMzBMMCA0MUwxMiAzMCBNMjYgMjR2MTdNMTQgMzBMMjYgNDFMMzggMzAgTTUyIDI0djE3TTQwIDMwTDUyIDQxTDY0IDMwIj48L3BhdGg+PC9zdmc+"); background-repeat: repeat; }
 .strip { font-size: 13px; font-weight: 800; letter-spacing: 0.28em; text-align: center; padding-block: 10px; }
-/* The strip's message stays centred; the other brand's button sits at the right, or under the message on a phone. */
-.strip .wrap { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 16px; }
-.strip .other-site { justify-self: end; color: inherit; text-decoration: none; white-space: nowrap; border: 2px solid currentColor; padding: 4px 10px; }
-@media (min-width: 1200px) { .strip .wrap { grid-template-columns: 1fr auto 1fr; } .strip .wrap > :first-child { grid-column: 2; } .strip .other-site { grid-column: 3; } }
-.strip .other-site:hover { text-decoration: underline; }
-@media (max-width: 760px) { .strip .wrap { grid-template-columns: 1fr; } .strip .wrap > * { grid-column: 1; justify-self: center; } .strip .other-site { white-space: normal; } }
 
 header.site { border-bottom: 8px solid var(--ink); }
+/* The header stays pinned at the top while the page scrolls, so the menu, cart and Your Orders are always in reach.
+   An open menu scrolls inside it on a short screen. Jumps to a spot on the page (like #book) stop below it:
+   js/site-menu.js keeps --head-h at the header's height. */
+header.site { position: sticky; top: 0; z-index: 40; background: var(--surface); }
+header.site.menu-open { max-height: 100dvh; overflow-y: auto; }
+html { scroll-padding-top: calc(var(--head-h, 80px) + 16px); }
 header.site .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-block: 16px; }
 /* The logo never squashes: it keeps its shape and, below about 400px wide, scales down. */
 .home-link { flex: none; display: flex; }
@@ -70,8 +85,8 @@ nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .section { padding-block: 96px; }
 .section-tight { padding-block: 64px; }
 .stack { display: flex; flex-direction: column; gap: 24px; }
-.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; }
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 32px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 32px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 32px; }
 .box { border: 8px solid var(--ink); padding: 40px 32px; display: flex; flex-direction: column; gap: 16px; }
 .box.band { border-color: var(--ink); }
 .box h3 { margin: 0; font-size: 28px; line-height: 1.2; font-weight: 800; }
@@ -151,7 +166,7 @@ details p { margin: 0 0 24px; color: var(--ink-muted); }
 .band .field::placeholder { color: var(--shade); }
 .lbl { font-size: 14px; font-weight: 800; letter-spacing: 0.1em; }
 .fld { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.fgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 20px; }
 fieldset { margin: 0; padding: 0; border: 0; }
 legend { padding: 0; margin-bottom: 12px; }
 .formbox { border: 8px solid var(--ink); background: var(--surface-print); padding: clamp(24px, 4vw, 48px); display: flex; flex-direction: column; gap: 24px; }
@@ -166,7 +181,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 /* Shop: product grid beside a sticky order summary */
 .shop-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 48px; align-items: start; }
 @media (max-width: 960px) { .shop-grid { grid-template-columns: minmax(0, 1fr); } }
-.products { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
+.products { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 24px; }
 .product { border: 3px solid var(--ink); background: var(--surface-print); display: flex; flex-direction: column; }
 .product .ph { height: 160px; }
 /* Drawings after Merle's portrait: home cards, shop products, one icon per menu section */
@@ -196,7 +211,7 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 .shop-err { margin: 0; font-weight: 800; }
 </style>
 
-<div class="band strip"><div class="wrap"><span>ORDER ON UBER EATS &amp; MR D · OR COLLECT FROM THE KITCHEN</span><a class="other-site" href="tommy-sugo.html" data-site="tommy">Looking for Tommy Sugo? →</a></div></div>
+<div class="band strip"><div class="wrap"><span>ORDER ON UBER EATS &amp; MR D · OR COLLECT FROM THE KITCHEN</span></div></div>
 
 <header class="site">
   <div class="wrap">
@@ -710,6 +725,21 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
   </section>
 </main>
 
+<!-- MEET TOMMY SUGO: the other brand, in its own look. Hidden on Your Order. -->
+<aside class="cross-brand" aria-labelledby="cross-brand-h">
+  <div class="wrap">
+    <div class="cross-card">
+      <img class="cross-logo" src="tommy-seal-white.png" alt="">
+      <div class="cross-copy">
+        <p class="cross-tag">Meet Tommy Sugo</p>
+        <h2 class="cross-h" id="cross-brand-h">Not a Schnitz Night? Let a Pizza Save It.</h2>
+        <p class="cross-text">Tommy Sugo does hand-rolled thin-base pizza and a 7-hour slow-cooked Roma tomato sauce, from the food truck and the dark kitchen.</p>
+        <a class="cross-btn" href="tommy-sugo.html" data-site="tommy">Visit Tommy Sugo&nbsp;→</a>
+      </div>
+    </div>
+  </div>
+</aside>
+
 <footer class="site band">
   <div class="wrap">
     <div class="foot-top">
@@ -728,6 +758,10 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
         <span class="tag" style="font-size: 14px;">ORDER ON</span>
         <a class="flink" href="https://www.ubereats.com" target="_blank" rel="noopener">Uber Eats</a>
         <a class="flink" href="https://www.mrd.com" target="_blank" rel="noopener">Mr D</a>
+      </div>
+      <div class="foot-col">
+        <span class="tag" style="font-size: 14px;">ALSO TRY</span>
+        <a class="flink" href="tommy-sugo.html" data-site="tommy">Tommy Sugo →</a>
       </div>
       <div class="foot-col">
         <span class="tag" style="font-size: 14px;">FOLLOW</span>
