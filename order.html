@@ -51,6 +51,9 @@ p { margin: 0; }
   var token = params.get("t") || "";
   var box = document.getElementById("order");
   var NAMES = { tommy: "Tommy Sugo", merles: "Merle's" };
+  // "Tommy Sugo", or "Tommy Sugo & Merle's" for an order holding both.
+  function brandsOf(o) { return o.brands && o.brands.length ? o.brands : [o.brand]; }
+  function nameOf(o) { return brandsOf(o).map(function (b) { return NAMES[b] || b; }).join(" & "); }
   var STAGES = ["received", "preparing", "ready", "collected"];
   // The progress list always says plainly where the order is, whatever the voice.
   var STEP_NAMES = { received: "Order received", preparing: "Being prepared", ready: "Ready for collection", collected: "Collected" };
@@ -142,7 +145,7 @@ p { margin: 0; }
     a.href = href;
     return a;
   }
-  function home(o) { return window.Sites.url(o.brand); }
+  function home(o) { return window.Sites.url(brandsOf(o).length > 1 ? "home" : o.brand); }
 
   function summary(o) {
     var section = el("div", "box");
@@ -165,17 +168,17 @@ p { margin: 0; }
   function draw(o) {
     clearTimeout(prepTimer);
     box.textContent = "";
-    box.appendChild(link("back", "← " + (NAMES[o.brand] || "Back to the website"), home(o)));
+    box.appendChild(link("back", "← " + (brandsOf(o).length > 1 ? "Back to the website" : nameOf(o)), home(o)));
     body(o);
     var foot = el("div", "foot");
-    foot.appendChild(link("btn", o.status === "pending_payment" ? "Back to the menu" : "Order something else", home(o) + "#menu"));
+    foot.appendChild(link("btn", o.status === "pending_payment" ? "Back to the menu" : "Order something else", home(o) + (brandsOf(o).length > 1 ? "" : "#menu")));
     foot.appendChild(link("back", "All your orders", "account.html?from=" + encodeURIComponent(o.brand)));
     box.appendChild(foot);
   }
 
   function body(o) {
     var paid = params.get("paid");
-    box.appendChild(el("p", "tag", (NAMES[o.brand] || "") + " · Order #" + o.number));
+    box.appendChild(el("p", "tag", nameOf(o) + " · Order #" + o.number));
     if (o.test) box.appendChild(el("p", "test", "Test order: no money was taken and the kitchen shouldn't make this."));
 
     if (o.status === "cancelled" && o.expired) {

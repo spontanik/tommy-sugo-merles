@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Shop · Tommy Sugo &amp; Merle's</title>
+<meta name="description" content="Frozen pizza, frozen schnitz and the sauces from Tommy Sugo and Merle's, in one order, collected from the kitchen.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;700&family=Montserrat:wght@500;700;800&family=Oswald:wght@600;700&display=swap">
+<style>
+/* The combined Shop (spontanik.co.za/shop.html): both brands' shop items in one order. The order is the same one the
+   brand sites use (js/cart.js), so menu food added on Tommy Sugo or Merle's shows up here too, and the other way round.
+   Each brand's block wears its own look: Tommy Sugo black and sauce red, Merle's paper and heavy black. */
+:root {
+  --black: #000000;
+  --paper: #f2f2f2;
+  --shade: #d3d2d2;
+  --muted-on-black: #d3d2d2;
+  --muted-on-paper: #4a4a48;
+  --sauce: #ec1c24;
+  --poster: Oswald, "Arial Narrow", Impact, sans-serif;
+  --sans: Archivo, "Helvetica Neue", Arial, sans-serif;
+  --merles-poster: Impact, Anton, "Arial Narrow", sans-serif;
+  --merles-sans: "Proxima Nova", Montserrat, "Helvetica Neue", Arial, sans-serif;
+  /* order.js draws its bar and dialogs with these */
+  --surface: #ffffff;
+  --ink: #000000;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body { margin: 0; background: var(--paper); color: var(--black); font-family: var(--sans); font-size: 17px; line-height: 1.5; }
+img { max-width: 100%; display: block; }
+h1, h2, h3 { text-wrap: balance; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--sauce); outline-offset: 3px; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 720px) { .wrap { padding-left: 40px; padding-right: 40px; } }
+.tag { margin: 0; font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 26px; font-family: var(--poster); font-size: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; cursor: pointer; border: 2px solid var(--black); background: var(--black); color: var(--paper); }
+.btn:hover { background: var(--sauce); border-color: var(--sauce); color: var(--black); }
+.btn:disabled { opacity: .6; cursor: wait; }
+.btn-ghost { background: transparent; color: var(--black); }
+.pill { min-height: 44px; padding: 0 18px; background: transparent; color: var(--black); border: 2px solid var(--black); font: inherit; font-weight: 700; cursor: pointer; }
+
+/* Header, as on the Events page. */
+.bar { position: sticky; top: 0; z-index: 20; background: var(--black); color: var(--paper); border-bottom: 4px solid var(--sauce); }
+.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; min-height: 68px; flex-wrap: wrap; padding-block: 8px; }
+.brandmark { color: var(--paper); text-decoration: none; font-family: var(--poster); font-weight: 700; font-size: 20px; letter-spacing: 0.04em; text-transform: uppercase; }
+.brandmark span { color: var(--sauce); }
+.bar nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; }
+.bar nav a { color: var(--paper); text-decoration: none; font-family: var(--poster); font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; min-height: 44px; display: inline-flex; align-items: center; }
+.bar nav a:hover, .bar nav a[aria-current] { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+.bar nav a.cart-link { background: var(--sauce); color: var(--black); padding: 0 16px; text-decoration: none; }
+@media (max-width: 640px) { .bar nav .hide-sm { display: none; } }
+
+.hero { background: var(--black); color: var(--paper); }
+.hero .wrap { padding-block: 64px 56px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+.hero h1 { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(44px, 7vw, 84px); line-height: 0.98; text-transform: uppercase; }
+.hero p { margin: 0; max-width: 640px; font-size: 19px; color: var(--muted-on-black); }
+.hero .tag { color: var(--sauce); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 40px; align-items: start; padding-block: 56px 96px; }
+@media (max-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* Each brand's block, in its own look. */
+.brand-block { margin-bottom: 48px; }
+.brand-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding: 20px 24px; }
+.brand-head img { height: 64px; width: auto; }
+.brand-head h2 { margin: 0; font-size: clamp(30px, 4vw, 44px); line-height: 1; }
+.brand-head a { font-weight: 700; color: inherit; min-height: 44px; display: inline-flex; align-items: center; }
+.brand-block.tommy .brand-head { background: var(--black); color: var(--paper); border-bottom: 6px solid var(--sauce); }
+.brand-block.tommy .brand-head h2 { font-family: var(--poster); font-weight: 700; text-transform: uppercase; }
+.brand-block.merles .brand-head { background: var(--paper); color: var(--black); border: 8px solid var(--black); }
+.brand-block.merles .brand-head h2 { font-family: var(--merles-poster); font-weight: 400; }
+.brand-body { padding-top: 24px; display: flex; flex-direction: column; gap: 32px; }
+.sec h3 { margin: 0 0 16px; font-family: var(--poster); font-size: 24px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+.brand-block.merles .sec h3 { font-family: var(--merles-poster); font-weight: 400; text-transform: none; font-size: 28px; }
+
+.products { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: 20px; }
+.product { background: #fff; border: 2px solid var(--black); display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.brand-block.merles .product { border-width: 4px; }
+.product .ill { width: 100%; aspect-ratio: 1 / 1; object-fit: contain; background: var(--paper); padding: 12px; border-bottom: 2px solid var(--black); }
+.product.sold-out .ill { opacity: .45; }
+.product-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.product h3 { margin: 0; font-family: var(--poster); font-size: 22px; line-height: 1.1; text-transform: uppercase; }
+.brand-block.merles .product h3 { font-family: var(--merles-sans); font-weight: 800; text-transform: none; font-size: 20px; }
+.product .desc { margin: 0; color: var(--muted-on-paper); font-size: 15px; }
+.product .stock { margin: 0; font-weight: 700; font-size: 14px; }
+.product-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 8px; }
+.product .price { font-family: var(--poster); font-size: 22px; font-weight: 700; white-space: nowrap; }
+.product .sold { font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 13px; }
+.stepper { display: inline-flex; align-items: center; border: 2px solid var(--black); }
+.stepper button { width: 44px; height: 44px; background: transparent; border: 0; color: var(--black); font: 700 22px var(--sans); cursor: pointer; }
+.stepper button:hover { background: var(--black); color: var(--paper); }
+.stepper output { min-width: 28px; text-align: center; font-weight: 700; }
+.loading, .failed { padding: 24px; border: 2px dashed var(--black); }
+
+/* Your order, beside the products (below them on a phone). */
+.cart { position: sticky; top: 88px; background: #fff; border: 4px solid var(--black); padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+@media (max-width: 980px) { .cart { position: static; } }
+.cart h2 { margin: 0; font-family: var(--poster); font-size: 32px; text-transform: uppercase; }
+.cart-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cart-lines li { display: flex; justify-content: space-between; gap: 12px; font-weight: 500; overflow-wrap: anywhere; }
+.cart-lines li span:last-child { font-family: var(--poster); font-weight: 600; white-space: nowrap; }
+.cart-total { display: flex; justify-content: space-between; align-items: baseline; border-top: 2px solid var(--black); padding-top: 12px; font-family: var(--poster); font-size: 24px; font-weight: 700; }
+.fld { display: flex; flex-direction: column; gap: 6px; }
+.lbl { font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.field { width: 100%; min-height: 48px; border: 2px solid var(--black); background: var(--paper); color: var(--black); padding: 10px 14px; font: inherit; border-radius: 0; }
+.desc { margin: 0; color: var(--muted-on-paper); }
+.muted { color: var(--muted-on-paper); }
+.shop-err { margin: 0; font-weight: 700; color: var(--sauce); }
+.cart a { color: var(--black); font-weight: 700; }
+
+footer { background: var(--black); color: var(--paper); border-top: 8px solid var(--sauce); padding-block: 48px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px 48px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+footer a { color: var(--paper); font-weight: 700; min-height: 44px; display: inline-flex; align-items: center; }
+footer small { color: var(--muted-on-black); }
+</style>
+</head>
+<body data-brand="both">
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brandmark" href="index.html" data-site="home">Tommy Sugo <span>×</span> Merle's</a>
+    <nav aria-label="Main">
+      <a href="events.html" data-site="events" class="hide-sm">Events</a>
+      <a href="shop.html" data-site="shop" aria-current="page">Shop</a>
+      <a href="tommy-sugo.html" data-site="tommy" class="hide-sm">Tommy Sugo</a>
+      <a href="merles-schnitz.html" data-site="merles" class="hide-sm">Merle's</a>
+      <a class="cart-link" href="#cart" id="cart-link">Your order</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="shop-h">
+    <div class="wrap">
+      <p class="tag">One shop · one order</p>
+      <h1 id="shop-h">The Shop</h1>
+      <p>Frozen pizza and the 7-hour sauce from Tommy Sugo, frozen schnitz and the sauces from Merle's. Put them in one order and collect it from the kitchen.</p>
+    </div>
+  </section>
+
+  <div class="wrap layout">
+    <div id="products">
+      <p class="loading">Loading the shop…</p>
+    </div>
+
+    <form id="shop-form" novalidate>
+      <aside class="cart" id="cart" aria-labelledby="cart-h">
+        <div id="shop-order" class="stack" style="display: flex; flex-direction: column; gap: 16px;">
+          <h2 id="cart-h">Your Order</h2>
+          <p id="cart-empty" class="muted" style="margin: 0;">Nothing here yet. Add frozen pizza, schnitz or sauce.</p>
+          <ul id="cart-lines" class="cart-lines" hidden></ul>
+          <div class="cart-total"><span id="cart-count">0 items</span><span id="cart-total">TBC</span></div>
+          <p class="desc" style="font-size: 14px;">Want food too? Add from <a href="tommy-sugo.html" data-site="tommy" data-site-hash="#menu">Tommy Sugo's menu</a> or <a href="merles-schnitz.html" data-site="merles" data-site-hash="#menu">Merle's menu</a>: it's the same order.</p>
+          <div id="get-delivery" hidden></div>
+          <div class="fld" id="get-collect"><span class="lbl">Collect from</span><p class="desc" style="font-size: 16px; color: var(--black);">The kitchen, [AREA]</p></div>
+          <p id="get-note" class="desc" style="font-size: 14px;" hidden></p>
+          <div class="fld"><label class="lbl" for="shop-name">Your name</label><input id="shop-name" class="field" type="text" autocomplete="name"></div>
+          <div class="fld"><label class="lbl" for="shop-email">Email</label><input id="shop-email" class="field" type="email" autocomplete="email"></div>
+          <div class="fld"><label class="lbl" for="shop-phone">Cell number</label><input id="shop-phone" class="field" type="tel" autocomplete="tel"></div>
+          <p id="shop-err" class="shop-err" role="alert" hidden></p>
+          <button class="btn" type="submit">Pay and Place Order</button>
+          <p class="desc" style="font-size: 14px;">You'll pay on Yoco's secure page. We'll then email you a link to follow your order, and a collection code to give us when you collect.</p>
+        </div>
+        <div id="shop-done" role="status" hidden style="display: flex; flex-direction: column; gap: 12px;">
+          <h2 id="shop-done-title">Order In.</h2>
+          <p class="muted" style="margin: 0;">We'll email <span id="shop-done-email">you</span>.</p>
+          <button class="btn btn-ghost" type="button" id="shop-again">Start a New Order</button>
+        </div>
+      </aside>
+    </form>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Footer">
+      <a href="index.html" data-site="home">Home</a>
+      <a href="tommy-sugo.html" data-site="tommy">Tommy Sugo</a>
+      <a href="merles-schnitz.html" data-site="merles">Merle's</a>
+      <a href="events.html" data-site="events">Events &amp; Catering</a>
+      <a href="account.html">Your orders</a>
+    </nav>
+    <small>© 2026 Tommy Sugo &amp; Merle's</small>
+  </div>
+</footer>
+
+<script src="js/sites.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/catalog-config.js"></script>
+<script>
+// Both brands' shop items, drawn in the same shape the brand pages use, so js/order.js can add them to the order.
+(function () {
+  var conf = window.SITE_SUPABASE || {};
+  var box = document.getElementById("products");
+  var BRANDS = [
+    { key: "tommy", name: "Tommy Sugo", logo: "tommy-seal-white.png", site: "tommy" },
+    { key: "merles", name: "Merle's", logo: "merles-logo.svg", site: "merles" }
+  ];
+
+  // The header's "Your order" link shows how many are in it (order.js calls this as it does the brand pages' cart icon).
+  window.NavIcons = { cart: function (n) { document.getElementById("cart-link").textContent = n ? "Your order (" + n + ")" : "Your order"; } };
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = text;
+    return e;
+  }
+  function money(v) {
+    if (v === null || v === undefined || v === "") return null;
+    var n = Number(v);
+    return "R" + (n % 1 ? n.toFixed(2) : String(n));
+  }
+  function get(path) {
+    return fetch(conf.url.replace(/\/$/, "") + "/rest/v1/" + path, { headers: { apikey: conf.key, Authorization: "Bearer " + conf.key } })
+      .then(function (r) { if (!r.ok) throw new Error(path + " " + r.status); return r.json(); });
+  }
+
+  function product(it, brand) {
+    var counted = it.stock !== null && it.stock !== undefined;
+    var soldOut = it.is_sold_out || (it.yoco_id && !money(it.price)) || (counted && it.stock <= 0);
+    var a = el("article", "product" + (soldOut ? " sold-out" : ""));
+    a.setAttribute("data-product", it.cart_name || it.name);
+    a.setAttribute("data-item-id", it.id);
+    a.setAttribute("data-item-kind", "shop");
+    a.setAttribute("data-brand", brand.key);
+    if (money(it.price)) a.setAttribute("data-price", String(Number(it.price)));
+    if (counted) a.setAttribute("data-stock", String(it.stock));
+    if (it.image_url) {
+      var img = el("img", "ill");
+      img.src = it.image_url; img.alt = it.image_alt || ""; img.loading = "lazy";
+      a.appendChild(img);
+    }
+    var body = el("div", "product-body");
+    body.appendChild(el("h3", null, it.name));
+    if (it.description) body.appendChild(el("p", "desc", it.description));
+    if (counted && !soldOut) body.appendChild(el("p", "stock", it.stock + " in stock"));
+    var foot = el("div", "product-foot");
+    foot.appendChild(el("span", "price", money(it.price) || "TBC"));
+    if (soldOut) {
+      foot.appendChild(el("span", "sold", "Sold out"));
+    } else {
+      var st = el("div", "stepper");
+      var minus = el("button", null, "−"); minus.type = "button"; minus.setAttribute("data-step", "-1"); minus.setAttribute("aria-label", "One less " + it.name);
+      var out = el("output", null, "0"); out.setAttribute("aria-live", "polite");
+      var plus = el("button", null, "+"); plus.type = "button"; plus.setAttribute("data-step", "1"); plus.setAttribute("aria-label", "One more " + it.name);
+      st.appendChild(minus); st.appendChild(out); st.appendChild(plus);
+      foot.appendChild(st);
+    }
+    body.appendChild(foot);
+    a.appendChild(body);
+    return a;
+  }
+
+  function draw(sections, items) {
+    box.textContent = "";
+    BRANDS.forEach(function (brand) {
+      var secs = sections.filter(function (s) { return s.brand === brand.key; });
+      if (!secs.length) secs = (window.CATALOG_CONFIG.brands[brand.key].shop || []).map(function (s) { return { key: s.key, title: s.title }; });
+      var mine = items.filter(function (i) { return i.brand === brand.key; });
+      if (!mine.length) return;
+      var block = el("section", "brand-block " + brand.key);
+      block.setAttribute("aria-label", brand.name);
+      var head = el("div", "brand-head");
+      var title = el("div"); title.style.cssText = "display:flex;align-items:center;gap:16px";
+      var logo = el("img"); logo.src = brand.logo; logo.alt = "";
+      title.appendChild(logo); title.appendChild(el("h2", null, brand.name));
+      var visit = el("a", null, "Visit " + brand.name + " →"); visit.href = window.Sites.url(brand.site);
+      head.appendChild(title); head.appendChild(visit);
+      block.appendChild(head);
+      var body = el("div", "brand-body");
+      secs.forEach(function (sec) {
+        var list = mine.filter(function (i) { return i.section === sec.key; });
+        if (!list.length) return;
+        var s = el("div", "sec");
+        s.appendChild(el("h3", null, sec.title));
+        var grid = el("div", "products");
+        list.forEach(function (it) { grid.appendChild(product(it, brand)); });
+        s.appendChild(grid);
+        body.appendChild(s);
+      });
+      block.appendChild(body);
+      box.appendChild(block);
+    });
+    if (!box.children.length) box.appendChild(el("p", "failed", "Nothing in the shop just now. Check back soon."));
+    document.dispatchEvent(new CustomEvent("catalog:rendered"));
+  }
+
+  if (!conf.url || /YOUR-/.test(conf.url + conf.key)) {
+    box.textContent = "";
+    box.appendChild(el("p", "failed", "The shop isn't connected yet."));
+    return;
+  }
+  Promise.all([
+    get("sections?select=brand,key,title,sort_order&kind=eq.shop&is_hidden=eq.false&order=sort_order.asc").catch(function () { return []; }),
+    get("shop_items?select=*&is_hidden=eq.false&brand=in.(tommy,merles)&order=sort_order.asc,name.asc")
+  ]).then(function (r) { draw(r[0], r[1]); }).catch(function () {
+    box.textContent = "";
+    box.appendChild(el("p", "failed", "The shop couldn't load just now. Please refresh the page."));
+  });
+})();
+</script>
+<script>
+window.ORDER_COPY = {
+  liveCheckout: true,
+  errDeliveryLive: "Delivery can't be ordered online yet. Please collect from the kitchen.",
+  errUnpriced: "Some of your items don't have a price yet. Please remove them to check out.",
+  noteFood: "Menu items are collection only, from the kitchen in [AREA]. Ready in about [X] minutes.",
+  noteMixed: "Everything is collected together from the kitchen in [AREA]. Ready in about [X] minutes.",
+  errEmpty: "Add something to your order first.",
+  errAddress: "Add a delivery address.",
+  errName: "Add your name so we know whose order it is.",
+  doneDelivery: "Order In.",
+  doneCollect: "Order In. Come and Get It."
+};
+</script>
+<script src="js/cart.js"></script>
+<script src="js/order.js"></script>
+</body>
+</html>

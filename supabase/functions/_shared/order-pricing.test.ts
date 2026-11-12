@@ -81,6 +81,25 @@ test("lets frozen items ride along with a menu order", () => {
   assert.deepEqual(lines.map((l) => [l.kind, l.qty]), [["menu", 1], ["shop", 2]]);
 });
 
+test("prices one order across both brands and tags each line with its brand", () => {
+  const tommyJar = { ...jar, brand: "tommy" };
+  const schnitz = { ...plain, id: "s", name: "Schnitz Roll", price: 85, brand: "merles" };
+  const { lines, totalCents } = priceOrder(
+    [{ brand: "merles", kind: "menu", itemId: "s", qty: 2 }, { brand: "tommy", kind: "shop", itemId: "j", qty: 1 }],
+    [schnitz],
+    [tommyJar],
+  );
+  assert.equal(totalCents, 25000);
+  assert.deepEqual(lines.map((l) => [l.brand, l.name]), [["merles", "Schnitz Roll"], ["tommy", "Sauce jar"]]);
+});
+
+test("refuses an item claimed for the wrong brand, and uses the page's brand when a line doesn't say", () => {
+  const tommyJar = { ...jar, brand: "tommy" };
+  refused(() => priceOrder([{ brand: "merles", kind: "shop", itemId: "j", qty: 1 }], [], [tommyJar]), /isn't available/);
+  assert.equal(priceOrder([{ kind: "shop", itemId: "j", qty: 1 }], [], [tommyJar], "tommy").lines[0].brand, "tommy");
+  refused(() => priceOrder([{ kind: "shop", itemId: "j", qty: 1 }], [], [tommyJar], "merles"), /isn't available/);
+});
+
 test("refuses bad quantities, empty orders and unknown kinds", () => {
   for (const qty of [0, -1, 1.5, 21]) refused(() => order({ qty }), /up to 20/);
   refused(() => priceOrder([], [], []), /Add something/);

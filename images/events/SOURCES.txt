@@ -1,0 +1,27 @@
+Where each photo in this folder came from.
+ts-*.jpg: the team's catering photos (WhatsApp images, 11 Nov 2026), from the TS Images folder.
+web-*.jpg: tommysugofood.co.za, downloaded at 1600px wide.
+
+ts-01.jpg <- WhatsApp Image 2026-11-11 at 18.06.38.jpeg
+ts-02.jpg <- WhatsApp Image 2026-11-11 at 18.06.39 (1).jpeg
+ts-04.jpg <- WhatsApp Image 2026-11-11 at 18.06.39.jpeg
+ts-08.jpg <- WhatsApp Image 2026-11-11 at 18.06.41 (1).jpeg
+ts-10.jpg <- WhatsApp Image 2026-11-11 at 18.06.42 (1).jpeg
+ts-14.jpg <- WhatsApp Image 2026-11-11 at 18.06.43.jpeg
+ts-16.jpg <- WhatsApp Image 2026-11-11 at 18.06.44 (2).jpeg
+ts-20.jpg <- WhatsApp Image 2026-11-11 at 18.06.45.jpeg
+ts-22.jpg <- WhatsApp Image 2026-11-11 at 18.06.46.jpeg
+ts-23.jpg <- WhatsApp Image 2026-11-11 at 18.06.47 (1).jpeg
+ts-25.jpg <- WhatsApp Image 2026-11-11 at 18.06.47.jpeg
+ts-27.jpg <- WhatsApp Image 2026-11-11 at 18.06.48.jpeg
+web-truck.jpg   586965 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/78538A9F-3ABF-45D2-8706-AAC971525974_1_102_a.jpg?width=1600
+web-truck-festival.jpg   205132 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/9257282C-CBC5-4102-9159-C23BC06C298A_1_105_c_c3f720b7-6e2e-447f-bec3-f56bd23352b3.jpg?width=1600
+web-truck-crowd.jpg   240905 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/4053A5A4-9CC8-4A3E-AC54-F8901E399705_1_105_c.jpg?width=1600
+web-truck-event.jpg   199570 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/B51743E6-78AD-4370-80B0-44EC0D4366FC_1_105_c.jpg?width=1600
+web-truck-queue.jpg   331676 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/13D53EA0-685C-4C95-BBF9-7F1B5D17115E.jpg?width=1600
+web-truck-team.jpg   173368 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/44FF30E1-A3CE-4472-A73C-5BEB04A5AB9C_1_105_c.jpg?width=1600
+web-festival-night.jpg   544547 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/DSC09856.jpg?width=1600
+web-guests.jpg   163832 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/A45A7661-4302-481F-9832-94509BCAF4D1_1_105_c.jpg?width=1600
+web-pizza-salami.jpg   475983 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/PIZZA_SALAMI.jpg?width=1600
+web-potjies.jpg   464363 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/0CCC8902-1876-44E7-8396-C7A83ED39EB9_1_102_o.jpg?width=1600
+web-catering-serve.jpg   496788 bytes  <- https://www.tommysugofood.co.za/cdn/shop/files/DSC09987.jpg?width=1600

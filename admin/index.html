@@ -192,6 +192,11 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 .dlg footer .right { display: flex; gap: 12px; margin-left: auto; }
 .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; align-items: end; }
 .yoco-links { display: flex; flex-direction: column; gap: 12px; }
+/* Orders: just this brand, or both stores (one kitchen makes both, and an order can hold both). */
+.scope-switch { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+.scope-switch .btn[aria-pressed="false"] { background: transparent; color: inherit; }
+.tag.brand-tommy { background: #000; color: #f2f2f2; }
+.tag.brand-merles { background: #f2f2f2; color: #000; border: 2px solid #000; }
 .orders { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .order { background: var(--raised); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
 .order-received { border: 3px solid #000; }
@@ -703,7 +708,11 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var ordersKnown = null; // order ids already seen, to flag new ones
   var ordersRows = [];
   var ordersCodes = {}; // what's been typed into each collection code box, kept across redraws
-  var ORDER_COLUMNS = "id,number,status,customer_name,customer_email,customer_phone,collect_from,total,payment_mode,created_at,paid_at,yoco_order_id,yoco_order_error,email_sent_at,email_error,order_lines(name,qty,unit_price,position)";
+  var ORDER_COLUMNS = "id,number,status,brands,customer_name,customer_email,customer_phone,collect_from,total,payment_mode,created_at,paid_at,yoco_order_id,yoco_order_error,email_sent_at,email_error,order_lines(brand,name,qty,unit_price,position)";
+  // "one": orders holding the selected brand (a mixed order shows for both brands). "both": every order, for one screen
+  // in the kitchen. Remembered on this computer.
+  var ordersScope = "one";
+  try { if (localStorage.getItem("orders-scope") === "both") ordersScope = "both"; } catch (e) {}
   var ORDER_ACTIVE = ["received", "preparing", "ready"];
   var ORDER_LABELS = { received: "New", preparing: "Preparing", ready: "Ready", collected: "Collected", cancelled: "Cancelled" };
 
@@ -737,8 +746,9 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       return;
     }
     // Paid orders only: unpaid ones, and ones released for not being paid in time, aren't the kitchen's business.
-    var res = await db.from("orders").select(ORDER_COLUMNS).eq("brand", brand).not("paid_at", "is", null)
-      .order("created_at", { ascending: false }).limit(100);
+    var query = db.from("orders").select(ORDER_COLUMNS).not("paid_at", "is", null);
+    query = ordersScope === "both" ? query.overlaps("brands", YOCO_BRANDS) : query.contains("brands", [brand]);
+    var res = await query.order("created_at", { ascending: false }).limit(100);
     if (seq !== loadSeq) return;
     if (res.error) {
       toast("Couldn't load orders: " + res.error.message, true);
@@ -763,6 +773,10 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   function orderCard(o) {
     var when = new Date(o.created_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" });
     var lines = (o.order_lines || []).slice().sort(function (a, b) { return a.position - b.position; });
+    var brands = o.brands && o.brands.length ? o.brands : [state.brand];
+    var mixed = brands.length > 1;
+    // Showing both stores, or an order holding both: say whose each order (and each line) is.
+    var brandTags = ordersScope === "both" || mixed ? brands.map(function (b) { return h("span", { class: "tag brand-" + b, text: brandInfo(b).label }); }) : [];
     var actions = h("div", { class: "order-actions" });
     function act(label, cls, action, extra, done) {
       var b = h("button", { class: "btn" + cls, type: "button", text: label, onclick: function () { runOrderAct(b, action, o.id, extra, done); } });
@@ -805,13 +819,15 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     }
     return h("li", { class: "order order-" + o.status }, [
       h("div", { class: "order-head" }, [
-        h("h3", {}, ["#" + o.number + " · " + o.customer_name]),
+        h("h3", {}, ["#" + o.number + " · " + o.customer_name])].concat(brandTags, [
         h("span", { class: "tag" + (o.status === "received" ? " sold" : ""), text: ORDER_LABELS[o.status] }),
         test ? h("span", { class: "tag", text: "Test" }) : null,
         o.yoco_order_id ? h("span", { class: "tag", text: "In Yoco" }) : null
-      ]),
+      ])),
       h("p", { class: "hint", text: when + (o.customer_phone ? " · " + o.customer_phone : "") + " · " + o.customer_email }),
-      h("ul", { class: "order-lines" }, lines.map(function (l) { return h("li", {}, [h("strong", { text: l.qty + " × " }), l.name]); })),
+      h("ul", { class: "order-lines" }, lines.map(function (l) {
+        return h("li", {}, [h("strong", { text: l.qty + " × " }), (mixed && l.brand ? brandInfo(l.brand).label + " · " : "") + l.name]);
+      })),
       h("p", { class: "order-total", text: "Total " + money(o.total) + (o.collect_from ? " · " + o.collect_from : "") })
     ].concat(problems, [actions.children.length ? actions : null]));
   }
@@ -819,6 +835,21 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   function drawOrders() {
     var box = $("panel");
     box.textContent = "";
+    function scopeBtn(scope, label) {
+      return h("button", { class: "btn small", type: "button", "aria-pressed": String(ordersScope === scope), text: label, onclick: function () {
+        if (ordersScope === scope) return;
+        ordersScope = scope;
+        try { localStorage.setItem("orders-scope", scope); } catch (e) {}
+        clearTimeout(ordersTimer);
+        ordersKnown = null; // a different list: don't call everything in it new
+        loadOrders(loadSeq, true);
+      } });
+    }
+    box.appendChild(h("div", { class: "scope-switch", role: "group", "aria-label": "Which orders to show" }, [
+      h("span", { class: "hint", text: "Show orders for" }),
+      scopeBtn("one", brandInfo(state.brand).label + " only"),
+      scopeBtn("both", "Both stores")
+    ]));
     var active = ordersRows.filter(function (o) { return ORDER_ACTIVE.indexOf(o.status) >= 0; })
       .sort(function (a, b) { return new Date(a.created_at) - new Date(b.created_at); });
     var done = ordersRows.filter(function (o) { return ORDER_ACTIVE.indexOf(o.status) < 0; });

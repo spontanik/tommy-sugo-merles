@@ -21,6 +21,9 @@
 }
 * { box-sizing: border-box; }
 body { background: var(--paper); color: var(--black); font-family: var(--merles-sans); font-size: 16px; line-height: 1.5; }
+/* On a laptop or desktop all four squares fit on one screen: the page is exactly the screen's height, the doors take
+   what the bottom row leaves, and their logos, headings and spacing scale with the height. A phone stacks them. */
+
 h1, h2 { text-wrap: balance; }
 a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 
@@ -29,10 +32,13 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 
 .doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 820px) { .doors { grid-template-columns: minmax(0, 1fr); } }
-.door { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center; min-height: 640px; padding-block: 72px; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+.door { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(8px, 1.8vh, 24px); text-align: center; min-height: 0; padding-block: clamp(12px, 3vh, 72px); padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
 .door .tag { margin: 0; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; }
-.door h1 { margin: 0; text-transform: uppercase; line-height: 1.02; font-size: clamp(40px, 5.2vw, 68px); max-width: 520px; }
-.door .lede { margin: 0; max-width: 420px; font-size: 18px; line-height: 1.45; }
+.door h1 { margin: 0; text-transform: uppercase; line-height: 1.02; font-size: clamp(26px, min(5.2vw, 5.7vh), 68px); max-width: 600px; }
+/* Door headings are always two lines, one per .line, so the two headings' lines sit level at any screen size. */
+.door h1 .line { display: block; white-space: nowrap; }
+.door .lede { margin: 0; max-width: 480px; font-size: clamp(14px, 2.1vh, 18px); line-height: 1.4; }
+@media (max-width: 820px) { .door { padding-block: 56px; gap: 20px; } .door h1 { font-size: clamp(26px, 8.4vw, 56px); } }
 .door .logo { display: block; }
 .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 28px; text-decoration: none; text-transform: uppercase; cursor: pointer; }
 
@@ -41,25 +47,81 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 .tommy .tag { font-family: var(--tommy-poster); font-weight: 600; color: var(--sauce); }
 .tommy h1 { font-family: var(--tommy-poster); font-weight: 700; letter-spacing: 0.01em; }
 .tommy .lede { color: var(--muted-on-black); font-weight: 500; }
-.tommy .logo { width: 200px; height: 200px; }
+.tommy .logo { width: clamp(64px, 14vh, 200px); height: clamp(64px, 14vh, 200px); }
+@media (max-width: 820px) { .tommy .logo { width: 160px; height: 160px; } }
 .tommy .btn { background: var(--sauce); color: var(--black); border: 2px solid var(--sauce); font-family: var(--tommy-poster); font-weight: 600; font-size: 18px; letter-spacing: 0.06em; }
 .tommy .btn:hover { background: var(--paper); border-color: var(--paper); }
 
 /* Merle's door */
-.merles { background: var(--paper); color: var(--black); border-left: 8px solid var(--black); }
-@media (max-width: 820px) { .merles { border-left: 0; border-top: 8px solid var(--black); } }
+/* No edge on the side: the split between the doors sits exactly in the middle, in line with the bottom row's. */
+.merles { background: var(--paper); color: var(--black); }
+@media (max-width: 820px) { .merles { border-top: 8px solid var(--black); } }
 .merles .tag { font-family: var(--merles-sans); font-weight: 800; letter-spacing: 0.28em; }
 .merles h1 { font-family: var(--merles-poster); font-weight: 400; }
 .merles .lede { color: var(--muted-on-paper); font-weight: 500; }
-.merles .logo { width: auto; height: 200px; max-width: 100%; }
+.merles .logo { width: auto; height: clamp(64px, 14vh, 200px); max-width: 100%; }
+@media (max-width: 820px) { .merles .logo { height: 160px; } }
 .merles .btn { background: var(--black); color: var(--paper); border: 3px solid var(--black); font-family: var(--merles-sans); font-weight: 800; font-size: 15px; letter-spacing: 0.08em; }
 .merles .btn:hover { background: var(--paper); color: var(--black); }
 
-.both { background: var(--black); color: var(--paper); border-top: 8px solid var(--sauce); }
-.both .wrap { max-width: 1200px; margin: 0 auto; padding-block: 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px 48px; }
-.both h2 { margin: 0; font-family: var(--tommy-poster); font-weight: 700; font-size: clamp(28px, 3.4vw, 40px); line-height: 1.1; text-transform: uppercase; letter-spacing: 0.01em; }
-.both p { margin: 0; max-width: 520px; color: var(--muted-on-black); font-family: var(--tommy-sans); }
-.both small { display: block; margin-top: 8px; font-size: 13px; color: var(--muted-on-black); }
+/* The bottom row, half the doors' height or less: two separate squares that checkerboard with the doors above.
+   Events, Trucks & Catering (left) wears Merle's colours, under Tommy Sugo's door; The Shop (right) wears Tommy Sugo's,
+   under Merle's. No photos: it stays as clean as the doors. */
+/* One sauce-red line runs right across above the row. On a phone the Shop comes before Events (Tommy, Merle's, Shop,
+   Events), with the same red line between them. */
+.both { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 8px solid var(--sauce); }
+@media (max-width: 820px) {
+  .both { grid-template-columns: minmax(0, 1fr); }
+  .shared.shop { order: -1; }
+  .shared.events { border-top: 8px solid var(--sauce); }
+}
+.shared { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(4px, 1.1vh, 12px); text-align: center; text-decoration: none; padding: clamp(14px, 2.6vh, 32px) max(24px, env(safe-area-inset-right, 0px)) clamp(14px, 2.6vh, 32px) max(24px, env(safe-area-inset-left, 0px)); }
+@media (max-width: 820px) { .shared { padding-block: 40px; } }
+.shared h2 { margin: 0; font-size: clamp(24px, min(3vw, 4.2vh), 40px); line-height: 1.02; max-width: 520px; }
+.shared p { margin: 0; max-width: 560px; font-size: clamp(14px, 1.9vh, 16px); line-height: 1.4; }
+
+
+/* Events in Merle's colours: paper, heavy black, Anton. */
+.shared.events { background: var(--paper); color: var(--black); }
+.shared.events h2 { font-family: var(--merles-poster); font-weight: 400; }
+.shared.events p { color: var(--muted-on-paper); font-family: var(--merles-sans); font-weight: 500; }
+.shared.events .btn { background: var(--black); color: var(--paper); border: 3px solid var(--black); font-family: var(--merles-sans); font-weight: 800; font-size: 14px; letter-spacing: 0.08em; }
+.shared.events:hover .btn { background: var(--paper); color: var(--black); }
+
+/* The Shop in Tommy Sugo's colours: black, sauce red, Oswald. */
+.shared.shop { background: var(--black); color: var(--paper); }
+.shared.shop h2 { font-family: var(--tommy-poster); font-weight: 700; text-transform: uppercase; letter-spacing: 0.01em; }
+.shared.shop p { color: var(--muted-on-black); font-family: var(--tommy-sans); font-weight: 500; }
+.shared.shop .btn { background: var(--sauce); color: var(--black); border: 2px solid var(--sauce); font-family: var(--tommy-poster); font-weight: 600; font-size: 17px; letter-spacing: 0.06em; }
+.shared.shop:hover .btn { background: var(--paper); border-color: var(--paper); }
+.footnote { margin: 0; background: var(--shade); color: var(--muted-on-paper); text-align: center; font-family: var(--tommy-sans); font-size: 12px; padding: 6px max(16px, env(safe-area-inset-left, 0px)); }
+@media (min-width: 821px) {
+  /* Below the top strip: the doors take exactly two thirds of the height and the bottom row one third, whatever the
+     screen (both measured outside edge to outside edge, red line included). Only if a square's content needs more
+     room than its share does that row grow. */
+  body { display: grid; grid-template-rows: auto 2fr 1fr auto; min-height: 100vh; min-height: 100dvh; }
+  /* Each pair of squares shares one set of rows (spacer, then logo / heading / text / button for the doors,
+     heading / text / button for the bottom row, then spacer). Every row is as tall as the taller square needs, so the
+     buttons, headings and logos line up across the pair however much text either square has. The spacers keep the
+     content centred in the square. */
+  .doors { grid-template-rows: 1fr auto auto auto auto 1fr; }
+  .both { grid-template-rows: 1fr auto auto auto 1fr; }
+  .door, .shared { grid-row: 1 / -1; display: grid; grid-template-rows: subgrid; justify-items: center; align-content: stretch; }
+  .door > *, .shared > * { align-self: start; }
+  .door > :nth-child(1), .shared > :nth-child(1) { grid-row: 2; align-self: end; }
+  .door > :nth-child(2), .shared > :nth-child(2) { grid-row: 3; }
+  .door > :nth-child(3), .shared > :nth-child(3) { grid-row: 4; }
+  .door > :nth-child(4), .shared > :nth-child(4) { grid-row: 5; }
+}
+@media (min-width: 821px) and (max-height: 700px) {
+  /* Short laptop screens: a little less padding everywhere so all four squares still fit without scrolling. */
+  .top { padding-block: 8px; }
+  .shared { padding-block: 10px; gap: 4px; }
+  .shared h2 { font-size: 24px; }
+  .footnote { padding-block: 3px; }
+}
+/* All four buttons are exactly the same size (width and height, border included), whatever their wording or brand. */
+.door .btn, .shared .btn { box-sizing: border-box; width: 264px; max-width: 100%; height: clamp(40px, 5.2vh, 52px); min-height: 0; padding: 0 16px; white-space: nowrap; }
 </style>
 
 <div class="top"><p>Pizza or schnitz? Why not both.</p></div>
@@ -67,28 +129,32 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 <main class="doors">
   <section class="door tommy" aria-labelledby="tommy-h">
     <img class="logo" src="tommy-seal.png" alt="Tommy Sugo Pizza seal: The Secret's in the Sauce">
-    <h1 id="tommy-h">Last night a pizza saved my life.</h1>
+    <h1 id="tommy-h"><span class="line">Last night a pizza</span> <span class="line">saved my life.</span></h1>
     <p class="lede">Hand-rolled thin bases and a 7-hour slow-cooked Roma tomato sauce. On the festival circuit, and delivered from our dark kitchen.</p>
     <a class="btn" href="tommy-sugo.html" data-site="tommy">Enter Tommy Sugo →</a>
   </section>
 
   <section class="door merles" aria-labelledby="merles-h">
     <img class="logo" src="merles-logo.svg" alt="Merle's Schnitz, Around the Corner">
-    <h1 id="merles-h">Let's get schnitzfaced.</h1>
+    <h1 id="merles-h"><span class="line">Let's get</span> <span class="line">schnitzfaced.</span></h1>
     <p class="lede">Proper chicken schnitz from a delivery kitchen. No counter, no queue, straight to your door.</p>
     <a class="btn" href="merles-schnitz.html" data-site="merles">Enter Merle's →</a>
   </section>
 </main>
 
-<section class="both" aria-label="Both kitchens">
-  <div class="wrap">
-    <h2>Two kitchens. One craving.</h2>
-    <div>
-      <p>Tommy Sugo pizza and Merle's schnitz both deliver on Uber Eats and Mr D. For the freezer, each has a shop: frozen pizza and the sauce, frozen schnitz and Merle's sauces.</p>
-      <small>Website prototype for the Tommy Sugo and Merle's teams. Prices, areas and links are placeholders.</small>
-    </div>
-  </div>
+<section class="both" aria-label="For both brands">
+  <a class="shared events" href="events.html" data-site="events" aria-labelledby="events-h">
+    <h2 id="events-h">Events, Trucks &amp; Catering</h2>
+    <p>Hire one truck or both, bring them to your festival, or have the whole day catered.</p>
+    <span class="btn">Plan Your Event →</span>
+  </a>
+  <a class="shared shop" href="shop.html" data-site="shop" aria-labelledby="shop-h">
+    <h2 id="shop-h">The Shop</h2>
+    <p>Frozen pizza, frozen schnitz and the sauces from both kitchens, in one order.</p>
+    <span class="btn">Shop Both →</span>
+  </a>
 </section>
+<p class="footnote">Website prototype for the Tommy Sugo and Merle's teams. Prices, areas and links are placeholders.</p>
 
 <script src="js/sites.js"></script>
 </body></html>

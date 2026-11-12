@@ -91,7 +91,8 @@ a { color: var(--ink); }
   function orderCard(o) {
     var li = el("li", "order");
     var head = el("div", "order-head");
-    head.appendChild(el("strong", null, (NAMES[o.brand] || "") + " · #" + o.number));
+    var names = (o.brands && o.brands.length ? o.brands : [o.brand]).map(function (b) { return NAMES[b] || b; }).join(" & ");
+    head.appendChild(el("strong", null, names + " · #" + o.number));
     var current = CURRENT.indexOf(o.status) >= 0 && o.status !== "pending_payment";
     head.appendChild(el("span", "status" + (current ? " live" : ""), LABELS[o.status] || o.status));
     li.appendChild(head);

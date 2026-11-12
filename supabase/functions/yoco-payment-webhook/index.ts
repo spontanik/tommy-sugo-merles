@@ -2,7 +2,7 @@
 // carry a valid signature. This, not the customer's return to the site, is what confirms an order.
 import { adminClient, BRANDS, getSecret } from "../_shared/yoco.ts";
 import { verifyWebhook } from "../_shared/yoco-catalogue.ts";
-import { recordInYoco, sendOrderEmail } from "../_shared/orders.ts";
+import { brandsPaidThrough, recordInYoco, sendOrderEmail } from "../_shared/orders.ts";
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Use POST.", { status: 405 });
@@ -29,7 +29,8 @@ Deno.serve(async (req) => {
     if (event.type !== "payment.succeeded") return new Response("ok");
     const orderId = payment.metadata?.orderId;
     const checkoutId = payment.metadata?.checkoutId;
-    const query = db.from("orders").select("id, brand, total, status").eq("brand", brand);
+    // This account's webhook confirms orders for every brand it takes payments for (Merle's pays through Tommy Sugo's).
+    const query = db.from("orders").select("id, brand, total, status").in("brand", brandsPaidThrough(brand));
     const { data: order, error } = await (orderId ? query.eq("id", orderId) : query.eq("checkout_id", checkoutId)).maybeSingle();
     if (error) throw new Error("Couldn't read the order.");
     if (!order) {
