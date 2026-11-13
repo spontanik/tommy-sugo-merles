@@ -1,4 +1,4 @@
-/* The events page hero: the Tommy Sugo truck drives in along the road under the buttons, stops in the empty right
+/* The events page hero: the Tommy Sugo truck drives in on its pizza wheels along the road under the buttons, stops in the empty right
    half (on a phone, in its own strip under the buttons), folds its hatch up into an awning and opens for service:
    oven glow, bunting bulbs, an OPEN sign and steam from the flue. It plays once, the first time the hero is on
    screen, then keeps a small idle loop while the hero is visible. People who ask for less motion see it parked and
@@ -70,6 +70,58 @@
     }
     el("path", { d: "M14 -222 L276 -222", stroke: "#f2f2f2", "stroke-width": 2, fill: "none" }, g);
   })();
+
+  // ---- Pizza wheels: each wheel is a small pizza drawn like the menu's pizza icons (black ink on paper, a crust band,
+  // salami rounds with four dots, olives, a basil leaf, eight cuts) inside a thin black tyre. It sits inside .spin,
+  // so the toppings roll. ----
+  function drawPizzaWheel(g, seed) {
+    var s = seed;
+    var rand = function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    var INK = "#000", PAPER = "#f2f2f2", R = 29;
+    var polar = function (r, a) { return [Math.cos(a) * r, Math.sin(a) * r]; };
+    var line = function (pts, close) { return "M" + pts.map(function (p) { return p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" L") + (close ? " Z" : ""); };
+    var jit = function (pts, amp) { return pts.map(function (p) { return [p[0] + (rand() - .5) * amp, p[1] + (rand() - .5) * amp]; }); };
+    var ring = function (r, n, wob) { var o = []; for (var j = 0; j < n; j++) { var a = j / n * Math.PI * 2; o.push(polar(r + (wob ? wob(a) : 0), a)); } return o; };
+    var ink = function (d, w, extra) { var a = { d: d, fill: "none", stroke: INK, "stroke-width": w, "stroke-linecap": "round", "stroke-linejoin": "round" }; for (var k in extra) a[k] = extra[k]; return el("path", a, g); };
+    var flick = function (x, y, ang, len, w) {
+      var x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+      var mx = (x + x2) / 2 + Math.cos(ang + 1.57) * len * .2, my = (y + y2) / 2 + Math.sin(ang + 1.57) * len * .2;
+      ink("M" + x.toFixed(1) + " " + y.toFixed(1) + " Q" + mx.toFixed(1) + " " + my.toFixed(1) + " " + x2.toFixed(1) + " " + y2.toFixed(1), w);
+    };
+    g.textContent = "";
+    // Sits inside a thin black tyre (r 30), so the pizza itself is a little smaller
+    g = el("g", { transform: "scale(.82)" }, g);
+    // The pizza: paper, wobbly ink rim, a lighter double-drawn rim inside it
+    ink(line(jit(ring(R, 30), .9), true), 2.2, { fill: PAPER });
+    ink(line(jit(ring(R - 3, 24), .7), true), .8);
+    // Inner edge of the crust, bumpy where the cheese meets it, and flicks in the crust band
+    var CR = R - 7;
+    ink(line(jit(ring(CR, 40, function (a) { return Math.sin(a * 23) * 1 + Math.sin(a * 9) * .6; }), .5), true), 1.2);
+    for (var k = 0; k < 16; k++) {
+      var fa = k / 16 * Math.PI * 2 + rand() * .2, fp = polar(CR + 1.5 + rand() * 2, fa);
+      flick(fp[0], fp[1], fa + Math.PI + (rand() - .5) * .8, 2.5 + rand() * 2, .8);
+    }
+    // Eight cuts, slightly wandering
+    for (k = 0; k < 4; k++) {
+      var ca = k * Math.PI / 4 + (rand() - .5) * .06, p0 = polar(-CR + 1, ca), p1 = polar(CR - 1, ca);
+      ink(line(jit([p0, [ (p0[0] + p1[0]) * .5, (p0[1] + p1[1]) * .5 ], p1], .9)), 1);
+    }
+    // Toppings: one per slice, salami and olives alternating, and a basil leaf near the middle
+    for (k = 0; k < 8; k++) {
+      var ta = (k + .5) * Math.PI / 4 + (rand() - .5) * .25, tr = k % 2 ? 14 + rand() * 3 : 12 + rand() * 3, tp = polar(tr, ta);
+      if (k % 2 === 0) {
+        ink(line(jit(ring(4.6, 12).map(function (p) { return [p[0] + tp[0], p[1] + tp[1]]; }), .5), true), 1.2, { fill: PAPER });
+        [[-1.5, -1.3], [1.6, -1.4], [-1.3, 1.6], [1.5, 1.3]].forEach(function (o) { el("circle", { cx: (tp[0] + o[0]).toFixed(1), cy: (tp[1] + o[1]).toFixed(1), r: .75, fill: INK }, g); });
+      } else {
+        el("circle", { cx: tp[0].toFixed(1), cy: tp[1].toFixed(1), r: 2.4, fill: INK }, g);
+        el("circle", { cx: tp[0].toFixed(1), cy: tp[1].toFixed(1), r: .9, fill: PAPER }, g);
+      }
+    }
+    var leaf = el("g", { transform: "rotate(" + (rand() * 360).toFixed(0) + ") translate(0 -4) scale(.42)" }, g);
+    el("path", { d: "M0 -13 Q9 -4 0 12 Q-9 -4 0 -13 Z", fill: PAPER, stroke: INK, "stroke-width": 2.6, "stroke-linejoin": "round" }, leaf);
+    el("path", { d: "M0 -9 L0 9 M0 -2 L-4 -6 M0 -2 L4 -6 M0 4 L-4 0 M0 4 L4 0", fill: "none", stroke: INK, "stroke-width": 1.8, "stroke-linecap": "round" }, leaf);
+  }
+  svg.querySelectorAll(".spin[data-pizza]").forEach(function (g) { drawPizzaWheel(g, +g.getAttribute("data-pizza")); });
 
   var bulbs = [];
   layout();
