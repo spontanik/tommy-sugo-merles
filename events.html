@@ -151,6 +151,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* Gallery: real photos, a mosaic on wide screens and two across on a phone. */
 .gallery { padding-block: 88px 0; } /* the enquiry form below brings its own space */
 .mosaic { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 200px; grid-auto-flow: dense; gap: 8px; }
+.gallery .more-link { align-self: flex-start; color: var(--black); font-weight: 700; min-height: 44px; display: inline-flex; align-items: center; }
 .mosaic img { width: 100%; height: 100%; object-fit: cover; }
 .mosaic .w { grid-column: span 2; }
 .mosaic .t { grid-row: span 2; }
@@ -194,6 +195,7 @@ footer small { color: var(--muted-on-black); }
     <nav aria-label="Main">
       <a href="events.html" data-site="events" aria-current="page">Events</a>
       <a href="#circuit" class="hide-sm">On the Circuit</a>
+      <a href="gallery.html" data-site="gallery" class="hide-sm">Gallery</a>
       <a href="shop.html" data-site="shop" class="hide-sm">Shop</a>
       <a href="tommy-sugo.html" data-site="tommy" class="hide-sm">Tommy Sugo</a>
       <a href="merles-schnitz.html" data-site="merles" class="hide-sm">Merle's</a>
@@ -400,6 +402,7 @@ footer small { color: var(--muted-on-black); }
       <div class="head">
         <p class="tag red">What it looks like</p>
         <h2 class="section-h" id="gallery-h">From the Truck to the Table</h2>
+        <a class="more-link" href="gallery.html" data-site="gallery">See the whole gallery →</a>
       </div>
       <div class="mosaic">
         <img class="w t" src="images/events/ts-08.jpg" alt="A grazing table of cheeses, cured meats, fruit and tomatoes" loading="lazy">
@@ -496,6 +499,7 @@ footer small { color: var(--muted-on-black); }
       <a href="merles-schnitz.html" data-site="merles">Merle's</a>
       <a href="shop.html" data-site="shop">Shop</a>
       <a href="#circuit">On the Circuit</a>
+      <a href="gallery.html" data-site="gallery">Gallery</a>
       <a href="#enquire">Enquire</a>
     </nav>
     <small>© 2026 Tommy Sugo &amp; Merle's</small>

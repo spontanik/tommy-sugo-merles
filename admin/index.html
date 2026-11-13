@@ -180,6 +180,11 @@ textarea.input { min-height: 88px; resize: vertical; }
 .match-row .price { text-align: right; font-family: var(--item-font); font-weight: var(--item-weight); letter-spacing: var(--item-track); font-variant-numeric: tabular-nums; }
 @media (max-width: 720px) { .match-row { grid-template-columns: minmax(0, 1fr) 72px; } .match-row select { grid-column: 1 / -1; } }
 
+/* Gallery: photos fill their square, and a rule marks where the page's first 15 end. */
+.row .thumb.photo { object-fit: cover; }
+.fold-line { list-style: none; display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.fold-line::before, .fold-line::after { content: ""; flex: 1; border-top: 2px dashed #000; }
+
 /* Dialogs */
 dialog { border: 2px solid #000; padding: 0; width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); background: var(--ground); color: var(--ink); }
 dialog.narrow { width: min(460px, calc(100vw - 32px)); }
@@ -288,6 +293,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       <button class="tab" type="button" role="tab" id="tab-menu" data-view-btn="menu" aria-controls="panel" aria-selected="false">Menu</button>
       <button class="tab" type="button" role="tab" id="tab-shop" data-view-btn="shop" aria-controls="panel" aria-selected="false">Shop</button>
       <button class="tab" type="button" role="tab" id="tab-events" data-view-btn="events" aria-controls="panel" aria-selected="false">Events</button>
+      <button class="tab" type="button" role="tab" id="tab-gallery" data-view-btn="gallery" aria-controls="panel" aria-selected="false">Gallery</button>
       <button class="tab" type="button" role="tab" id="tab-settings" data-view-btn="settings" aria-controls="panel" aria-selected="false">Settings</button>
     </div>
     <div id="panel" role="tabpanel"></div>
@@ -393,6 +399,45 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   </form>
 </dialog>
 
+<dialog id="gal-dlg">
+  <form class="dlg" id="gal-form" method="dialog" novalidate>
+    <header><h2 id="gal-title">Edit photo</h2><button class="btn ghost" type="button" id="gal-close">Close</button></header>
+    <div class="body">
+      <div class="fld">
+        <span class="lbl">Photo</span>
+        <div class="img-edit">
+          <div id="g-img-box"></div>
+          <div class="ctrls">
+            <input type="file" id="g-file" accept="image/png,image/jpeg,image/webp" hidden>
+            <button class="btn ghost" type="button" id="g-upload">Upload photo</button>
+            <p class="hint">JPG, PNG or WebP, up to 5 MB. About 1600 pixels across is plenty.</p>
+          </div>
+        </div>
+      </div>
+      <div class="fld"><label for="g-alt">What it shows</label><input class="input" id="g-alt" required><p class="hint">For screen readers, e.g. “The team setting out a grazing table”.</p></div>
+      <div class="price-grid">
+        <div class="fld"><label for="g-shape">Size in the grid</label>
+          <select class="input" id="g-shape">
+            <option value="square">Square, one block</option>
+            <option value="wide">Wide, two across</option>
+            <option value="tall">Tall, two down</option>
+            <option value="big">Big, two by two</option>
+          </select></div>
+        <div class="fld"><label for="g-pos">Position</label><input class="input" id="g-pos" type="number" inputmode="numeric" min="1" step="1"><p class="hint" id="g-pos-hint"></p></div>
+      </div>
+      <label class="check"><input type="checkbox" id="g-hidden"><span>Hide from the site<small>Keeps the photo here without showing it in the gallery.</small></span></label>
+      <p class="msg err" id="g-err" role="alert" hidden></p>
+    </div>
+    <footer>
+      <button class="btn ghost" type="button" id="g-delete">Delete</button>
+      <div class="right">
+        <button class="btn ghost" type="button" id="g-cancel">Cancel</button>
+        <button class="btn save" type="submit" id="g-save">Save</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
+
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="../js/sites.js"></script>
@@ -435,7 +480,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var YOCO_COLS = { price: "yoco_id" }; // the website prices that can follow a Yoco item
 
   function parseRoute(hash) {
-    var m = /^#(tommy|merles)\/(orders|menu|shop|events|settings)$/.exec(hash || "");
+    var m = /^#(tommy|merles)\/(orders|menu|shop|events|gallery|settings)$/.exec(hash || "");
     return m ? { brand: m[1], view: m[2] } : null;
   }
 
@@ -670,6 +715,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var hash = state.view === "menu" || state.view === "shop" ? "#" + state.view : "";
     // On spontanik.co.za each brand has its own subdomain, so the page set in Settings only matters elsewhere.
     $("view-site").href = state.view === "events" ? window.Sites.url("events", "#circuit")
+      : state.view === "gallery" ? window.Sites.url("gallery")
       : window.Sites.live ? window.Sites.url(brand, hash) : "../" + info.page + hash;
     saveRoute();
   }
@@ -694,7 +740,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var r = parseRoute(location.hash);
     if (!r || $("app").hidden) return;
     // A save in an open dialog goes to the current brand and view, so they can't change underneath it.
-    if ($("dlg").open || $("sec-dlg").open || $("ev-dlg").open) { saveRoute(); return; }
+    if ($("dlg").open || $("sec-dlg").open || $("ev-dlg").open || $("gal-dlg").open) { saveRoute(); return; }
     go(r);
   });
 
@@ -726,6 +772,16 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       eventsMissing = !!ev.error && (ev.error.code === "42P01" || ev.error.code === "PGRST205");
       if (ev.error && !eventsMissing) toast("Couldn't load events: " + ev.error.message, true);
       drawEvents();
+      return;
+    }
+    if (view === "gallery") {
+      var gp = await db.from("gallery_photos").select("*").order("sort_order").order("created_at");
+      if (seq !== loadSeq) return;
+      drawChrome();
+      photos = gp.error ? null : gp.data;
+      photosMissing = !!gp.error && (gp.error.code === "42P01" || gp.error.code === "PGRST205");
+      if (gp.error && !photosMissing) toast("Couldn't load photos: " + gp.error.message, true);
+      drawGallery();
       return;
     }
     if (view === "settings") {
@@ -1910,6 +1966,168 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     if (res.error) { $("e-err").textContent = "Couldn't delete: " + res.error.message; $("e-err").hidden = false; return; }
     evDlg.close();
     toast("Deleted " + row.name + ".");
+    load();
+  });
+
+  // ---------- Gallery tab ----------
+  // The photos on the gallery page (gallery.html), in this order. The page shows the first 15, then 15 more at a time.
+  var GALLERY_PAGE = 15;
+  var SHAPE_TEXT = { square: "Square", wide: "Wide", tall: "Tall", big: "Big" };
+  var photos = null; // rows from gallery_photos, or null if they couldn't be read
+  var photosMissing = false;
+  var galEdit = { row: null, src: null };
+
+  function photoRow(r, i) {
+    return h("li", { class: "row" + (r.is_hidden ? " is-hidden" : "") }, [
+      h("img", { class: "thumb photo", src: src(r.src), alt: "", loading: "lazy" }),
+      h("div", { class: "main" }, [
+        h("div", { class: "name" }, [String(i + 1) + ". " + r.alt, r.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null]),
+        h("p", { class: "sub", text: SHAPE_TEXT[r.shape] || r.shape })
+      ]),
+      h("div", { class: "prices" }),
+      h("div", { class: "actions" }, [
+        h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move photo " + (i + 1) + " up", "data-focus": r.id + ":up", disabled: i === 0, onclick: function () { movePhoto(i, i - 1, r.id + ":up"); } }, ["↑"]),
+        h("button", { class: "btn ghost icon-btn", type: "button", "aria-label": "Move photo " + (i + 1) + " down", "data-focus": r.id + ":down", disabled: i === photos.length - 1, onclick: function () { movePhoto(i, i + 1, r.id + ":down"); } }, ["↓"]),
+        h("button", { class: "btn", type: "button", "aria-label": "Edit photo " + (i + 1) + ", " + r.alt, onclick: function () { openPhoto(r); } }, ["Edit"])
+      ])
+    ]);
+  }
+
+  function drawGallery(focusKey) {
+    var box = $("panel");
+    box.textContent = "";
+    if (!photos) {
+      box.appendChild(h("p", { class: "notice", text: photosMissing
+        ? "The gallery can't be edited yet: the gallery_photos table isn't in the database. Until that migration is applied, the gallery page shows the photos written into it."
+        : "The gallery can't be edited right now: the photos couldn't be read. Try again in a moment." }));
+      return;
+    }
+    box.appendChild(h("div", { class: "panel-top" }, [
+      h("button", { class: "btn", type: "button", onclick: function () { openPhoto(null); } }, ["+ Add photo"])
+    ]));
+    box.appendChild(h("p", { class: "section-note", text: "The gallery page shows these in this order: the first " + GALLERY_PAGE + ", then " + GALLERY_PAGE + " more each time someone taps Show more photos. Hidden photos are skipped." }));
+    var shown = photos.filter(function (r) { return !r.is_hidden; }).length;
+    var list = h("ul", { class: "rows" });
+    var visible = 0;
+    photos.forEach(function (r, i) {
+      list.appendChild(photoRow(r, i));
+      if (!r.is_hidden && ++visible === GALLERY_PAGE && shown > GALLERY_PAGE) {
+        list.appendChild(h("li", { class: "fold-line", text: "Above: the first " + GALLERY_PAGE + " on the page" }));
+      }
+    });
+    box.appendChild(h("section", { class: "section" }, [
+      h("div", { class: "section-head" }, [h("h2", {}, ["Photos", h("span", { class: "count", text: plural(shown, "photo") + " on the site" })])]),
+      photos.length ? list : h("p", { class: "empty-row", text: "No photos yet." })
+    ]));
+    refocus(focusKey);
+  }
+
+  // Puts the photo at `from` at `to` and renumbers them all 10, 20, 30…, saving only the ones that changed.
+  async function reorderPhotos(from, to) {
+    var moved = photos.splice(from, 1)[0];
+    photos.splice(to, 0, moved);
+    var changes = [];
+    photos.forEach(function (r, k) { var want = (k + 1) * 10; if (r.sort_order !== want) { r.sort_order = want; changes.push(r); } });
+    var results = await Promise.all(changes.map(function (r) {
+      return db.from("gallery_photos").update({ sort_order: r.sort_order }).eq("id", r.id);
+    }));
+    return results.filter(function (x) { return x.error; })[0];
+  }
+
+  async function movePhoto(from, to, focusKey) {
+    if (to < 0 || to >= photos.length) return;
+    var bad = await reorderPhotos(from, to);
+    if (bad) { toast("Couldn't save the new order: " + bad.error.message, true); load(); return; }
+    drawGallery(focusKey);
+  }
+
+  var galDlg = $("gal-dlg");
+
+  function drawPhoto() {
+    var box = $("g-img-box");
+    box.textContent = "";
+    box.appendChild(galEdit.src ? h("img", { class: "preview", src: src(galEdit.src), alt: "" }) : h("div", { class: "noimg", text: "No photo yet" }));
+    $("g-upload").textContent = galEdit.src ? "Replace photo" : "Upload photo";
+  }
+
+  function openPhoto(row) {
+    galEdit = { row: row, src: row ? row.src : null };
+    var n = photos.length + (row ? 0 : 1);
+    var at = row ? photos.indexOf(row) + 1 : n;
+    $("gal-title").textContent = row ? "Edit photo " + at : "New photo";
+    $("g-alt").value = row ? row.alt : "";
+    $("g-shape").value = row ? row.shape : "square";
+    $("g-pos").value = at;
+    $("g-pos").max = n;
+    $("g-pos-hint").textContent = "1 is first. 1 to " + n + ".";
+    $("g-hidden").checked = row ? !!row.is_hidden : false;
+    $("g-err").hidden = true;
+    $("g-delete").hidden = !row;
+    $("g-save").disabled = false;
+    drawPhoto();
+    galDlg.showModal();
+    (row ? $("g-alt") : $("g-upload")).focus();
+  }
+
+  $("gal-close").addEventListener("click", function () { galDlg.close(); });
+  $("g-cancel").addEventListener("click", function () { galDlg.close(); });
+  $("g-upload").addEventListener("click", function () { $("g-file").click(); });
+  $("g-file").addEventListener("change", async function () {
+    var file = this.files[0];
+    this.value = "";
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast("That photo is over 5 MB. Try a smaller one.", true); return; }
+    var safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+    var path = "gallery/" + Date.now() + "-" + safe;
+    $("g-upload").disabled = true;
+    $("g-upload").textContent = "Uploading…";
+    var res = await db.storage.from("item-images").upload(path, file, { cacheControl: "31536000", contentType: file.type });
+    $("g-upload").disabled = false;
+    if (res.error) { drawPhoto(); toast("Upload failed: " + res.error.message, true); return; }
+    galEdit.src = db.storage.from("item-images").getPublicUrl(path).data.publicUrl;
+    drawPhoto();
+  });
+
+  $("gal-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var err = $("g-err");
+    err.hidden = true;
+    function fail(text, id) { err.textContent = text; err.hidden = false; if (id) $(id).focus(); }
+    var row = galEdit.row;
+    var n = photos.length + (row ? 0 : 1);
+    var pos = parseInt($("g-pos").value, 10);
+    if (!galEdit.src) return fail("Upload a photo first.", "g-upload");
+    var data = { src: galEdit.src, alt: $("g-alt").value.trim(), shape: $("g-shape").value, is_hidden: $("g-hidden").checked };
+    if (!data.alt) return fail("Say what the photo shows. Screen readers read it out.", "g-alt");
+    if (!(pos >= 1 && pos <= n)) return fail("The position should be from 1 to " + n + ".", "g-pos");
+    $("g-save").disabled = true;
+    var res;
+    if (row) {
+      res = await db.from("gallery_photos").update(data).eq("id", row.id);
+    } else {
+      data.sort_order = photos.reduce(function (m, r) { return Math.max(m, r.sort_order); }, 0) + 10;
+      res = await db.from("gallery_photos").insert(data).select().single();
+    }
+    if (res.error) { $("g-save").disabled = false; return fail("Couldn't save: " + res.error.message); }
+    var saved = row ? Object.assign(row, data) : res.data;
+    if (!row) photos.push(saved);
+    var from = photos.indexOf(saved);
+    var bad = from !== pos - 1 ? await reorderPhotos(from, pos - 1) : null;
+    $("g-save").disabled = false;
+    galDlg.close();
+    if (bad) toast("Saved, but couldn't move it: " + bad.error.message, true);
+    else toast(row ? "Saved photo " + pos + "." : "Added the photo at " + pos + ".");
+    load();
+  });
+
+  $("g-delete").addEventListener("click", async function () {
+    var row = galEdit.row;
+    if (!row) return;
+    if (!confirm("Delete this photo from the gallery for good? To take it off the site but keep it here, tick Hide instead.")) return;
+    var res = await db.from("gallery_photos").delete().eq("id", row.id);
+    if (res.error) { $("g-err").textContent = "Couldn't delete: " + res.error.message; $("g-err").hidden = false; return; }
+    galDlg.close();
+    toast("Deleted the photo.");
     load();
   });
 
