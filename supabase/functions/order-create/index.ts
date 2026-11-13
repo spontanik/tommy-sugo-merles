@@ -1,16 +1,18 @@
 // Called by the checkout on a brand page. Public, so nothing from the request is trusted: prices come from the database.
-// Deploy with verify_jwt off. Saves the order as awaiting payment, reserves its counted shop items, and returns Yoco's
-// payment page. The reservation holds until the order is paid, cancelled, or left unpaid for UNPAID_MINUTES.
+// Deploy with verify_jwt off. Saves the order as awaiting payment, reserves its counted shop items, and returns the
+// payment page: PayFast's when the paying account has PayFast set up, otherwise Yoco Checkout's. The reservation holds
+// until the order is paid, cancelled, or left unpaid for UNPAID_MINUTES.
 // A signed-in customer sends their session as the Authorization bearer, and the order is linked to their account.
 // Without one (or if it has run out) the order is placed without an account, as before.
 // One order can hold both brands (each line says its brand), collected from the one kitchen and paid in one go through
-// Tommy Sugo's Yoco account. body.brand is the page it came from: "tommy", "merles", or "both" (the combined shop).
+// Tommy Sugo's account. body.brand is the page it came from: "tommy", "merles", or "both" (the combined shop).
 import { adminClient, BRANDS, getSecret } from "../_shared/yoco.ts";
 import { OrderError, priceOrder, type RequestedLine } from "../_shared/order-pricing.ts";
-import { accountOf, checkoutFetch, CORS, orderLink, reply, siteUrl } from "../_shared/orders.ts";
+import { accountOf, checkoutFetch, CORS, getPayfast, orderLink, reply, shopName, siteUrl } from "../_shared/orders.ts";
+import { checkoutUrl, PAYFAST_MIN_CENTS, signedCheckoutQuery, splitName } from "../_shared/payfast.ts";
 
 const LOCAL = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/;
-const MIN_CENTS = 200; // Yoco doesn't accept less
+const YOCO_MIN_CENTS = 200; // Yoco doesn't accept less
 const UNPAID_MINUTES = 30; // an unpaid order's stock is released after this (also in the expire-unpaid-orders job)
 const clean = (value: unknown, max: number) => String(value ?? "").trim().slice(0, max);
 
@@ -52,8 +54,9 @@ Deno.serve(async (req) => {
     ? (await db.auth.getUser(bearer).catch(() => null))?.data?.user?.id ?? null
     : null;
   try {
-    const key = await getSecret(db, accountOf(brand), "checkout_key");
-    if (!key) return reply({ ok: false, error: "Online payments aren't switched on yet. Please order in person or call us." });
+    const payfast = await getPayfast(db, accountOf(brand));
+    const key = payfast ? null : await getSecret(db, accountOf(brand), "checkout_key");
+    if (!payfast && !key) return reply({ ok: false, error: "Online payments aren't switched on yet. Please order in person or call us." });
 
     // Release stock held by orders nobody paid for, so it counts as available for this one.
     const expired = await db.rpc("expire_unpaid_orders", { p_minutes: UNPAID_MINUTES });
@@ -70,10 +73,11 @@ Deno.serve(async (req) => {
     ]);
     if (menu.error || shop.error) throw new Error("Couldn't read the menu.");
     const { lines, totalCents } = priceOrder(requested, menu.data, shop.data, pageBrand);
-    if (totalCents < MIN_CENTS) throw new OrderError("Online orders need to be at least R2.");
+    const minCents = payfast ? PAYFAST_MIN_CENTS : YOCO_MIN_CENTS;
+    if (totalCents < minCents) throw new OrderError(`Online orders need to be at least R${minCents / 100}.`);
 
-    // A test key can return to a local copy of the site, so checkout can be tried before it's published.
-    const isTest = key.startsWith("sk_test");
+    // A test setup can return to a local copy of the site, so checkout can be tried before it's published.
+    const isTest = payfast ? payfast.mode === "sandbox" : key!.startsWith("sk_test");
     const base = isTest && LOCAL.test(String(body.returnBase)) ? body.returnBase : siteUrl(brands.length > 1 ? "both" : brand);
     const accessToken = randomHex(32);
     const { data: order, error } = await db.from("orders").insert({
@@ -87,6 +91,8 @@ Deno.serve(async (req) => {
       collect_from: clean(body.collectFrom, 200) || null,
       total: totalCents / 100,
       customer_id: customerId,
+      payment_provider: payfast ? "payfast" : "yoco",
+      payment_mode: isTest ? "test" : "live",
     }).select("id, number").single();
     if (error) throw new Error("Couldn't save your order.");
     const saved = await db.from("order_lines").insert(lines.map((l) => ({ ...l, order_id: order.id })));
@@ -106,7 +112,26 @@ Deno.serve(async (req) => {
 
     try {
       const link = orderLink(accessToken, base);
-      const checkout = await checkoutFetch(key, "/checkouts", {
+      if (payfast) {
+        const { first, last } = splitName(name);
+        const url = checkoutUrl(payfast.mode, signedCheckoutQuery({
+          merchant_id: payfast.merchantId,
+          merchant_key: payfast.merchantKey,
+          return_url: link,
+          cancel_url: `${link}&paid=cancelled`,
+          notify_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/payfast-notify`,
+          name_first: first.slice(0, 100),
+          name_last: last.slice(0, 100),
+          email_address: email.slice(0, 100),
+          m_payment_id: order.id,
+          amount: (totalCents / 100).toFixed(2),
+          item_name: `${shopName({ brand, brands })} order #${order.number}`.slice(0, 100),
+          item_description: lines.map((l) => `${l.qty} × ${l.name}`).join(", ").slice(0, 255),
+        }, payfast.passphrase));
+        await db.from("orders").update({ checkout_url: url }).eq("id", order.id);
+        return reply({ ok: true, redirectUrl: url });
+      }
+      const checkout = await checkoutFetch(key!, "/checkouts", {
         method: "POST",
         headers: { "Idempotency-Key": order.id },
         body: JSON.stringify({

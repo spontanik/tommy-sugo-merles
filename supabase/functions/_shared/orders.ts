@@ -1,6 +1,7 @@
-// Shared by the order functions: what happens once an order is paid, and the Yoco Checkout API.
+// Shared by the order functions: what happens once an order is paid, PayFast's settings and the Yoco Checkout API.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.95.0";
 import { getApiKey, getSecret, yocoJson } from "./yoco.ts";
+import type { PayfastMode } from "./payfast.ts";
 
 // Each brand's site, where its order links and Yoco Checkout return. Only deploy the order functions with these once
 // the subdomains are live: until then, orders would link to addresses that don't open.
@@ -11,13 +12,13 @@ const SITE_URLS: Record<string, string> = {
 export const siteUrl = (brand: string) => SITE_URLS[brand] ?? "https://spontanik.co.za";
 
 // Both brands take payments, receive the payment webhook and send order emails through Tommy Sugo's setup (Merle's
-// sells through Tommy Sugo's Yoco account). An order holding both brands is filed under that account's brand.
+// sells through Tommy Sugo's Yoco and PayFast accounts). An order holding both brands is filed under that account's brand.
 const PAYS_THROUGH: Record<string, string> = { tommy: "tommy", merles: "tommy" };
 export const accountOf = (brand: string) => PAYS_THROUGH[brand] ?? "tommy";
 export const brandsPaidThrough = (account: string) => Object.keys(PAYS_THROUGH).filter((b) => PAYS_THROUGH[b] === account);
 export const CHECKOUT_API = "https://payments.yoco.com/api";
 
-const BRAND_NAMES: Record<string, string> = { tommy: "Tommy Sugo", merles: "Merle's" };
+export const BRAND_NAMES: Record<string, string> = { tommy: "Tommy Sugo", merles: "Merle's" };
 // "Tommy Sugo", or "Tommy Sugo & Merle's" for an order holding both.
 // deno-lint-ignore no-explicit-any
 export const shopName = (order: any) =>
@@ -50,6 +51,20 @@ export async function checkoutFetch(key: string, path: string, init: RequestInit
       : body.message ?? `Yoco Checkout returned an error (${res.status}).`);
   }
   return body;
+}
+
+// The PayFast details of an account (a brand in PAYS_THROUGH's values), or null when PayFast isn't set up there.
+export async function getPayfast(db: SupabaseClient, account: string) {
+  const { data, error } = await db.from("yoco_connections")
+    .select("payfast_merchant_id, payfast_merchant_key, payfast_mode").eq("brand", account).maybeSingle();
+  if (error) throw new Error("Couldn't read the PayFast details.");
+  if (!data?.payfast_merchant_id) return null;
+  return {
+    merchantId: data.payfast_merchant_id as string,
+    merchantKey: data.payfast_merchant_key as string,
+    mode: data.payfast_mode as PayfastMode,
+    passphrase: await getSecret(db, account, "payfast_passphrase"),
+  };
 }
 
 export async function sendEmail(

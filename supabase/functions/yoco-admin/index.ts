@@ -11,7 +11,8 @@ import {
   setSecret,
   yocoJson,
 } from "../_shared/yoco.ts";
-import { checkoutFetch, sendEmail } from "../_shared/orders.ts";
+import { accountOf, BRAND_NAMES, checkoutFetch, getPayfast, sendEmail } from "../_shared/orders.ts";
+import { checkoutUrl, type PayfastMode, signedCheckoutQuery } from "../_shared/payfast.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -84,7 +85,14 @@ Deno.serve(async (req) => {
         keyError = (e as Error).message;
       }
     }
-    return { ok: true, connection, keySource: source, keyError, locations };
+    // PayFast is set on the account that takes the payments, which for Merle's is Tommy Sugo's.
+    const account = accountOf(brand);
+    const payfast = await getPayfast(db, account);
+    return {
+      ok: true, connection, keySource: source, keyError, locations,
+      payfast: payfast ? { mode: payfast.mode } : null,
+      paysThrough: account === brand ? null : BRAND_NAMES[account],
+    };
   };
 
   try {
@@ -204,6 +212,42 @@ Deno.serve(async (req) => {
         await setSecret(db, brand, "checkout_key", null);
         await setSecret(db, brand, "checkout_webhook_secret", null);
         await updateConnection({ checkout_key_hint: null, checkout_mode: null, checkout_webhook_id: null });
+        return reply(await describe());
+      }
+
+      case "save_payfast": {
+        if (accountOf(brand) !== brand) return reply({ ok: false, error: `Set PayFast up in ${BRAND_NAMES[accountOf(brand)]}'s Settings.` });
+        const merchantId = String(body.merchant_id ?? "").trim();
+        const merchantKey = String(body.merchant_key ?? "").trim();
+        const newPassphrase = String(body.passphrase ?? "").trim();
+        const mode: PayfastMode | null = body.mode === "live" ? "live" : body.mode === "sandbox" ? "sandbox" : null;
+        if (!/^[0-9]{1,12}$/.test(merchantId)) return reply({ ok: false, error: "Add the merchant ID: the number in PayFast's Settings." });
+        if (!/^[A-Za-z0-9]{1,40}$/.test(merchantKey)) return reply({ ok: false, error: "Add the merchant key from PayFast's Settings." });
+        if (!mode) return reply({ ok: false, error: "Choose live or sandbox." });
+        const passphrase = newPassphrase || await getSecret(db, brand, "payfast_passphrase");
+        if (!passphrase) return reply({ ok: false, error: "Add the passphrase. Set one in PayFast under Settings, then Developer Settings." });
+        // A signed R5 payment link proves PayFast accepts these details. Nobody pays it, so nothing is charged.
+        const check = await fetch(checkoutUrl(mode, signedCheckoutQuery({
+          merchant_id: merchantId, merchant_key: merchantKey, amount: "5.00", item_name: "Settings check",
+        }, passphrase)), { redirect: "manual" });
+        await check.body?.cancel();
+        if (check.status !== 302) {
+          return reply({ ok: false, error: `PayFast didn't accept these details for ${mode}. Check the merchant ID, key and passphrase.` });
+        }
+        if (newPassphrase) await setSecret(db, brand, "payfast_passphrase", newPassphrase);
+        await updateConnection({
+          payfast_merchant_id: merchantId,
+          payfast_merchant_key: merchantKey,
+          payfast_mode: mode,
+          ...(newPassphrase ? { payfast_passphrase_hint: newPassphrase.slice(-2) } : {}),
+        });
+        return reply(await describe());
+      }
+
+      case "remove_payfast": {
+        if (accountOf(brand) !== brand) return reply({ ok: false, error: `Change PayFast in ${BRAND_NAMES[accountOf(brand)]}'s Settings.` });
+        await setSecret(db, brand, "payfast_passphrase", null);
+        await updateConnection({ payfast_merchant_id: null, payfast_merchant_key: null, payfast_mode: null, payfast_passphrase_hint: null });
         return reply(await describe());
       }
 

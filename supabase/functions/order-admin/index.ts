@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
       await sendOrderEmail(db, order);
       return reply({ ok: true });
     case "send_to_yoco":
+      if (order.payment_provider === "payfast") return reply({ ok: false, error: "PayFast orders aren't sent to Yoco: Yoco is only for events." });
       if (order.yoco_order_id) return reply({ ok: false, error: "This order is already in Yoco." });
       if (order.status === "pending_payment") return reply({ ok: false, error: "This order hasn't been paid." });
       await recordInYoco(db, order);

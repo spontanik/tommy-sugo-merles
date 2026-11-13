@@ -146,8 +146,12 @@ location for recording sales.
 - The admin's **Orders** tab shows the selected brand's orders (including mixed ones) or, with **Both stores**, every
   order for the one kitchen. Each order then carries brand tags, and a mixed order's lines say whose they are.
 
-1. `order-create` prices the cart again from the database, saves the order as awaiting payment, and sends the customer to Yoco Checkout.
-2. `yoco-payment-webhook` confirms the payment. Only this moves an order on: the customer returning to the site proves nothing. It emails the customer their link and collection code, and records live orders in Yoco.
+Website orders are paid through **PayFast**, so Yoco only takes payments at events. PayFast is set up in Tommy Sugo's
+**Settings** (merchant ID, merchant key, passphrase, and sandbox or live), and `orders.payment_provider` records who took
+each payment. Yoco Checkout is only used if PayFast's details are removed.
+
+1. `order-create` prices the cart again from the database, saves the order as awaiting payment, and sends the customer to PayFast with a signed payment link (`_shared/payfast.ts`), or to Yoco Checkout as the fallback.
+2. `payfast-notify` confirms a PayFast payment: the signature must match, PayFast must confirm it sent the notification, and the amount must be the order's total. Only this moves an order on: the customer returning to the site proves nothing. It emails the customer their link and collection code. PayFast orders aren't recorded in Yoco. Deployed with `verify_jwt` off, like the other order functions. (`yoco-payment-webhook` does the same for Yoco Checkout orders, and records live ones in Yoco.)
 3. `order.html` is the customer's page, reached by a private link. It shows the code and the order's progress.
 4. The **Orders** tab in the admin moves an order through Preparing and Ready. Marking it collected needs the customer's code, which staff can't see.
 

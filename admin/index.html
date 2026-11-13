@@ -708,7 +708,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var ordersKnown = null; // order ids already seen, to flag new ones
   var ordersRows = [];
   var ordersCodes = {}; // what's been typed into each collection code box, kept across redraws
-  var ORDER_COLUMNS = "id,number,status,brands,customer_name,customer_email,customer_phone,collect_from,total,payment_mode,created_at,paid_at,yoco_order_id,yoco_order_error,email_sent_at,email_error,order_lines(brand,name,qty,unit_price,position)";
+  var ORDER_COLUMNS = "id,number,status,brands,customer_name,customer_email,customer_phone,collect_from,total,payment_mode,payment_provider,created_at,paid_at,yoco_order_id,yoco_order_error,email_sent_at,email_error,order_lines(brand,name,qty,unit_price,position)";
   // "one": orders holding the selected brand (a mixed order shows for both brands). "both": every order, for one screen
   // in the kitchen. Remembered on this computer.
   var ordersScope = "one";
@@ -795,10 +795,12 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       } });
       actions.appendChild(h("div", { class: "fld order-code" }, [h("label", { for: codeId, text: "Customer's collection code" }), h("div", { class: "inline" }, [input, collect])]));
     }
+    var payfast = o.payment_provider === "payfast";
+    var refundIn = payfast ? "PayFast" : "Yoco";
     if (ORDER_ACTIVE.indexOf(o.status) >= 0) {
       var cancel = h("button", { class: "btn ghost", type: "button", text: "Cancel order", onclick: function () {
-        if (!confirm("Cancel order #" + o.number + "? This doesn't refund the customer: do that in Yoco.")) return;
-        runOrderAct(cancel, "cancel", o.id, null, "Order #" + o.number + " cancelled, and its shop items are back in stock. Remember to refund it in Yoco.");
+        if (!confirm("Cancel order #" + o.number + "? This doesn't refund the customer: do that in " + refundIn + ".")) return;
+        runOrderAct(cancel, "cancel", o.id, null, "Order #" + o.number + " cancelled, and its shop items are back in stock. Remember to refund it in " + refundIn + ".");
       } });
       actions.appendChild(cancel);
     }
@@ -810,7 +812,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     }
     if (o.yoco_order_error) problems.push(h("p", { class: "notice", text: "Not recorded in Yoco: " + o.yoco_order_error }));
     var test = o.payment_mode === "test";
-    if (!o.yoco_order_id && o.status !== "cancelled" && (o.yoco_order_error || test)) {
+    if (!payfast && !o.yoco_order_id && o.status !== "cancelled" && (o.yoco_order_error || test)) {
       var toYoco = h("button", { class: "btn ghost", type: "button", text: "Send to Yoco", onclick: function () {
         if (test && !confirm("Send this test order to Yoco? It creates a real open order there, marked unpaid, which you'll need to void.")) return;
         runOrderAct(toYoco, "send_to_yoco", o.id, null);
@@ -822,6 +824,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
         h("h3", {}, ["#" + o.number + " · " + o.customer_name])].concat(brandTags, [
         h("span", { class: "tag" + (o.status === "received" ? " sold" : ""), text: ORDER_LABELS[o.status] }),
         test ? h("span", { class: "tag", text: "Test" }) : null,
+        payfast ? h("span", { class: "tag", text: "PayFast" }) : null,
         o.yoco_order_id ? h("span", { class: "tag", text: "In Yoco" }) : null
       ])),
       h("p", { class: "hint", text: when + (o.customer_phone ? " · " + o.customer_phone : "") + " · " + o.customer_email }),
@@ -1469,11 +1472,52 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     box.appendChild(yocoConnection(st, conn));
     box.appendChild(yocoSync(st, conn));
     box.appendChild(yocoMatching());
-    box.appendChild(yocoPayments(conn));
+    box.appendChild(payfastPayments(st, conn));
+    box.appendChild(yocoPayments(st, conn));
     box.appendChild(yocoEmails(conn));
   }
 
-  function yocoPayments(conn) {
+  function payfastPayments(st, conn) {
+    var intro = h("p", { class: "hint", text: "Website orders are paid through PayFast, so Yoco only handles payments at events. While PayFast is on, Yoco Checkout below isn't used." });
+    if (st.paysThrough) {
+      var via = st.payfast ? "Merle's takes payments through " + st.paysThrough + "'s PayFast (" + (st.payfast.mode === "live" ? "live" : "sandbox") + ")."
+        : "Merle's takes payments through " + st.paysThrough + "'s setup, which has no PayFast details yet.";
+      return yocoCard("PayFast", [h("p", { class: "yoco-status", text: via }), h("p", { class: "hint", text: "Change it in " + st.paysThrough + "'s Settings." })]);
+    }
+    var own = !!conn.payfast_merchant_id;
+    var id = h("input", { class: "input", id: "pf-id", type: "text", inputmode: "numeric", autocomplete: "off", spellcheck: "false", placeholder: "e.g. 10000100", value: conn.payfast_merchant_id || "" });
+    var key = h("input", { class: "input", id: "pf-key", type: "text", autocomplete: "off", spellcheck: "false", value: conn.payfast_merchant_key || "" });
+    var pass = h("input", { class: "input", id: "pf-pass", type: "password", autocomplete: "new-password", spellcheck: "false", placeholder: conn.payfast_passphrase_hint ? "Saved, ending ••" + conn.payfast_passphrase_hint : "Paste the passphrase" });
+    var mode = h("select", { class: "input", id: "pf-mode" }, [
+      h("option", { value: "sandbox", text: "Sandbox: test payments, no real money", selected: conn.payfast_mode !== "live" }),
+      h("option", { value: "live", text: "Live: customers pay real money", selected: conn.payfast_mode === "live" })
+    ]);
+    var save = h("button", { class: "btn", type: "button", text: own ? "Save changes" : "Save and switch on", onclick: function () {
+      if (mode.value === "live" && conn.payfast_mode !== "live" && !confirm("Switch to live? Customers will pay real money through PayFast.")) return;
+      yocoAct(save, "Checking with PayFast…", async function () {
+        await yoco("save_payfast", { merchant_id: id.value, merchant_key: key.value, passphrase: pass.value, mode: mode.value });
+      }, "PayFast details saved.");
+    } });
+    var remove = own ? h("button", { class: "btn ghost", type: "button", text: "Remove", onclick: function () {
+      if (!confirm("Remove the PayFast details? Website payments will fall back to Yoco Checkout if it's set up, or stop.")) return;
+      yocoAct(remove, "Removing…", async function () { await yoco("remove_payfast"); }, "PayFast details removed.");
+    } }) : null;
+    var line = !own ? "PayFast is off."
+      : conn.payfast_mode === "live" ? "Live: customers pay through PayFast with real money."
+      : "Sandbox: customers go to PayFast's test site and no real money is taken.";
+    return yocoCard("PayFast", [
+      h("p", { class: "yoco-status", text: line }),
+      intro,
+      h("div", { class: "fld" }, [h("label", { for: "pf-mode", text: "Mode" }), mode]),
+      h("div", { class: "fld" }, [h("label", { for: "pf-id", text: "Merchant ID" }), id]),
+      h("div", { class: "fld" }, [h("label", { for: "pf-key", text: "Merchant key" }), key]),
+      h("div", { class: "fld" }, [h("label", { for: "pf-pass", text: "Passphrase" }), pass,
+        h("p", { class: "hint", text: "All three are in PayFast under Settings, then Developer Settings. Set a passphrase there if there isn't one. Sandbox details are on sandbox.payfast.co.za. Saving checks them with PayFast; nothing is charged." })]),
+      h("div", { class: "inline" }, [save, remove])
+    ]);
+  }
+
+  function yocoPayments(st, conn) {
     var input = h("input", { class: "input", id: "checkout-key", type: "password", autocomplete: "new-password", spellcheck: "false", placeholder: "Paste a secret key (sk_test or sk_live)" });
     var save = h("button", { class: "btn", type: "button", text: conn.checkout_key_hint ? "Replace key" : "Save key", onclick: function () {
       var value = input.value.trim();
@@ -1484,10 +1528,11 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       if (!confirm("Remove the Checkout key? Customers won't be able to pay online until a new one is saved.")) return;
       yocoAct(remove, "Removing…", async function () { await yoco("remove_checkout_key"); }, "Checkout key removed.");
     } }) : null;
-    var line = !conn.checkout_key_hint ? "Online payments are off: customers can't check out yet."
+    var line = st.payfast ? "Not in use: PayFast takes website payments." + (conn.checkout_key_hint ? " Key ending " + conn.checkout_key_hint + " is kept as a fallback." : "")
+      : !conn.checkout_key_hint ? "Online payments are off: customers can't check out yet."
       : conn.checkout_mode === "live" ? "Live: customers pay real money. Key ending " + conn.checkout_key_hint + "."
       : "Test mode: no real money is taken. Key ending " + conn.checkout_key_hint + ".";
-    return yocoCard("Online Payments", [
+    return yocoCard("Yoco Checkout (fallback)", [
       h("p", { class: "yoco-status", text: line }),
       h("div", { class: "fld" }, [h("label", { for: "checkout-key", text: "Yoco Checkout secret key" }), h("div", { class: "inline" }, [input, save, remove]),
         h("p", { class: "hint", text: "In the Yoco App: Checkout API, then How to connect. This is a different key from the API key above. Live keys appear once Yoco approves your website's domain." })])
