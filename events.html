@@ -55,10 +55,21 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .bar nav a.btn { color: var(--black); min-height: 44px; font-size: 15px; padding: 0 18px; }
 @media (max-width: 640px) { .bar nav .hide-sm { display: none; } }
 
-/* Hero: words on black. */
-.hero { background: var(--black); color: var(--paper); }
-.hero .wrap { padding-block: 80px 88px; }
-@media (max-width: 880px) { .hero .wrap { padding-block: 48px 56px; } }
+/* Hero: words on black, and the truck. On wide screens the words take the left half and the truck parks in the right;
+   its road runs just under the buttons, so it drives in behind the words. On narrower screens the truck has its own
+   strip under the buttons. js/truck-arrival.js lays the drawing out to match and runs it. */
+.hero { background: var(--black); color: var(--paper); position: relative; overflow: hidden; }
+.hero .wrap { position: relative; z-index: 1; padding-block: 80px 96px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; }
+.truck-slot { min-width: 0; }
+@media (max-width: 999px) {
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-block: 48px 56px; }
+  .truck-slot { height: 300px; }
+}
+.truck-stage { position: absolute; inset: 0; z-index: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
+.truck-stage .ink { fill: var(--black); stroke: var(--paper); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.truck-stage .ink-line { fill: none; stroke: var(--paper); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.truck-stage .reg { fill: none; stroke: var(--sauce); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.truck-stage .thin { stroke-width: 2; }
 .hero h1 { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(44px, 7vw, 88px); line-height: 0.98; text-transform: uppercase; max-width: 15ch; }
 .hero .copy { display: flex; flex-direction: column; gap: 22px; align-items: flex-start; }
 .hero .lede { color: var(--muted-on-black); }
@@ -220,7 +231,138 @@ footer small { color: var(--muted-on-black); }
           <a class="btn btn-line" href="#offer">What We Do</a>
         </div>
       </div>
+      <div class="truck-slot" id="truck-slot" aria-hidden="true"></div>
     </div>
+    <!-- The truck: drawn here, laid out and moved by js/truck-arrival.js. -->
+  <svg id="tk-stage" class="truck-stage" viewBox="0 0 1200 600" preserveAspectRatio="xMinYMin meet" role="img" aria-labelledby="tk-stage-title">
+    <title id="tk-stage-title">The Tommy Sugo pizza truck drives in along the road, stops, and lifts its serving hatch to open for service.</title>
+    <defs>
+      <clipPath id="tk-window-clip"><rect x="30" y="-188" width="230" height="80"/></clipPath>
+      <clipPath id="tk-awning-clip"><polygon points="30,-188 260,-188 274,-236 16,-236"/></clipPath>
+      <radialGradient id="tk-glow" cx="50%" cy="40%" r="70%">
+        <stop offset="0" stop-color="#ff5a3c" stop-opacity=".55"/>
+        <stop offset="1" stop-color="#ec1c24" stop-opacity="0"/>
+      </radialGradient>
+
+      <!-- Shapes drawn twice: once in red, a little off-register, then in paper over a black fill. -->
+      <g id="tk-body-shapes">
+        <rect x="0" y="-200" width="300" height="160"/>
+        <path d="M300 -40 L300 -165 L340 -165 L372 -112 L386 -107 L386 -40 Z"/>
+        <rect x="278" y="-222" width="16" height="22"/>
+        <rect x="272" y="-228" width="28" height="6"/>
+        <rect x="378" y="-54" width="14" height="12"/>
+      </g>
+      <g id="tk-wheel-shapes">
+        <circle cx="0" cy="0" r="30"/>
+      </g>
+      <g id="tk-awning-shapes">
+        <polygon points="30,-188 260,-188 274,-236 16,-236"/>
+      </g>
+    </defs>
+
+    <!-- Festival bunting strung across the top; its bulbs come on when the truck opens. -->
+    <g id="tk-bunting"></g>
+
+    <!-- The road -->
+    <g id="tk-road">
+      <path class="ink-line" id="tk-road-line" d=""/>
+      <g id="tk-dashes" fill="#f2f2f2" opacity=".55"></g>
+    </g>
+
+    <g id="tk-puffs"></g>
+
+    <g id="tk-truck">
+      <g id="tk-body">
+        <use href="#tk-body-shapes" class="reg" transform="translate(3.5 3)"/>
+        <use href="#tk-body-shapes" class="ink"/>
+
+        <!-- Windscreen, door, lights -->
+        <path d="M308 -156 L336 -156 L362 -114 L308 -114 Z" fill="#1d1d1b" stroke="#f2f2f2" stroke-width="3" stroke-linejoin="round"/>
+        <path class="ink-line thin" d="M318 -150 L332 -150"/>
+        <path class="ink-line" d="M306 -106 L306 -46 M314 -84 L326 -84"/>
+        <rect x="378" y="-98" width="8" height="12" fill="#f2f2f2"/>
+        <rect id="tk-tail" x="-5" y="-94" width="6" height="16" fill="#ec1c24"/>
+        <path class="ink-line thin" d="M-2 -46 L-10 -46"/>
+
+        <!-- Lettering on the lower panel -->
+        <text x="124" y="-70" fill="#f2f2f2" font-family="Oswald, 'Arial Narrow', Impact, sans-serif" font-weight="700" font-size="30" letter-spacing="1.5">TOMMY SUGO</text>
+        <text x="125" y="-52" fill="#ec1c24" font-family="Oswald, 'Arial Narrow', Impact, sans-serif" font-weight="600" font-size="11.5" letter-spacing="2.6">PIZZA · ON THE CIRCUIT</text>
+
+        <!-- Inside: seen once the hatch lifts -->
+        <g clip-path="url(#tk-window-clip)">
+          <rect x="30" y="-188" width="230" height="80" fill="#2a0608"/>
+          <rect x="44" y="-178" width="86" height="40" fill="#000" stroke="#f2f2f2" stroke-width="2"/>
+          <path class="ink-line thin" d="M52 -168 L104 -168 M52 -158 L118 -158 M52 -148 L92 -148"/>
+          <rect x="156" y="-180" width="88" height="62" fill="#000" stroke="#f2f2f2" stroke-width="2.5"/>
+          <rect x="172" y="-152" width="56" height="26" fill="#160304" stroke="#f2f2f2" stroke-width="2"/>
+          <g id="tk-flame">
+            <polygon points="178,-126 186,-146 192,-131 199,-150 206,-131 213,-144 221,-126" fill="#ec1c24"/>
+            <polygon points="186,-126 192,-138 199,-129 206,-140 213,-126" fill="#ff8a5c"/>
+          </g>
+          <rect id="tk-glow-rect" x="30" y="-188" width="230" height="80" fill="url(#tk-glow)" opacity="0"/>
+        </g>
+
+        <!-- Counter ledge -->
+        <rect x="24" y="-112" width="242" height="7" fill="#f2f2f2"/>
+        <g id="tk-boxes" opacity="0">
+          <rect x="60" y="-121" width="40" height="9" fill="#f2f2f2"/>
+          <rect x="64" y="-130" width="36" height="9" fill="#f2f2f2" stroke="#000" stroke-width="1"/>
+          <path d="M226 -112 L240 -126 L254 -112 Z" fill="#ec1c24"/>
+        </g>
+
+        <!-- The hatch, closed: hinged along its top edge. It folds up and becomes the awning. -->
+        <g id="tk-hatch">
+          <rect class="reg" x="33.5" y="-185" width="230" height="80"/>
+          <rect class="ink" x="30" y="-188" width="230" height="80"/>
+          <path class="ink-line thin" d="M36 -183 L254 -183"/>
+          <image href="images/truck-seal.png" x="113" y="-182" width="68" height="68"/>
+          <rect x="238" y="-126" width="14" height="5" fill="#f2f2f2"/>
+        </g>
+
+        <!-- The awning: the hatch's underside, propped open -->
+        <g id="tk-awning">
+          <use href="#tk-awning-shapes" class="reg" transform="translate(3.5 3)"/>
+          <use href="#tk-awning-shapes" class="ink"/>
+          <g clip-path="url(#tk-awning-clip)" id="tk-stripes"></g>
+          <use href="#tk-awning-shapes" fill="none" stroke="#f2f2f2" stroke-width="3" stroke-linejoin="round"/>
+        </g>
+        <g id="tk-struts" opacity="0">
+          <path class="ink-line thin" d="M34 -110 L19 -233 M256 -110 L271 -233"/>
+        </g>
+
+        <!-- OPEN sign, swinging from the awning -->
+        <g id="tk-sign" opacity="0">
+          <path class="ink-line thin" d="M214 -236 L218 -216 M246 -236 L242 -216"/>
+          <rect x="210" y="-217" width="40" height="18" fill="#ec1c24" stroke="#000" stroke-width="1.5"/>
+          <text x="230" y="-204" text-anchor="middle" fill="#000" font-family="Oswald, 'Arial Narrow', Impact, sans-serif" font-weight="700" font-size="11" letter-spacing="1.2">OPEN</text>
+        </g>
+
+        <!-- Wheel arches, cut out of the body -->
+        <circle cx="75" cy="-30" r="37" fill="#000"/>
+        <circle cx="335" cy="-30" r="37" fill="#000"/>
+        <path class="ink-line" d="M38 -40 A37 37 0 0 1 112 -40 M298 -40 A37 37 0 0 1 372 -40"/>
+      </g>
+
+      <g id="tk-steam"></g>
+
+      <g class="wheel" transform="translate(75 -30)">
+        <use href="#tk-wheel-shapes" class="reg" transform="translate(3 2.5)"/>
+        <use href="#tk-wheel-shapes" class="ink" style="fill:#121211"/>
+        <g class="spin">
+          <circle r="11" fill="none" stroke="#f2f2f2" stroke-width="2.5"/>
+          <path class="ink-line thin" d="M0 -11 L0 -24 M0 11 L0 24 M-11 0 L-24 0 M11 0 L24 0"/>
+        </g>
+      </g>
+      <g class="wheel" transform="translate(335 -30)">
+        <use href="#tk-wheel-shapes" class="reg" transform="translate(3 2.5)"/>
+        <use href="#tk-wheel-shapes" class="ink" style="fill:#121211"/>
+        <g class="spin">
+          <circle r="11" fill="none" stroke="#f2f2f2" stroke-width="2.5"/>
+          <path class="ink-line thin" d="M0 -11 L0 -24 M0 11 L0 24 M-11 0 L-24 0 M11 0 L24 0"/>
+        </g>
+      </g>
+    </g>
+  </svg>
   </section>
 
   <section class="offer" id="offer" aria-labelledby="offer-h">
@@ -493,6 +635,7 @@ footer small { color: var(--muted-on-black); }
 <script src="js/supabase-config.js"></script>
 <script src="js/circuit.js"></script>
 <script src="js/gallery.js"></script>
+<script src="js/truck-arrival.js"></script>
 <script>
 (function () {
   // Like the brand pages' enquiry forms, this doesn't send anywhere yet: it checks the details and says thanks.
