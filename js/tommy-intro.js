@@ -1,9 +1,9 @@
 /* The landing page's Tommy Sugo door, introduced: a terminal cursor types five dots and deletes them, then types
    "Last night a pizza saved my life." while eight pizza slices (drawn like the menu's pizza icons) drop from the top
    of the door into the seal's place. They snap together, the pizza spins up and flips over into the seal, the line
-   about the bases and the Enter button fade up, and Tommy winks.
+   about the bases and the Enter button fade up; a second after the spin ends, Tommy winks.
 
-   - Plays at half speed, once per visit (a return to the landing page in the same tab session shows the door as is).
+   - Plays once per visit (a return to the landing page in the same tab session shows the door as is).
    - People who ask their device for less motion, and anyone without scripts, see the door exactly as it was.
    - A click or a key press on the door skips to the end.
    - Everything is in its final place from the start, just hidden, so nothing on the page moves when it finishes.
@@ -39,13 +39,14 @@
   function polar(r, a) { return [Math.cos(a) * r, Math.sin(a) * r]; }
 
   // ---- Timeline, in ms at full speed; it plays at SPEED ----
-  var SPEED = 0.5;
+  var SPEED = 1;
   var DOTS = 5, DOT_AT = 300, DOT_EVERY = 160, DOTS_GONE = [1500, 1800];
   var TYPE_AT = 1900, CHAR = 70;
   var ORDER = [0, 4, 2, 6, 1, 5, 3, 7], STAGGER = 260, FALL = 600, FALL_AT = 1900;
   var SNAP = [4350, 4600], SPIN = [4650, 6050], FLIP = [5350, 5850], LAND = [6050, 6400];
-  var LEDE = [6300, 6800], BTN = [6700, 7200], CURSOR_GONE = 6300, WINK = [7350, 7490], SPARKLE = [7360, 7720];
-  var TOTAL = 7800, TURNS = 3;
+  // The wink comes 1 s after the spin ends, just after the Enter button appears.
+  var LEDE = [6300, 6800], BTN = [6700, 7200], CURSOR_GONE = 6300, WINK = [7050, 7190], SPARKLE = [7060, 7420];
+  var TOTAL = 7500, TURNS = 3;
 
   // ---- Build the eight slices once, drawn like the menu's pizza icons ----
   // Black ink, hand-drawn (every line wobbles a little), on a paper-white pizza; a crust band of grass-like flicks;
