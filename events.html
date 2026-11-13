@@ -345,21 +345,14 @@ footer small { color: var(--muted-on-black); }
 
       <g id="tk-steam"></g>
 
+      <!-- Wheels: thin black tyres with a pizza in each, drawn by js/truck-arrival.js inside .spin so the toppings roll. -->
       <g class="wheel" transform="translate(75 -30)">
-        <use href="#tk-wheel-shapes" class="reg" transform="translate(3 2.5)"/>
         <use href="#tk-wheel-shapes" class="ink" style="fill:#121211"/>
-        <g class="spin">
-          <circle r="11" fill="none" stroke="#f2f2f2" stroke-width="2.5"/>
-          <path class="ink-line thin" d="M0 -11 L0 -24 M0 11 L0 24 M-11 0 L-24 0 M11 0 L24 0"/>
-        </g>
+        <g class="spin" data-pizza="3"></g>
       </g>
       <g class="wheel" transform="translate(335 -30)">
-        <use href="#tk-wheel-shapes" class="reg" transform="translate(3 2.5)"/>
         <use href="#tk-wheel-shapes" class="ink" style="fill:#121211"/>
-        <g class="spin">
-          <circle r="11" fill="none" stroke="#f2f2f2" stroke-width="2.5"/>
-          <path class="ink-line thin" d="M0 -11 L0 -24 M0 11 L0 24 M-11 0 L-24 0 M11 0 L24 0"/>
-        </g>
+        <g class="spin" data-pizza="11"></g>
       </g>
     </g>
   </svg>
