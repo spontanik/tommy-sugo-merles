@@ -151,7 +151,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* Gallery: real photos, a mosaic on wide screens and two across on a phone. */
 .gallery { padding-block: 88px 0; } /* the enquiry form below brings its own space */
 .mosaic { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 200px; grid-auto-flow: dense; gap: 8px; }
-.gallery .more-link { align-self: flex-start; color: var(--black); font-weight: 700; min-height: 44px; display: inline-flex; align-items: center; }
+/* On this page, a preview: 8 equal tiles, four across (two on a phone), then the way to the gallery page. */
+.mosaic.preview { grid-auto-flow: row; }
+.gallery-more { display: flex; justify-content: center; margin-top: 32px; }
+.btn-dark { background: var(--black); border-color: var(--black); color: var(--paper); }
+.btn-dark:hover { background: var(--sauce); border-color: var(--sauce); color: var(--black); }
 .mosaic img { width: 100%; height: 100%; object-fit: cover; }
 .mosaic .w { grid-column: span 2; }
 .mosaic .t { grid-row: span 2; }
@@ -402,40 +406,19 @@ footer small { color: var(--muted-on-black); }
       <div class="head">
         <p class="tag red">What it looks like</p>
         <h2 class="section-h" id="gallery-h">From the Truck to the Table</h2>
-        <a class="more-link" href="gallery.html" data-site="gallery">See the whole gallery →</a>
       </div>
-      <div class="mosaic">
-        <img class="w t" src="images/events/ts-08.jpg" alt="A grazing table of cheeses, cured meats, fruit and tomatoes" loading="lazy">
+      <!-- The first 8 photos from the Gallery tab in /admin (js/gallery.js); these stay if that can't load. -->
+      <div class="mosaic preview" data-gallery-preview="8">
+        <img src="images/events/ts-08.jpg" alt="A grazing table of cheeses, cured meats, fruit and tomatoes" loading="lazy">
         <img src="images/events/web-truck-festival.jpg" alt="The Tommy Sugo truck serving at a summer festival" loading="lazy">
         <img src="images/events/ts-22.jpg" alt="The chef at work in the kitchen" loading="lazy">
         <img src="images/events/web-pizza-salami.jpg" alt="A Tommy Sugo salami pizza, fresh from the oven" loading="lazy">
         <img src="images/events/ts-20.jpg" alt="Bowls of fresh salad ready for service" loading="lazy">
-        <img class="w" src="images/events/ts-27.jpg" alt="Guests at a long candle-lit dinner table" loading="lazy">
+        <img src="images/events/ts-27.jpg" alt="Guests at a long candle-lit dinner table" loading="lazy">
         <img src="images/events/ts-25.jpg" alt="A plated main course with roast vegetables" loading="lazy">
-        <img class="t" src="images/events/ts-06.jpg" alt="A board of cured meats, cheeses, grapes and rosemary" loading="lazy">
-        <img class="t" src="images/events/ts-01.jpg" alt="The team setting out a grazing table" loading="lazy">
-        <img src="images/events/web-truck-team.jpg" alt="The Tommy Sugo team in front of the truck" loading="lazy">
-        <img class="t" src="images/events/ts-11.jpg" alt="A guest laughing as she serves herself at the grazing table" loading="lazy">
-        <img src="images/events/web-potjies.jpg" alt="Potjies cooking over the fire" loading="lazy">
-        <img class="w" src="images/events/ts-02.jpg" alt="The team behind a long grazing table" loading="lazy">
-        <img src="images/events/web-festival-night.jpg" alt="A festival at night, lit up in orange and red" loading="lazy">
-        <img src="images/events/ts-16.jpg" alt="Plating salads for a catered event" loading="lazy">
-        <img class="w" src="images/events/ts-24.jpg" alt="The team gathered in the kitchen before service" loading="lazy">
-        <img src="images/events/web-guests.jpg" alt="Guests enjoying pizza at an outdoor event" loading="lazy">
-        <img src="images/events/ts-23.jpg" alt="A plated dish with green beans and carrots" loading="lazy">
-        <img class="w" src="images/events/web-truck-event.jpg" alt="The Tommy Sugo truck at an outdoor event, guests gathered around" loading="lazy">
-        <img src="images/events/ts-14.jpg" alt="A grazing table with bread, dips and fresh vegetables" loading="lazy">
-        <img src="images/events/web-catering-serve.jpg" alt="The team serving guests at a catered event" loading="lazy">
-        <img class="t" src="images/events/ts-12.jpg" alt="A young guest choosing from the grazing table" loading="lazy">
-        <img class="w t" src="images/events/web-truck.jpg" alt="The Tommy Sugo food truck, black with the red seal, parked under trees" loading="lazy">
-        <img src="images/events/web-truck-crowd.jpg" alt="Guests ordering at the Tommy Sugo food truck at an outdoor event" loading="lazy">
-        <img class="t" src="images/events/ts-05.jpg" alt="The chef finishing a grazing table as the team looks on" loading="lazy">
-        <img src="images/events/ts-10.jpg" alt="Long grazing tables laid out at an outdoor catered event" loading="lazy">
-        <img class="w" src="images/events/ts-17.jpg" alt="Bowls of salad set out beside the chafing dishes" loading="lazy">
-        <img class="w" src="images/events/web-truck-queue.jpg" alt="A busy crowd around the Tommy Sugo truck at a festival" loading="lazy">
-        <img src="images/events/ts-04.jpg" alt="The team laying out a grazing table at an event" loading="lazy">
-        <img class="w" src="images/events/ts-26.jpg" alt="A plate being finished with an edible flower" loading="lazy">
+        <img src="images/events/ts-06.jpg" alt="A board of cured meats, cheeses, grapes and rosemary" loading="lazy">
       </div>
+      <div class="gallery-more"><a class="btn btn-dark" href="gallery.html" data-site="gallery">View More Photos</a></div>
     </div>
   </section>
 
@@ -509,6 +492,7 @@ footer small { color: var(--muted-on-black); }
 <script src="js/sites.js"></script>
 <script src="js/supabase-config.js"></script>
 <script src="js/circuit.js"></script>
+<script src="js/gallery.js"></script>
 <script>
 (function () {
   // Like the brand pages' enquiry forms, this doesn't send anywhere yet: it checks the details and says thanks.

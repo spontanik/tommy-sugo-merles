@@ -2005,7 +2005,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     box.appendChild(h("div", { class: "panel-top" }, [
       h("button", { class: "btn", type: "button", onclick: function () { openPhoto(null); } }, ["+ Add photo"])
     ]));
-    box.appendChild(h("p", { class: "section-note", text: "The gallery page shows these in this order: the first " + GALLERY_PAGE + ", then " + GALLERY_PAGE + " more each time someone taps Show more photos. Hidden photos are skipped." }));
+    box.appendChild(h("p", { class: "section-note", text: "The gallery page shows these in this order: the first " + GALLERY_PAGE + ", then " + GALLERY_PAGE + " more each time someone taps Show more photos. The catering page shows the first 8, all the same size. Hidden photos are skipped." }));
     var shown = photos.filter(function (r) { return !r.is_hidden; }).length;
     var list = h("ul", { class: "rows" });
     var visible = 0;
