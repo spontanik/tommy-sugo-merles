@@ -3,7 +3,7 @@
    of the door into the seal's place. They snap together, the pizza spins up and flips over into the seal, the line
    about the bases and the Enter button fade up; a second after the spin ends, Tommy winks.
 
-   - Plays once per visit (a return to the landing page in the same tab session shows the door as is).
+   - Plays every time the landing page loads, reloads included.
    - People who ask their device for less motion, and anyone without scripts, see the door exactly as it was.
    - A click or a key press on the door skips to the end.
    - Everything is in its final place from the start, just hidden, so nothing on the page moves when it finishes.
@@ -14,10 +14,7 @@
   var logo = $("ti-logo");
   if (!logo) return;
   var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var KEY = "tommy-intro-seen", seen = false;
-  try { seen = sessionStorage.getItem(KEY) === "1"; } catch (e) {}
-  if (reduce || seen) return;
-  try { sessionStorage.setItem(KEY, "1"); } catch (e) {}
+  if (reduce) return;
 
   function el(tag, attrs, parent) {
     var e = document.createElementNS(NS, tag);
