@@ -124,6 +124,7 @@ products.
 - An item linked to Yoco offers Yoco's variants and modifiers when added, using Yoco's required and maximum selections. Each combination is its own line in the cart.
 - The item editor has a switch for each variant, modifier group and modifier, per item. Medium variants and the Package group start off (`OFF_BY_DEFAULT` in `_shared/yoco-catalogue.ts`), and everything else starts on.
 - At a brand connected to Yoco, a menu item only shows while it's linked to a Yoco item that still exists. The database enforces this (`menu_items.yoco_listed`). Shop items aren't covered.
+- Both menus show one price per item, the Collect price. Uber Eats and Mr D set their own, so a Deliver price kept in the admin isn't shown on the site.
 - Menu items are collection only. Any food in the cart makes the whole order a collection from the kitchen: the Delivery / Collect choice isn't shown, and shop items (frozen pizzas, sauce) in that order are collected with it.
 - Delivery is only offered when the cart holds nothing but shop items. Those orders can also choose Collect.
 - Sold-out shop items can't be added. Add buttons only appear with live data, so the static fallback can't take food orders.
