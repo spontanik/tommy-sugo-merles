@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gallery · Tommy Sugo &amp; Merle's</title>
+<meta name="description" content="Photos from the Tommy Sugo and Merle's trucks, festivals, grazing tables and catered events.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700&family=Oswald:wght@600;700&display=swap">
+<style>
+/* The photo gallery, on the main address (spontanik.co.za/gallery.html), styled like the events page it grew out of.
+   The photos and their order are set in the Gallery tab in /admin; js/gallery.js shows 15 at a time. */
+:root {
+  --black: #000000;
+  --paper: #f2f2f2;
+  --shade: #d3d2d2;
+  --muted-on-black: #d3d2d2;
+  --muted-on-paper: #4a4a48;
+  --sauce: #ec1c24;
+  --poster: Oswald, "Arial Narrow", Impact, sans-serif;
+  --sans: Archivo, "Helvetica Neue", Arial, sans-serif;
+  --merles-poster: Impact, Anton, "Arial Narrow", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+body { margin: 0; background: var(--paper); color: var(--black); font-family: var(--sans); font-size: 17px; line-height: 1.55; }
+img { max-width: 100%; display: block; }
+h1, h2, h3 { text-wrap: balance; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--sauce); outline-offset: 3px; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 720px) { .wrap { padding-left: 40px; padding-right: 40px; } }
+.tag { margin: 0; font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.red { color: var(--sauce); }
+.section-h { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(32px, 5vw, 52px); line-height: 1.05; text-transform: uppercase; letter-spacing: 0.01em; }
+.lede { margin: 0; font-size: 19px; max-width: 620px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 26px; font-family: var(--poster); font-size: 18px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; text-decoration: none; cursor: pointer; border: 2px solid var(--sauce); background: var(--sauce); color: var(--black); }
+.btn:hover { background: var(--paper); border-color: var(--paper); }
+.btn-line { background: transparent; color: var(--paper); border-color: var(--paper); }
+.btn-line:hover { background: var(--paper); color: var(--black); }
+.btns { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* Header: pinned, so Enquire is always one tap away. */
+.bar { position: sticky; top: 0; z-index: 20; background: var(--black); color: var(--paper); border-bottom: 4px solid var(--sauce); }
+.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px 24px; min-height: 68px; flex-wrap: wrap; padding-block: 8px; }
+.brandmark { color: var(--paper); text-decoration: none; font-family: var(--poster); font-weight: 700; font-size: 20px; letter-spacing: 0.04em; text-transform: uppercase; }
+.brandmark span { color: var(--sauce); }
+.bar nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; }
+.bar nav a { color: var(--paper); text-decoration: none; font-family: var(--poster); font-size: 15px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; min-height: 44px; display: inline-flex; align-items: center; }
+.bar nav a:hover, .bar nav a[aria-current] { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+.bar nav a.btn { color: var(--black); min-height: 44px; font-size: 15px; padding: 0 18px; }
+@media (max-width: 640px) { .bar nav .hide-sm { display: none; } }
+
+/* Heading on black. */
+.hero { background: var(--black); color: var(--paper); }
+.hero .wrap { padding-block: 64px 72px; display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
+@media (max-width: 880px) { .hero .wrap { padding-block: 44px 52px; } }
+.hero h1 { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(44px, 7vw, 88px); line-height: 0.98; text-transform: uppercase; max-width: 15ch; }
+.hero .lede { color: var(--muted-on-black); }
+
+/* The photos: a mosaic on wide screens, two across on a phone. */
+.photos { padding-block: 48px 88px; }
+.mosaic { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 200px; grid-auto-flow: dense; gap: 8px; }
+.mosaic img { width: 100%; height: 100%; object-fit: cover; }
+.mosaic .w { grid-column: span 2; }
+.mosaic .t { grid-row: span 2; }
+@media (max-width: 760px) { .mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 150px; } }
+.mosaic img:focus { outline: 3px solid var(--sauce); outline-offset: 3px; }
+.more { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 40px; text-align: center; }
+.more p { margin: 0; color: var(--muted-on-paper); font-size: 15px; }
+.btn.dark { background: var(--black); border-color: var(--black); color: var(--paper); }
+.btn.dark:hover { background: var(--sauce); border-color: var(--sauce); color: var(--black); }
+
+/* Ask about an event. */
+.cta { background: var(--sauce); }
+.cta .wrap { padding-block: 56px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 40px; }
+.cta h2 { margin: 0; font-family: var(--poster); font-weight: 700; font-size: clamp(30px, 4vw, 44px); line-height: 1.02; text-transform: uppercase; }
+.cta .btn { background: var(--black); border-color: var(--black); color: var(--paper); }
+.cta .btn:hover { background: var(--paper); border-color: var(--paper); color: var(--black); }
+
+footer { background: var(--black); color: var(--paper); border-top: 8px solid var(--sauce); padding-block: 48px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px 48px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+footer a { color: var(--paper); font-weight: 700; min-height: 44px; display: inline-flex; align-items: center; }
+footer small { color: var(--muted-on-black); }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="brandmark" href="index.html" data-site="home">Tommy Sugo <span>×</span> Merle's</a>
+    <nav aria-label="Main">
+      <a href="events.html" data-site="events">Events</a>
+      <a href="gallery.html" data-site="gallery" aria-current="page" class="hide-sm">Gallery</a>
+      <a href="shop.html" data-site="shop" class="hide-sm">Shop</a>
+      <a href="tommy-sugo.html" data-site="tommy" class="hide-sm">Tommy Sugo</a>
+      <a href="merles-schnitz.html" data-site="merles" class="hide-sm">Merle's</a>
+      <a class="btn" href="events.html#enquire" data-site="events" data-site-hash="#enquire">Enquire</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="hero-h">
+    <div class="wrap">
+      <p class="tag red">Gallery</p>
+      <h1 id="hero-h">From the Truck to the Table</h1>
+      <p class="lede">Festivals, grazing tables, long dinners and the trucks themselves. A look at what we bring to an event.</p>
+    </div>
+  </section>
+
+  <section class="photos" aria-labelledby="hero-h">
+    <div class="wrap">
+      <!-- Filled from the Gallery tab in /admin by js/gallery.js. These photos stay if that can't load. -->
+      <div class="mosaic" id="photos">
+        <img class="w t" src="images/events/ts-08.jpg" alt="A grazing table of cheeses, cured meats, fruit and tomatoes" loading="lazy">
+        <img src="images/events/web-truck-festival.jpg" alt="The Tommy Sugo truck serving at a summer festival" loading="lazy">
+        <img src="images/events/ts-22.jpg" alt="The chef at work in the kitchen" loading="lazy">
+        <img src="images/events/web-pizza-salami.jpg" alt="A Tommy Sugo salami pizza, fresh from the oven" loading="lazy">
+        <img src="images/events/ts-20.jpg" alt="Bowls of fresh salad ready for service" loading="lazy">
+        <img class="w" src="images/events/ts-27.jpg" alt="Guests at a long candle-lit dinner table" loading="lazy">
+        <img src="images/events/ts-25.jpg" alt="A plated main course with roast vegetables" loading="lazy">
+        <img class="t" src="images/events/ts-06.jpg" alt="A board of cured meats, cheeses, grapes and rosemary" loading="lazy">
+        <img class="t" src="images/events/ts-01.jpg" alt="The team setting out a grazing table" loading="lazy">
+        <img src="images/events/web-truck-team.jpg" alt="The Tommy Sugo team in front of the truck" loading="lazy">
+        <img class="t" src="images/events/ts-11.jpg" alt="A guest laughing as she serves herself at the grazing table" loading="lazy">
+        <img src="images/events/web-potjies.jpg" alt="Potjies cooking over the fire" loading="lazy">
+        <img class="w" src="images/events/ts-02.jpg" alt="The team behind a long grazing table" loading="lazy">
+        <img src="images/events/web-festival-night.jpg" alt="A festival at night, lit up in orange and red" loading="lazy">
+        <img src="images/events/ts-16.jpg" alt="Plating salads for a catered event" loading="lazy">
+        <img class="w" src="images/events/ts-24.jpg" alt="The team gathered in the kitchen before service" loading="lazy">
+        <img src="images/events/web-guests.jpg" alt="Guests enjoying pizza at an outdoor event" loading="lazy">
+        <img src="images/events/ts-23.jpg" alt="A plated dish with green beans and carrots" loading="lazy">
+        <img class="w" src="images/events/web-truck-event.jpg" alt="The Tommy Sugo truck at an outdoor event, guests gathered around" loading="lazy">
+        <img src="images/events/ts-14.jpg" alt="A grazing table with bread, dips and fresh vegetables" loading="lazy">
+        <img src="images/events/web-catering-serve.jpg" alt="The team serving guests at a catered event" loading="lazy">
+        <img class="t" src="images/events/ts-12.jpg" alt="A young guest choosing from the grazing table" loading="lazy">
+        <img class="w t" src="images/events/web-truck.jpg" alt="The Tommy Sugo food truck, black with the red seal, parked under trees" loading="lazy">
+        <img src="images/events/web-truck-crowd.jpg" alt="Guests ordering at the Tommy Sugo food truck at an outdoor event" loading="lazy">
+        <img class="t" src="images/events/ts-05.jpg" alt="The chef finishing a grazing table as the team looks on" loading="lazy">
+        <img src="images/events/ts-10.jpg" alt="Long grazing tables laid out at an outdoor catered event" loading="lazy">
+        <img class="w" src="images/events/ts-17.jpg" alt="Bowls of salad set out beside the chafing dishes" loading="lazy">
+        <img class="w" src="images/events/web-truck-queue.jpg" alt="A busy crowd around the Tommy Sugo truck at a festival" loading="lazy">
+        <img src="images/events/ts-04.jpg" alt="The team laying out a grazing table at an event" loading="lazy">
+        <img class="w" src="images/events/ts-26.jpg" alt="A plate being finished with an edible flower" loading="lazy">
+      </div>
+      <div class="more">
+        <p id="count" aria-live="polite"></p>
+        <button class="btn dark" type="button" id="more" hidden>Show more photos</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" aria-labelledby="cta-h">
+    <div class="wrap">
+      <h2 id="cta-h">Want this at your event?</h2>
+      <a class="btn" href="events.html#enquire" data-site="events" data-site-hash="#enquire">Make an Enquiry</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Footer">
+      <a href="index.html" data-site="home">Home</a>
+      <a href="events.html" data-site="events">Events</a>
+      <a href="tommy-sugo.html" data-site="tommy">Tommy Sugo</a>
+      <a href="merles-schnitz.html" data-site="merles">Merle's</a>
+      <a href="shop.html" data-site="shop">Shop</a>
+    </nav>
+    <small>© 2026 Tommy Sugo &amp; Merle's</small>
+  </div>
+</footer>
+
+<script src="js/sites.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/gallery.js"></script>
+</body>
+</html>

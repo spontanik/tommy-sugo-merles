@@ -114,6 +114,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .date dl { margin: 0; display: grid; gap: 8px; }
 .date dt { font-family: var(--poster); font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
 .date dd { margin: 0; color: var(--muted-on-paper); }
+.date-logo { display: block; align-self: flex-start; max-width: 100%; }
+.date-logo img { display: block; height: 64px; width: auto; max-width: 100%; object-fit: contain; }
+.date-link { margin-top: auto; padding-top: 4px; font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--black); text-underline-offset: 3px; }
+.date-link:hover { text-decoration-thickness: 3px; }
 .date.more { background: var(--black); color: var(--paper); border-color: var(--black); justify-content: center; }
 .date.more p:not(.tag) { margin: 0; color: var(--muted-on-black); }
 .vote { margin-top: 40px; background: var(--sauce); color: var(--black); padding: clamp(24px, 5vw, 48px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px 48px; align-items: center; }
@@ -147,6 +151,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 /* Gallery: real photos, a mosaic on wide screens and two across on a phone. */
 .gallery { padding-block: 88px 0; } /* the enquiry form below brings its own space */
 .mosaic { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 200px; grid-auto-flow: dense; gap: 8px; }
+/* On this page, a preview: 8 equal tiles, four across (two on a phone), then the way to the gallery page. */
+.mosaic.preview { grid-auto-flow: row; }
+.gallery-more { display: flex; justify-content: center; margin-top: 32px; }
+.btn-dark { background: var(--black); border-color: var(--black); color: var(--paper); }
+.btn-dark:hover { background: var(--sauce); border-color: var(--sauce); color: var(--black); }
 .mosaic img { width: 100%; height: 100%; object-fit: cover; }
 .mosaic .w { grid-column: span 2; }
 .mosaic .t { grid-row: span 2; }
@@ -154,9 +163,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* Enquiry form. */
 .enquire { padding-block: 88px 104px; }
-.enquire .wrap { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
-@media (max-width: 880px) { .enquire .wrap { grid-template-columns: minmax(0, 1fr); } }
-.enquire aside { display: flex; flex-direction: column; gap: 16px; }
+.enquire .head .lede { color: var(--muted-on-paper); }
+/* The form runs the width of the page under the heading: on wide screens two pairs of fields share a line. */
+@media (min-width: 881px) {
+  .enquire .formbox:not(.done) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; align-items: start; }
+  .enquire .formbox:not(.done) > :not(.row2) { grid-column: 1 / -1; }
+}
 .formbox { background: #fff; border: 4px solid var(--black); padding: clamp(20px, 4vw, 36px); display: flex; flex-direction: column; gap: 18px; }
 .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 @media (max-width: 560px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
@@ -187,6 +199,7 @@ footer small { color: var(--muted-on-black); }
     <nav aria-label="Main">
       <a href="events.html" data-site="events" aria-current="page">Events</a>
       <a href="#circuit" class="hide-sm">On the Circuit</a>
+      <a href="gallery.html" data-site="gallery" class="hide-sm">Gallery</a>
       <a href="shop.html" data-site="shop" class="hide-sm">Shop</a>
       <a href="tommy-sugo.html" data-site="tommy" class="hide-sm">Tommy Sugo</a>
       <a href="merles-schnitz.html" data-site="merles" class="hide-sm">Merle's</a>
@@ -350,21 +363,14 @@ footer small { color: var(--muted-on-black); }
         <h2 class="section-h" id="circuit-h">Have Truck, Will Travel</h2>
         <p class="lede">From September to April the Tommy Sugo truck follows the festival season, with the full menu on board. If you can hear the music, you're close.</p>
       </div>
-      <div class="dates">
+      <!-- Filled from the Events tab in /admin by js/circuit.js. These cards stay if that can't load. -->
+      <div class="dates" data-circuit>
         <article class="date">
           <p class="tag red">12–15 Nov</p>
           <h3>The Gathering</h3>
           <dl>
             <div><dt>Where</dt><dd>POD Place of Dreams, Karoo</dd></div>
             <div><dt>Serving</dt><dd>Pizza all day. Shakshuka and Brekkie pizza from sunrise.</dd></div>
-          </dl>
-        </article>
-        <article class="date">
-          <p class="tag red">[Dates]</p>
-          <h3>[Festival name]</h3>
-          <dl>
-            <div><dt>Where</dt><dd>[Venue], [Town]</dd></div>
-            <div><dt>Serving</dt><dd>[Pizza, falafel, shawarma]</dd></div>
           </dl>
         </article>
         <article class="date more">
@@ -399,50 +405,30 @@ footer small { color: var(--muted-on-black); }
     <div class="wrap">
       <div class="head">
         <p class="tag red">What it looks like</p>
-        <h2 class="section-h" id="gallery-h">From the Truck and the Table</h2>
+        <h2 class="section-h" id="gallery-h">From the Truck to the Table</h2>
       </div>
-      <div class="mosaic">
-        <img class="w t" src="images/events/ts-08.jpg" alt="A grazing table of cheeses, cured meats, fruit and tomatoes" loading="lazy">
+      <!-- The first 8 photos from the Gallery tab in /admin (js/gallery.js); these stay if that can't load. -->
+      <div class="mosaic preview" data-gallery-preview="8">
+        <img src="images/events/ts-08.jpg" alt="A grazing table of cheeses, cured meats, fruit and tomatoes" loading="lazy">
         <img src="images/events/web-truck-festival.jpg" alt="The Tommy Sugo truck serving at a summer festival" loading="lazy">
         <img src="images/events/ts-22.jpg" alt="The chef at work in the kitchen" loading="lazy">
         <img src="images/events/web-pizza-salami.jpg" alt="A Tommy Sugo salami pizza, fresh from the oven" loading="lazy">
         <img src="images/events/ts-20.jpg" alt="Bowls of fresh salad ready for service" loading="lazy">
-        <img class="w" src="images/events/ts-27.jpg" alt="Guests at a long candle-lit dinner table" loading="lazy">
+        <img src="images/events/ts-27.jpg" alt="Guests at a long candle-lit dinner table" loading="lazy">
         <img src="images/events/ts-25.jpg" alt="A plated main course with roast vegetables" loading="lazy">
-        <img class="t" src="images/events/ts-06.jpg" alt="A board of cured meats, cheeses, grapes and rosemary" loading="lazy">
-        <img class="t" src="images/events/ts-01.jpg" alt="The team setting out a grazing table" loading="lazy">
-        <img src="images/events/web-truck-team.jpg" alt="The Tommy Sugo team in front of the truck" loading="lazy">
-        <img class="t" src="images/events/ts-11.jpg" alt="A guest laughing as she serves herself at the grazing table" loading="lazy">
-        <img src="images/events/web-potjies.jpg" alt="Potjies cooking over the fire" loading="lazy">
-        <img class="w" src="images/events/ts-02.jpg" alt="The team behind a long grazing table" loading="lazy">
-        <img src="images/events/web-festival-night.jpg" alt="A festival at night, lit up in orange and red" loading="lazy">
-        <img src="images/events/ts-16.jpg" alt="Plating salads for a catered event" loading="lazy">
-        <img class="w" src="images/events/ts-24.jpg" alt="The team gathered in the kitchen before service" loading="lazy">
-        <img src="images/events/web-guests.jpg" alt="Guests enjoying pizza at an outdoor event" loading="lazy">
-        <img src="images/events/ts-23.jpg" alt="A plated dish with green beans and carrots" loading="lazy">
-        <img class="w" src="images/events/web-truck-event.jpg" alt="The Tommy Sugo truck at an outdoor event, guests gathered around" loading="lazy">
-        <img src="images/events/ts-14.jpg" alt="A grazing table with bread, dips and fresh vegetables" loading="lazy">
-        <img src="images/events/web-catering-serve.jpg" alt="The team serving guests at a catered event" loading="lazy">
-        <img class="t" src="images/events/ts-12.jpg" alt="A young guest choosing from the grazing table" loading="lazy">
-        <img class="w t" src="images/events/web-truck.jpg" alt="The Tommy Sugo food truck, black with the red seal, parked under trees" loading="lazy">
-        <img src="images/events/web-truck-crowd.jpg" alt="Guests ordering at the Tommy Sugo food truck at an outdoor event" loading="lazy">
-        <img class="t" src="images/events/ts-05.jpg" alt="The chef finishing a grazing table as the team looks on" loading="lazy">
-        <img src="images/events/ts-10.jpg" alt="Long grazing tables laid out at an outdoor catered event" loading="lazy">
-        <img class="w" src="images/events/ts-17.jpg" alt="Bowls of salad set out beside the chafing dishes" loading="lazy">
-        <img class="w" src="images/events/web-truck-queue.jpg" alt="A busy crowd around the Tommy Sugo truck at a festival" loading="lazy">
-        <img src="images/events/ts-04.jpg" alt="The team laying out a grazing table at an event" loading="lazy">
-        <img class="w" src="images/events/ts-26.jpg" alt="A plate being finished with an edible flower" loading="lazy">
+        <img src="images/events/ts-06.jpg" alt="A board of cured meats, cheeses, grapes and rosemary" loading="lazy">
       </div>
+      <div class="gallery-more"><a class="btn btn-dark" href="gallery.html" data-site="gallery">View More Photos</a></div>
     </div>
   </section>
 
   <section class="enquire" id="enquire" aria-labelledby="enquire-h">
     <div class="wrap">
-      <aside>
+      <div class="head">
         <p class="tag red">Make an enquiry</p>
         <h2 class="section-h" id="enquire-h">Let's Feed Your Event</h2>
-        <p class="lede" style="color: var(--muted-on-paper);">Send us the details and we'll come back with a menu and a quote. Nothing is booked until you confirm.</p>
-      </aside>
+        <p class="lede">Send us the details and we'll come back with a menu and a quote. Nothing is booked until you confirm.</p>
+      </div>
       <div>
         <form id="enquiry" class="formbox" novalidate>
           <div class="row2">
@@ -475,7 +461,7 @@ footer small { color: var(--muted-on-black); }
           </fieldset>
           <div class="fld"><label class="lbl" for="e-note">Tell us more</label><textarea id="e-note" class="field" placeholder="Timings, dietary needs, vegan, gluten-free and veggie schnitz counts, anything else"></textarea></div>
           <p class="err" id="e-err" role="alert" hidden></p>
-          <button class="btn" type="submit" style="align-self: flex-start;">Send Enquiry</button>
+          <button class="btn" type="submit" style="align-self: flex-start; justify-self: start;">Send Enquiry</button>
         </form>
         <div class="formbox done" id="enquiry-done" role="status" hidden>
           <p class="tag red">Enquiry sent</p>
@@ -496,6 +482,7 @@ footer small { color: var(--muted-on-black); }
       <a href="merles-schnitz.html" data-site="merles">Merle's</a>
       <a href="shop.html" data-site="shop">Shop</a>
       <a href="#circuit">On the Circuit</a>
+      <a href="gallery.html" data-site="gallery">Gallery</a>
       <a href="#enquire">Enquire</a>
     </nav>
     <small>© 2026 Tommy Sugo &amp; Merle's</small>
@@ -503,6 +490,9 @@ footer small { color: var(--muted-on-black); }
 </footer>
 
 <script src="js/sites.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/circuit.js"></script>
+<script src="js/gallery.js"></script>
 <script>
 (function () {
   // Like the brand pages' enquiry forms, this doesn't send anywhere yet: it checks the details and says thanks.
@@ -529,6 +519,9 @@ footer small { color: var(--muted-on-black); }
     done.hidden = true;
     form.hidden = false;
   });
+
+  // On the circuit: the truck's next stops, from the Events tab in /admin.
+  window.Circuit.fill();
 
   // On the circuit: a vote for the next town. Like the enquiry, it doesn't send anywhere yet.
   document.getElementById("vote-form").addEventListener("submit", function (e) {

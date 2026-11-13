@@ -148,6 +148,24 @@ nav.main { gap: 4px 16px; }
 .seal-panel .poster-lg { color: var(--on-sauce-lg); }
 .seal-panel p { margin: 0; }
 
+/* On the circuit: where the truck is next, from the Events tab in /admin (js/circuit.js), above the Merle's tile. */
+.dates { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr)); gap: 24px; }
+.date { border: 2px solid var(--rule); padding: 24px; display: flex; flex-direction: column; gap: 10px; min-width: 0; overflow-wrap: anywhere; }
+.date h3 { margin: 0; font-family: var(--poster); font-weight: 700; font-size: 28px; line-height: 1.1; letter-spacing: 0.02em; }
+.date dl { margin: 0; display: grid; gap: 8px; }
+.date dt { font-family: var(--poster); font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.date dd { margin: 0; color: var(--ink-muted); }
+.date p { margin: 0; }
+/* Event logos are made for white, so they sit on a white plate on the black page. */
+.date-logo { display: block; align-self: flex-start; max-width: 100%; background: #fff; padding: 8px; }
+.date-logo img { display: block; height: 56px; width: auto; max-width: 100%; object-fit: contain; }
+.date-link { margin-top: auto; padding-top: 4px; font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-underline-offset: 3px; }
+.date-link:hover { text-decoration-thickness: 3px; }
+.date.more { background: var(--sauce); color: var(--on-sauce); border-color: var(--sauce); justify-content: center; }
+.date.more .tag { color: var(--on-sauce); }
+.date.more h3 { color: var(--on-sauce-lg); }
+.date.more .btn { margin-top: 8px; align-self: flex-start; }
+
 .card { border: 2px solid var(--rule); display: flex; flex-direction: column; }
 .card .ph { height: 240px; }
 .card-body { padding: 24px; display: flex; flex-direction: column; gap: 4px; }
@@ -376,6 +394,33 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
         <h2 class="poster-lg">Your Event, Fed.</h2>
         <p>Hire the truck, book it with Merle's, see where it's parked next, or have the whole day catered.</p>
         <a class="btn btn-ink" href="events.html" data-site="events" style="margin-top: auto;">Plan Your Event →</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="circuit" style="padding-bottom: 96px;" aria-labelledby="circuit-h">
+    <div class="wrap stack" style="gap: 40px;">
+      <div class="center" style="gap: 16px;">
+        <p class="tag red">On the circuit</p>
+        <h2 class="poster-lg" id="circuit-h">Have Truck, Will Travel</h2>
+        <p class="muted" style="margin: 0; max-width: 560px;">From September to April the truck follows the festival season, with the full menu on board. If you can hear the music, you're close.</p>
+      </div>
+      <!-- Filled from the Events tab in /admin by js/circuit.js. These cards stay if that can't load. -->
+      <div class="dates" data-circuit>
+        <article class="date">
+          <p class="tag red">12–15 Nov</p>
+          <h3>The Gathering</h3>
+          <dl>
+            <div><dt>Where</dt><dd>POD Place of Dreams, Karoo</dd></div>
+            <div><dt>Serving</dt><dd>Pizza all day. Shakshuka and Brekkie pizza from sunrise.</dd></div>
+          </dl>
+        </article>
+        <article class="date more">
+          <p class="tag">Every season</p>
+          <h3>More dates drop weekly.</h3>
+          <p>We post the truck's next stop the moment it's booked. Want it at yours?</p>
+          <a class="btn btn-ink" href="events.html#enquire" data-site="events" data-site-hash="#enquire">Book the Truck →</a>
+        </article>
       </div>
     </div>
   </section>
@@ -845,11 +890,19 @@ window.ORDER_COPY = {
 <script src="js/cart.js"></script>
 <script src="js/order.js"></script>
 <script src="js/add-more.js"></script>
+<script src="js/circuit.js"></script>
 <script>
 (function () {
   var views = ["home", "menu", "delivery", "shop", "cart", "story"];
-  // On the Circuit, Catering and the enquiry form moved to the Events page: old links to them go there.
-  var moved = { circuit: "#circuit", catering: "#offer", book: "#enquire" };
+  // Catering and the enquiry form moved to the Events page: old links to them go there.
+  var moved = { catering: "#offer", book: "#enquire" };
+  // Sections inside a view: a link to one shows its view and scrolls to it. No nav item of their own.
+  var inView = { circuit: "home" };
+  function showIn(id) {
+    show(inView[id], true);
+    var el = document.getElementById(id);
+    if (el) el.scrollIntoView();
+  }
   function leave(id) {
     location.replace(window.Sites ? Sites.url("events", moved[id]) : "events.html" + moved[id]);
     return true;
@@ -876,6 +929,12 @@ window.ORDER_COPY = {
       leave(id);
       return;
     }
+    if (inView[id]) {
+      e.preventDefault();
+      try { history.replaceState(null, "", "#" + id); } catch (err) {}
+      showIn(id);
+      return;
+    }
     if (views.indexOf(id) >= 0) {
       e.preventDefault();
       try { history.replaceState(null, "", "#" + id); } catch (err) {}
@@ -885,10 +944,14 @@ window.ORDER_COPY = {
 
   window.addEventListener("hashchange", function () {
     var id = location.hash.slice(1);
-    if (!(moved[id] && leave(id))) show(id);
+    if (moved[id] && leave(id)) return;
+    if (inView[id]) showIn(id); else show(id);
   });
   var start = location.hash.slice(1);
-  if (!(moved[start] && leave(start))) show(start);
+  if (!(moved[start] && leave(start))) { if (inView[start]) showIn(start); else show(start); }
+
+  // On the circuit: the truck's next stops, from the Events tab in /admin.
+  if (window.Circuit) window.Circuit.fill();
 
   // Delivery: suburb vote
   document.getElementById("dvote-form").addEventListener("submit", function (e) {
