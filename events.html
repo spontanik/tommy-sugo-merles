@@ -145,20 +145,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .trio a { color: inherit; font-weight: 700; }
 
 /* Gallery: real photos, a mosaic on wide screens and two across on a phone. */
-.gallery { padding-block: 88px; }
+.gallery { padding-block: 88px 0; } /* the enquiry form below brings its own space */
 .mosaic { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 200px; grid-auto-flow: dense; gap: 8px; }
 .mosaic img { width: 100%; height: 100%; object-fit: cover; }
 .mosaic .w { grid-column: span 2; }
 .mosaic .t { grid-row: span 2; }
 @media (max-width: 760px) { .mosaic { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 150px; } }
-
-/* How it works. */
-.how { background: #fff; border-block: 2px solid var(--black); padding-block: 80px; }
-.how ol { list-style: none; margin: 32px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 32px; counter-reset: step; }
-.how li { counter-increment: step; display: flex; flex-direction: column; gap: 8px; }
-.how li::before { content: counter(step); width: 48px; height: 48px; display: grid; place-items: center; background: var(--black); color: var(--paper); font-family: var(--poster); font-weight: 700; font-size: 24px; }
-.how h3 { margin: 0; font-family: var(--poster); font-size: 24px; text-transform: uppercase; }
-.how p { margin: 0; color: var(--muted-on-paper); }
 
 /* Enquiry form. */
 .enquire { padding-block: 88px 104px; }
@@ -441,18 +433,6 @@ footer small { color: var(--muted-on-black); }
         <img src="images/events/ts-04.jpg" alt="The team laying out a grazing table at an event" loading="lazy">
         <img class="w" src="images/events/ts-26.jpg" alt="A plate being finished with an edible flower" loading="lazy">
       </div>
-    </div>
-  </section>
-
-  <section class="how" aria-labelledby="how-h">
-    <div class="wrap">
-      <p class="tag red">How it works</p>
-      <h2 class="section-h" id="how-h">Three Steps to Fed</h2>
-      <ol>
-        <li><h3>Tell us about it</h3><p>The date, where it is, how many people, and whether you're thinking trucks, catering or both.</p></li>
-        <li><h3>Get a menu and quote</h3><p>We put together a menu from Tommy Sugo, Merle's and our catering, with one quote for all of it.</p></li>
-        <li><h3>We bring the lot</h3><p>The trucks, the food and the team. We set up, serve and clear, and you enjoy your event.</p></li>
-      </ol>
     </div>
   </section>
 
