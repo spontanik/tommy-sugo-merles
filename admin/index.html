@@ -287,6 +287,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       <button class="tab" type="button" role="tab" id="tab-orders" data-view-btn="orders" aria-controls="panel" aria-selected="false">Orders</button>
       <button class="tab" type="button" role="tab" id="tab-menu" data-view-btn="menu" aria-controls="panel" aria-selected="false">Menu</button>
       <button class="tab" type="button" role="tab" id="tab-shop" data-view-btn="shop" aria-controls="panel" aria-selected="false">Shop</button>
+      <button class="tab" type="button" role="tab" id="tab-events" data-view-btn="events" aria-controls="panel" aria-selected="false">Events</button>
       <button class="tab" type="button" role="tab" id="tab-settings" data-view-btn="settings" aria-controls="panel" aria-selected="false">Settings</button>
     </div>
     <div id="panel" role="tabpanel"></div>
@@ -354,11 +355,50 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   </form>
 </dialog>
 
+<dialog id="ev-dlg">
+  <form class="dlg" id="ev-form" method="dialog" novalidate>
+    <header><h2 id="ev-title">Edit event</h2><button class="btn ghost" type="button" id="ev-close">Close</button></header>
+    <div class="body">
+      <div class="fld"><label for="e-name">Event name</label><input class="input" id="e-name" required></div>
+      <div class="price-grid">
+        <div class="fld"><label for="e-start">First day</label><input class="input" id="e-start" type="date" required></div>
+        <div class="fld"><label for="e-end">Last day</label><input class="input" id="e-end" type="date"></div>
+      </div>
+      <p class="hint" id="e-when">Leave the last day blank for a one-day event.</p>
+      <div class="fld"><label for="e-venue">Where</label><input class="input" id="e-venue"><p class="hint">Venue and town, e.g. “POD Place of Dreams, Karoo”.</p></div>
+      <div class="fld"><label for="e-serving">Serving</label><textarea class="input" id="e-serving"></textarea><p class="hint">What the truck has on, e.g. “Pizza all day. Shakshuka from sunrise.”</p></div>
+      <div class="fld"><label for="e-link">Event page</label><input class="input" id="e-link" type="url" inputmode="url" placeholder="https://"><p class="hint">The event's own site, for tickets and the line-up. The logo and an “Event page” link on the card open it.</p></div>
+      <div class="fld">
+        <span class="lbl">Event logo</span>
+        <div class="img-edit">
+          <div id="e-logo-box"></div>
+          <div class="ctrls">
+            <input type="file" id="e-file" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif" hidden>
+            <button class="btn ghost" type="button" id="e-upload">Upload logo</button>
+            <button class="btn ghost" type="button" id="e-logo-remove">Remove logo</button>
+            <p class="hint">PNG, JPG, WebP or SVG, up to 5 MB. A transparent background looks best on the white card.</p>
+          </div>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="e-hidden"><span>Hide from the site<small>Keeps the event here without showing it on the catering page.</small></span></label>
+      <p class="msg err" id="e-err" role="alert" hidden></p>
+    </div>
+    <footer>
+      <button class="btn ghost" type="button" id="e-delete">Delete</button>
+      <div class="right">
+        <button class="btn ghost" type="button" id="e-cancel">Cancel</button>
+        <button class="btn save" type="submit" id="e-save">Save</button>
+      </div>
+    </footer>
+  </form>
+</dialog>
+
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="../js/sites.js"></script>
 <script src="../js/supabase-config.js"></script>
 <script src="../js/catalog-config.js"></script>
+<script src="../js/circuit.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 (function () {
@@ -395,7 +435,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var YOCO_COLS = { price: "yoco_id" }; // the website prices that can follow a Yoco item
 
   function parseRoute(hash) {
-    var m = /^#(tommy|merles)\/(orders|menu|shop|settings)$/.exec(hash || "");
+    var m = /^#(tommy|merles)\/(orders|menu|shop|events|settings)$/.exec(hash || "");
     return m ? { brand: m[1], view: m[2] } : null;
   }
 
@@ -629,7 +669,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     }
     var hash = state.view === "menu" || state.view === "shop" ? "#" + state.view : "";
     // On spontanik.co.za each brand has its own subdomain, so the page set in Settings only matters elsewhere.
-    $("view-site").href = window.Sites.live ? window.Sites.url(brand, hash) : "../" + info.page + hash;
+    $("view-site").href = state.view === "events" ? window.Sites.url("events", "#circuit")
+      : window.Sites.live ? window.Sites.url(brand, hash) : "../" + info.page + hash;
     saveRoute();
   }
 
@@ -653,7 +694,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     var r = parseRoute(location.hash);
     if (!r || $("app").hidden) return;
     // A save in an open dialog goes to the current brand and view, so they can't change underneath it.
-    if ($("dlg").open || $("sec-dlg").open) { saveRoute(); return; }
+    if ($("dlg").open || $("sec-dlg").open || $("ev-dlg").open) { saveRoute(); return; }
     go(r);
   });
 
@@ -675,6 +716,16 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     if (view === "orders") {
       drawChrome();
       loadOrders(seq, true);
+      return;
+    }
+    if (view === "events") {
+      var ev = await db.from("circuit_events").select("*").order("starts_on").order("name");
+      if (seq !== loadSeq) return;
+      drawChrome();
+      events = ev.error ? null : ev.data;
+      eventsMissing = !!ev.error && (ev.error.code === "42P01" || ev.error.code === "PGRST205");
+      if (ev.error && !eventsMissing) toast("Couldn't load events: " + ev.error.message, true);
+      drawEvents();
       return;
     }
     if (view === "settings") {
@@ -1713,6 +1764,154 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     while (taken.indexOf(key) >= 0) { key = base + "-" + n; n++; }
     return key;
   }
+
+  // ---------- Events tab ----------
+  // The On the Circuit list on the catering page (events.html#circuit). One list for both brands. The page shows
+  // visible events until the end of their last day, soonest first (js/circuit.js), so past ones need no tidying.
+  var events = null; // rows from circuit_events, or null if they couldn't be read
+  var eventsMissing = false;
+  var evEdit = { row: null, logo: null };
+
+  function lastDay(r) { return r.ends_on || r.starts_on; }
+
+  function eventRow(r) {
+    var thumb = r.logo_url ? h("img", { class: "thumb", src: r.logo_url, alt: "" }) : h("div", { class: "thumb empty", text: "No logo" });
+    return h("li", { class: "row" + (r.is_hidden ? " is-hidden" : "") }, [
+      thumb,
+      h("div", { class: "main" }, [
+        h("div", { class: "name" }, [r.name, r.is_hidden ? h("span", { class: "tag", text: "Hidden" }) : null,
+          r.link ? h("a", { class: "tag", href: r.link, target: "_blank", rel: "noopener", text: "Event page ↗", "aria-label": r.name + " event page (opens in a new tab)" }) : null]),
+        r.venue ? h("p", { class: "sub", text: r.venue }) : null,
+        r.serving ? h("p", { class: "desc", text: r.serving }) : null
+      ]),
+      h("div", { class: "prices" }, [h("div", {}, [h("span", { text: "When" }), h("strong", { text: window.Circuit.label(r.starts_on, r.ends_on) })])]),
+      h("div", { class: "actions" }, [
+        h("button", { class: "btn", type: "button", "aria-label": "Edit " + r.name, onclick: function () { openEvent(r); } }, ["Edit"])
+      ])
+    ]);
+  }
+
+  function drawEvents() {
+    var box = $("panel");
+    box.textContent = "";
+    if (!events) {
+      box.appendChild(h("p", { class: "notice", text: eventsMissing
+        ? "Events can't be edited yet: the circuit_events table isn't in the database. Until that migration is applied, the catering page shows the dates written into it."
+        : "Events can't be edited right now: the list couldn't be read. Try again in a moment." }));
+      return;
+    }
+    var today = window.Circuit.today();
+    var upcoming = events.filter(function (r) { return lastDay(r) >= today; });
+    var past = events.filter(function (r) { return lastDay(r) < today; })
+      .sort(function (a, b) { return lastDay(b) < lastDay(a) ? -1 : lastDay(b) > lastDay(a) ? 1 : 0; });
+    box.appendChild(h("div", { class: "panel-top" }, [
+      h("button", { class: "btn", type: "button", onclick: function () { openEvent(null); } }, ["+ Add event"])
+    ]));
+    box.appendChild(h("p", { class: "section-note", text: "The On the Circuit list on the catering page, shared by both brands. Events show soonest first and drop off the page by themselves after their last day." }));
+    var shown = upcoming.filter(function (r) { return !r.is_hidden; }).length;
+    box.appendChild(h("section", { class: "section" }, [
+      h("div", { class: "section-head" }, [h("h2", {}, ["Coming up", h("span", { class: "count", text: plural(shown, "event") + " on the site" })])]),
+      upcoming.length ? h("ul", { class: "rows" }, upcoming.map(eventRow))
+        : h("p", { class: "empty-row", text: "Nothing coming up. The page shows just the “More dates drop weekly” card until you add one." })
+    ]));
+    if (past.length) {
+      box.appendChild(foldSection("past", ["Past", h("span", { class: "count", text: plural(past.length, "event") })], null, [
+        h("ul", { class: "rows" }, past.map(eventRow))
+      ]));
+    }
+  }
+
+  var evDlg = $("ev-dlg");
+
+  function drawLogo() {
+    var box = $("e-logo-box");
+    box.textContent = "";
+    box.appendChild(evEdit.logo ? h("img", { class: "preview", src: evEdit.logo, alt: "" }) : h("div", { class: "noimg", text: "No logo" }));
+    $("e-logo-remove").hidden = !evEdit.logo;
+  }
+
+  function openEvent(row) {
+    evEdit = { row: row, logo: row ? row.logo_url : null };
+    $("ev-title").textContent = row ? "Edit " + row.name : "New event";
+    $("e-name").value = row ? row.name : "";
+    $("e-start").value = row ? row.starts_on : "";
+    $("e-end").value = row && row.ends_on ? row.ends_on : "";
+    $("e-venue").value = row ? row.venue : "";
+    $("e-serving").value = row ? row.serving : "";
+    $("e-link").value = row && row.link ? row.link : "";
+    $("e-hidden").checked = row ? !!row.is_hidden : false;
+    $("e-err").hidden = true;
+    $("e-delete").hidden = !row;
+    $("e-save").disabled = false;
+    drawLogo();
+    evDlg.showModal();
+    $("e-name").focus();
+  }
+
+  $("ev-close").addEventListener("click", function () { evDlg.close(); });
+  $("e-cancel").addEventListener("click", function () { evDlg.close(); });
+  $("e-upload").addEventListener("click", function () { $("e-file").click(); });
+  $("e-logo-remove").addEventListener("click", function () { evEdit.logo = null; drawLogo(); });
+  $("e-file").addEventListener("change", async function () {
+    var file = this.files[0];
+    this.value = "";
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast("That logo is over 5 MB. Try a smaller one.", true); return; }
+    var safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+    var path = "events/" + Date.now() + "-" + safe;
+    $("e-upload").disabled = true;
+    $("e-upload").textContent = "Uploading…";
+    var res = await db.storage.from("item-images").upload(path, file, { cacheControl: "31536000", contentType: file.type });
+    $("e-upload").disabled = false;
+    $("e-upload").textContent = "Upload logo";
+    if (res.error) { toast("Upload failed: " + res.error.message, true); return; }
+    evEdit.logo = db.storage.from("item-images").getPublicUrl(path).data.publicUrl;
+    drawLogo();
+  });
+
+  $("ev-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var err = $("e-err");
+    err.hidden = true;
+    function fail(text, id) { err.textContent = text; err.hidden = false; if (id) $(id).focus(); }
+    var link = $("e-link").value.trim();
+    if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
+    var data = {
+      name: $("e-name").value.trim(),
+      starts_on: $("e-start").value,
+      ends_on: $("e-end").value || null,
+      venue: $("e-venue").value.trim(),
+      serving: $("e-serving").value.trim(),
+      link: link || null,
+      logo_url: evEdit.logo || null,
+      is_hidden: $("e-hidden").checked
+    };
+    if (!data.name) return fail("Give the event a name.", "e-name");
+    if (!data.starts_on) return fail("Pick the event's first day.", "e-start");
+    if (data.ends_on && data.ends_on < data.starts_on) return fail("The last day can't be before the first day.", "e-end");
+    if (data.ends_on === data.starts_on) data.ends_on = null;
+    if (link && !/^https?:\/\/[^\s.]+\.[^\s]+$/i.test(link)) return fail("The event page should be a web address, like https://thegathering.co.za.", "e-link");
+    var row = evEdit.row;
+    $("e-save").disabled = true;
+    var res = row ? await db.from("circuit_events").update(data).eq("id", row.id)
+      : await db.from("circuit_events").insert(data);
+    $("e-save").disabled = false;
+    if (res.error) return fail("Couldn't save: " + res.error.message);
+    evDlg.close();
+    toast((row ? "Saved " : "Added ") + data.name + ".");
+    load();
+  });
+
+  $("e-delete").addEventListener("click", async function () {
+    var row = evEdit.row;
+    if (!row) return;
+    if (!confirm("Delete “" + row.name + "” for good? To take it off the site but keep it here, tick Hide instead.")) return;
+    var res = await db.from("circuit_events").delete().eq("id", row.id);
+    if (res.error) { $("e-err").textContent = "Couldn't delete: " + res.error.message; $("e-err").hidden = false; return; }
+    evDlg.close();
+    toast("Deleted " + row.name + ".");
+    load();
+  });
 
   // ---------- Section dialog ----------
   var secDlg = $("sec-dlg");

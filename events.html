@@ -114,6 +114,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .date dl { margin: 0; display: grid; gap: 8px; }
 .date dt { font-family: var(--poster); font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
 .date dd { margin: 0; color: var(--muted-on-paper); }
+.date-logo { display: block; align-self: flex-start; max-width: 100%; }
+.date-logo img { display: block; height: 64px; width: auto; max-width: 100%; object-fit: contain; }
+.date-link { margin-top: auto; padding-top: 4px; font-family: var(--poster); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--black); text-underline-offset: 3px; }
+.date-link:hover { text-decoration-thickness: 3px; }
 .date.more { background: var(--black); color: var(--paper); border-color: var(--black); justify-content: center; }
 .date.more p:not(.tag) { margin: 0; color: var(--muted-on-black); }
 .vote { margin-top: 40px; background: var(--sauce); color: var(--black); padding: clamp(24px, 5vw, 48px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px 48px; align-items: center; }
@@ -154,9 +158,12 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 
 /* Enquiry form. */
 .enquire { padding-block: 88px 104px; }
-.enquire .wrap { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 48px; align-items: start; }
-@media (max-width: 880px) { .enquire .wrap { grid-template-columns: minmax(0, 1fr); } }
-.enquire aside { display: flex; flex-direction: column; gap: 16px; }
+.enquire .head .lede { color: var(--muted-on-paper); }
+/* The form runs the width of the page under the heading: on wide screens two pairs of fields share a line. */
+@media (min-width: 881px) {
+  .enquire .formbox:not(.done) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; align-items: start; }
+  .enquire .formbox:not(.done) > :not(.row2) { grid-column: 1 / -1; }
+}
 .formbox { background: #fff; border: 4px solid var(--black); padding: clamp(20px, 4vw, 36px); display: flex; flex-direction: column; gap: 18px; }
 .row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 @media (max-width: 560px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
@@ -350,21 +357,14 @@ footer small { color: var(--muted-on-black); }
         <h2 class="section-h" id="circuit-h">Have Truck, Will Travel</h2>
         <p class="lede">From September to April the Tommy Sugo truck follows the festival season, with the full menu on board. If you can hear the music, you're close.</p>
       </div>
-      <div class="dates">
+      <!-- Filled from the Events tab in /admin by js/circuit.js. These cards stay if that can't load. -->
+      <div class="dates" data-circuit>
         <article class="date">
           <p class="tag red">12–15 Nov</p>
           <h3>The Gathering</h3>
           <dl>
             <div><dt>Where</dt><dd>POD Place of Dreams, Karoo</dd></div>
             <div><dt>Serving</dt><dd>Pizza all day. Shakshuka and Brekkie pizza from sunrise.</dd></div>
-          </dl>
-        </article>
-        <article class="date">
-          <p class="tag red">[Dates]</p>
-          <h3>[Festival name]</h3>
-          <dl>
-            <div><dt>Where</dt><dd>[Venue], [Town]</dd></div>
-            <div><dt>Serving</dt><dd>[Pizza, falafel, shawarma]</dd></div>
           </dl>
         </article>
         <article class="date more">
@@ -399,7 +399,7 @@ footer small { color: var(--muted-on-black); }
     <div class="wrap">
       <div class="head">
         <p class="tag red">What it looks like</p>
-        <h2 class="section-h" id="gallery-h">From the Truck and the Table</h2>
+        <h2 class="section-h" id="gallery-h">From the Truck to the Table</h2>
       </div>
       <div class="mosaic">
         <img class="w t" src="images/events/ts-08.jpg" alt="A grazing table of cheeses, cured meats, fruit and tomatoes" loading="lazy">
@@ -438,11 +438,11 @@ footer small { color: var(--muted-on-black); }
 
   <section class="enquire" id="enquire" aria-labelledby="enquire-h">
     <div class="wrap">
-      <aside>
+      <div class="head">
         <p class="tag red">Make an enquiry</p>
         <h2 class="section-h" id="enquire-h">Let's Feed Your Event</h2>
-        <p class="lede" style="color: var(--muted-on-paper);">Send us the details and we'll come back with a menu and a quote. Nothing is booked until you confirm.</p>
-      </aside>
+        <p class="lede">Send us the details and we'll come back with a menu and a quote. Nothing is booked until you confirm.</p>
+      </div>
       <div>
         <form id="enquiry" class="formbox" novalidate>
           <div class="row2">
@@ -475,7 +475,7 @@ footer small { color: var(--muted-on-black); }
           </fieldset>
           <div class="fld"><label class="lbl" for="e-note">Tell us more</label><textarea id="e-note" class="field" placeholder="Timings, dietary needs, vegan, gluten-free and veggie schnitz counts, anything else"></textarea></div>
           <p class="err" id="e-err" role="alert" hidden></p>
-          <button class="btn" type="submit" style="align-self: flex-start;">Send Enquiry</button>
+          <button class="btn" type="submit" style="align-self: flex-start; justify-self: start;">Send Enquiry</button>
         </form>
         <div class="formbox done" id="enquiry-done" role="status" hidden>
           <p class="tag red">Enquiry sent</p>
@@ -503,6 +503,8 @@ footer small { color: var(--muted-on-black); }
 </footer>
 
 <script src="js/sites.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/circuit.js"></script>
 <script>
 (function () {
   // Like the brand pages' enquiry forms, this doesn't send anywhere yet: it checks the details and says thanks.
@@ -529,6 +531,9 @@ footer small { color: var(--muted-on-black); }
     done.hidden = true;
     form.hidden = false;
   });
+
+  // On the circuit: the truck's next stops, from the Events tab in /admin.
+  window.Circuit.fill();
 
   // On the circuit: a vote for the next town. Like the enquiry, it doesn't send anywhere yet.
   document.getElementById("vote-form").addEventListener("submit", function (e) {
