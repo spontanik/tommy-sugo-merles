@@ -12,8 +12,7 @@
   var MAX_DEVICE = 30;
   var client = null;
 
-  var PITCH = "Create an account to follow every order on any device and hear about specials first. " +
-    "We'll also keep your cell number, which is how loyalty points work at our counter.";
+  var PITCH = "Create an account to follow every order on any device and hear about specials first.";
 
   function db() {
     if (!client && window.supabase && conf.url) {
