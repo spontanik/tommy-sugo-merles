@@ -61,7 +61,11 @@ html { scroll-padding-top: calc(var(--head-h, 80px) + 16px); }
 header.site .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-block: 16px; }
 /* The logo never squashes: it keeps its shape and, below about 400px wide, scales down. */
 .home-link { flex: none; display: flex; }
-.home-link img { flex: none; height: clamp(32px, 11vw, 44px); width: auto; display: block; }
+.home-link img { flex: none; width: clamp(124px, 42.7vw, 171px); max-width: 100%; height: auto; display: block; }
+/* On a narrow phone, once every link is already in the menu, the logo gives up width before the header icons do (it
+   keeps its shape), so the row never runs off the screen. Only then, or js/site-menu.js would keep links in the row
+   and squash the logo instead. Specific enough to beat site-menu.js, which holds the first item at its full size. */
+header.site.has-menu.compact .wrap:not(:has(nav.main .nav)) > a.home-link:first-child { flex: 0 1 auto; min-width: 0; }
 nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .nav { color: var(--ink); font-weight: 700; font-size: 16px; text-decoration: none; padding: 10px 0; border-bottom: 3px solid transparent; }
 .nav:hover, .nav[aria-current="page"] { border-bottom-color: var(--ink); }
@@ -222,6 +226,22 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
 .cart-lines li { display: flex; justify-content: space-between; gap: 12px; }
 .cart-lines li span:last-child { font-weight: 800; white-space: nowrap; }
 .cart-total { display: flex; justify-content: space-between; align-items: baseline; border-top: 3px solid var(--ink); padding-top: 12px; font-size: 22px; font-weight: 800; }
+/* Add more: small square tiles under the total, each the brand's icon with a black + badge. */
+.add-more { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
+.add-lead { font-size: 13px; font-weight: 800; letter-spacing: 0.15em; margin-right: 2px; }
+.add-tile { position: relative; display: grid; place-items: center; width: 56px; height: 56px; border: 3px solid var(--ink); color: var(--ink); text-decoration: none; }
+.add-tile[hidden] { display: none; }
+/* The three tiles always stay on one line together; when there isn't room beside them, and always on a phone, the
+   lead goes on its own line above. */
+.add-tiles { display: flex; flex-wrap: nowrap; gap: 14px; }
+@media (max-width: 600px) { .add-lead { flex-basis: 100%; } }
+.add-tile:hover { background: var(--shade); }
+.add-tile svg { width: 36px; height: 36px; }
+.add-tile .pic-ink { fill: currentColor; }
+.add-tile .pic-shade { fill: var(--shade); stroke: currentColor; stroke-width: 2.5; stroke-linejoin: round; }
+.add-tile:hover .pic-shade { fill: var(--surface-print); }
+.add-tile .pic-paper { fill: var(--surface-print); }
+.add-plus { position: absolute; top: -9px; right: -9px; width: 20px; height: 20px; display: grid; place-items: center; background: var(--ink); color: var(--on-fill); font: 800 16px/1 var(--sans); }
 .shop-err { margin: 0; font-weight: 800; }
 </style>
 
@@ -581,9 +601,15 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
             <p id="cart-empty" class="muted" style="margin: 0;">Nothing here yet. Add food from the menu, or frozen schnitz and sauces from the shop.</p>
             <ul id="cart-lines" class="cart-lines" hidden></ul>
             <div class="cart-total"><span id="cart-count">0 items</span><span id="cart-total">TBC</span></div>
-            <a href="#menu" data-order-note hidden style="font-weight: 700;">Add food from the menu, for collection</a>
-            <a href="tommy-sugo.html" data-site="tommy" data-site-hash="#menu" style="font-weight: 700;">Add Tommy Sugo pizza to this order →</a>
-            <a href="#shop" style="font-weight: 700;">Add frozen schnitz or sauces from the shop</a>
+            <!-- Add more: small tiles with the brand's icons; each says what it adds on hover and to screen readers. -->
+            <nav class="add-more" aria-label="Add more to your order">
+              <span class="add-lead" aria-hidden="true">ADD MORE</span>
+              <span class="add-tiles">
+                <a class="add-tile" href="#menu" data-order-note hidden aria-label="Add food from the menu, for collection" title="Add food from the menu, for collection"><svg class="add-svg" viewBox="-1 -1 50 50" width="36" height="36" aria-hidden="true" focusable="false"><path class="pic-ink" transform="translate(2.5 2.5)" d="M11 5h25v36h-25Z"/><path class="pic-shade" d="M11 5h25v36h-25Z"/><path class="pic-ink" d="M15 10h17v4.5h-17ZM15 19h11v2.5h-11ZM15 25h9v2.5h-9ZM15 31h12v2.5h-12ZM28.4 20.25a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0ZM28.4 26.25a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0ZM28.4 32.25a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0 -3.2 0Z"/></svg><span class="add-plus" aria-hidden="true">+</span></a>
+                <a class="add-tile" href="tommy-sugo.html" data-site="tommy" data-site-hash="#menu" aria-label="Add Tommy Sugo pizza to this order" title="Add Tommy Sugo pizza to this order"><svg class="add-svg" viewBox="-1 -1 50 50" width="36" height="36" aria-hidden="true" focusable="false"><path class="pic-ink" transform="translate(2.5 2.5)" d="M5 24a19 19 0 1 0 38 0a19 19 0 1 0 -38 0ZM10 24a14 14 0 1 0 28 0a14 14 0 1 0 -28 0Z"/><path class="pic-shade" d="M5 24a19 19 0 1 0 38 0a19 19 0 1 0 -38 0Z"/><path class="pic-shade" d="M10 24a14 14 0 1 0 28 0a14 14 0 1 0 -28 0Z"/><path class="pic-ink" d="M16.4 18a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0ZM27.4 19a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0ZM14.4 29a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0ZM25.9 30.5a2.6 2.6 0 1 0 5.2 0a2.6 2.6 0 1 0 -5.2 0ZM22 24a2 2 0 1 0 4 0a2 2 0 1 0 -4 0ZM11.5 17.7 L35.7 31.7 L36.5 30.3 L12.3 16.3ZM17.7 36.5 L31.7 12.3 L30.3 11.5 L16.3 35.7Z"/></svg><span class="add-plus" aria-hidden="true">+</span></a>
+                <a class="add-tile" href="#shop" aria-label="Add frozen schnitz or sauces from the shop" title="Add frozen schnitz or sauces from the shop"><svg class="add-svg" viewBox="-1 -1 50 50" width="36" height="36" aria-hidden="true" focusable="false"><path class="pic-ink" transform="translate(2.5 2.5)" d="M7 17h34v25h-34ZM4 8L44 8L44 17A5 4 0 0 1 34 17A5 4 0 0 1 24 17A5 4 0 0 1 14 17A5 4 0 0 1 4 17Z"/><path class="pic-shade" d="M7 17h34v25h-34Z"/><path class="pic-shade" d="M4 8L44 8L44 17A5 4 0 0 1 34 17A5 4 0 0 1 24 17A5 4 0 0 1 14 17A5 4 0 0 1 4 17Z"/><path class="pic-ink" d="M14 8h10v9A5 4 0 0 1 14 17ZM34 8h10v9A5 4 0 0 1 34 17ZM27 26h9v16h-9ZM3 41h42v3h-42Z"/><path class="pic-paper" d="M11 25h12v10h-12ZM33 33h1.6v1.6h-1.6Z"/></svg><span class="add-plus" aria-hidden="true">+</span></a>
+              </span>
+            </nav>
             <fieldset id="get-how">
               <legend class="lbl">HOW DO YOU WANT IT</legend>
               <div class="btns">

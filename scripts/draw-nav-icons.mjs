@@ -138,6 +138,18 @@ const tommy = {
       brush([[20.5, 25.5], [27, 25.2], [33, 25.6]], 3.2),
     ];
   },
+  // The cart's "Add Merle's schnitz" tile: a schnitz on a roll, in Tommy Sugo's brush line.
+  schnitz() {
+    seed = 81;
+    return [
+      brush([[6.5, 23], [10, 14.5], [24, 10.5], [38, 14.5], [41.5, 23]], 3.4),
+      brush([[6, 23.5], [24, 22.8], [42, 23.4]], 2.6),
+      brush([[5, 28], [9, 26], [13, 28.5], [17, 26], [21, 28.4], [25, 26], [29, 28.5], [33, 26], [37, 28.3], [41, 26], [43, 28]], 3),
+      brush([[7, 32], [24, 31.4], [41, 32]], 2.6),
+      brush([[7.5, 32.5], [9.5, 37.5], [24, 38.8], [38.5, 37.5], [40.5, 32.5]], 3.4),
+      dot(17, 16.5, 1.2), dot(24, 14.5, 1.2), dot(31, 16.8, 1.2), dot(21, 19, 1.1), dot(28, 19.2, 1.1),
+    ];
+  },
   // WhatsApp: a handset in a speech bubble, in brush strokes, never WhatsApp's own logo.
   whatsapp() {
     seed = 71;
@@ -224,6 +236,15 @@ const merles = {
       white: [],
     };
   },
+  // The cart's "Add Tommy Sugo pizza" tile: a pizza from above, in the poster shapes.
+  pizza() {
+    return {
+      shapes: [circle(24, 24, 19), circle(24, 24, 14)],
+      ink: [circle(19, 18, 2.6), circle(30, 19, 2.6), circle(17, 29, 2.6), circle(28.5, 30.5, 2.6), circle(24, 24, 2),
+        bar(24, 24, 28, 1.6, 30), bar(24, 24, 28, 1.6, -60)],
+      white: [],
+    };
+  },
   whatsapp() {
     return {
       // The tail first, so the bubble's fill covers where they meet.
@@ -268,8 +289,8 @@ const merlesButton = {
 
 const names = ["menu", "delivery", "shop"];
 const out = {
-  tommy: Object.fromEntries([...names, "instagram", "facebook", "whatsapp"].map((n) => [n, tommySvg(n)])),
-  merles: Object.fromEntries([...names, "cart", "orders", "instagram", "facebook", "whatsapp"].map((n) => [n, merlesSvg(n)])),
+  tommy: Object.fromEntries([...names, "instagram", "facebook", "whatsapp", "schnitz"].map((n) => [n, tommySvg(n)])),
+  merles: Object.fromEntries([...names, "cart", "orders", "instagram", "facebook", "whatsapp", "pizza"].map((n) => [n, merlesSvg(n)])),
   merlesButton,
 };
 console.log(JSON.stringify(out, null, 2));
