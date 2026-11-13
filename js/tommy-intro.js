@@ -1,18 +1,20 @@
-/* The landing page's Tommy Sugo door, introduced: a terminal cursor types five dots and deletes them, then types
+/* The Tommy Sugo home page hero, introduced: a terminal cursor types five dots and deletes them, then types
    "Last night a pizza saved my life." while eight pizza slices (drawn like the menu's pizza icons) drop from the top
-   of the door into the seal's place. They snap together, the pizza spins up and flips over into the seal, the line
-   about the bases and the Enter button fade up; a second after the spin ends, Tommy winks.
+   of the hero into the seal's place on the frame. They snap together, the pizza spins up and flips over into the
+   seal; the red bar, the line about the bases and the buttons fade up, and a second after the spin ends Tommy winks.
 
-   - Plays every time the landing page loads, reloads included.
-   - People who ask their device for less motion, and anyone without scripts, see the door exactly as it was.
-   - A click or a key press on the door skips to the end.
+   - Plays every time someone lands on the home view, reloads included (not when the page opens on another view).
+   - People who ask their device for less motion, and anyone without scripts, see the hero exactly as it was.
+   - A click on the hero or a key press skips to the end.
    - Everything is in its final place from the start, just hidden, so nothing on the page moves when it finishes.
-   The drawing is in index.html (#ti-logo). */
+   The drawing is in tommy-sugo.html (#ti-logo); the parts that fade up are marked data-intro="lede" or "btn". */
 (function () {
   var NS = "http://www.w3.org/2000/svg";
   var $ = function (id) { return document.getElementById(id); };
   var logo = $("ti-logo");
   if (!logo) return;
+  var view = logo.closest("main[data-view]");
+  if (view && view.hidden) return;
   var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduce) return;
 
@@ -136,18 +138,22 @@
 
 
   // ---- The headline: one span per letter, in place but unseen ----
-  var door = logo.closest(".door"), h1 = door.querySelector("h1");
-  var lede = door.querySelector(".lede"), btn = door.querySelector(".btn");
+  var hero = logo.closest(".frame") || logo.closest(".door");
+  var clip = logo.closest("section") || hero;
+  var h1 = hero.querySelector("h1");
+  var reveals = [["lede", LEDE], ["btn", BTN]].map(function (r) {
+    return { nodes: Array.prototype.slice.call(hero.querySelectorAll('[data-intro="' + r[0] + '"]')), at: r[1] };
+  });
   var full = h1.textContent.replace(/\s+/g, " ").trim();
   h1.setAttribute("aria-label", full);
   var chars = [];
-  h1.querySelectorAll(".line").forEach(function (line) {
-    var text = line.textContent;
-    line.textContent = "";
-    line.setAttribute("aria-hidden", "true");
+  var lines = h1.querySelectorAll(".line");
+  (lines.length ? Array.prototype.slice.call(lines) : [h1]).forEach(function (box) {
+    var text = box.textContent.replace(/\s+/g, " ").trim();
+    box.textContent = "";
     var inner = document.createElement("span");
-    inner.className = "inner";
-    line.appendChild(inner);
+    inner.setAttribute("aria-hidden", "true");
+    box.appendChild(inner);
     text.split("").forEach(function (c) {
       var s = document.createElement("span");
       s.className = "ch";
@@ -155,18 +161,20 @@
       inner.appendChild(s);
       chars.push(s);
     });
+    if (lines.length) box.appendChild(document.createTextNode(" "));
   });
   var NCH = chars.length, TYPE_END = TYPE_AT + NCH * CHAR;
+  // The dots sit where the first letter will be.
   var dots = document.createElement("span");
   dots.className = "dots";
-  chars[0].parentNode.appendChild(dots);
+  chars[0].appendChild(dots);
   var cur = document.createElement("span");
   cur.className = "cur";
 
   var toss = $("ti-toss"), seal = $("ti-seal"), wink = $("ti-wink"), spk = $("ti-sparkle");
   var FROM = 0;
   function fallFrom() {
-    var d = door.getBoundingClientRect(), l = logo.getBoundingClientRect();
+    var d = clip.getBoundingClientRect(), l = logo.getBoundingClientRect();
     FROM = -((l.top - d.top) * (320 / l.width) + 160 + R + 40);
   }
   fallFrom();
@@ -221,11 +229,13 @@
       spk.setAttribute("opacity", (kp < .7 ? 1 : 1 - (kp - .7) / .3).toFixed(2));
     }
 
-    [[lede, LEDE], [btn, BTN]].forEach(function (pair) {
-      var p = easeOut(prog(t, pair[1][0], pair[1][1]));
-      pair[0].style.opacity = p.toFixed(3);
-      pair[0].style.transform = "translateY(" + (10 * (1 - p)).toFixed(2) + "px)";
-      pair[0].style.pointerEvents = p > .5 ? "" : "none";
+    reveals.forEach(function (r) {
+      var p = easeOut(prog(t, r.at[0], r.at[1]));
+      r.nodes.forEach(function (n) {
+        n.style.opacity = p.toFixed(3);
+        n.style.transform = "translateY(" + (10 * (1 - p)).toFixed(2) + "px)";
+        n.style.pointerEvents = p > .5 ? "" : "none";
+      });
     });
   }
 
@@ -239,15 +249,15 @@
     toss.removeAttribute("transform");
     seal.style.display = "";
     wink.style.display = spk.style.display = "none";
-    [lede, btn].forEach(function (n) { n.style.opacity = n.style.transform = n.style.pointerEvents = ""; });
-    door.removeEventListener("click", skip);
+    reveals.forEach(function (r) { r.nodes.forEach(function (n) { n.style.opacity = n.style.transform = n.style.pointerEvents = ""; }); });
+    clip.removeEventListener("click", skip);
     document.removeEventListener("keydown", skip);
   }
   function skip(e) {
     if (done || (e.target && e.target.closest && e.target.closest("a"))) return;
     finish();
   }
-  door.addEventListener("click", skip);
+  clip.addEventListener("click", skip);
   document.addEventListener("keydown", skip);
 
   var start = null, done = false;

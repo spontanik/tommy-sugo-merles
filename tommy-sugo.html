@@ -135,7 +135,17 @@ nav.main { gap: 4px 16px; }
 /* The seal hangs from the frame's top line. It never squashes: it stays round and, on narrow screens, scales down as one piece. */
 .frame { --seal: clamp(112px, 36vw, 176px); position: relative; border: 2px solid var(--rule); padding: calc(var(--seal) / 2 + 40px) clamp(20px, 6vw, 72px) 72px; }
 .frame-seal { position: absolute; top: calc(var(--seal) / -2); left: 50%; transform: translateX(-50%); width: max-content; padding: 0 20px; background: var(--surface); }
-.frame-seal img { width: var(--seal); height: var(--seal); max-width: none; display: block; }
+.frame-seal img, .frame-seal svg { width: var(--seal); height: var(--seal); max-width: none; display: block; overflow: visible; }
+/* The home intro (js/tommy-intro.js): slices fall from the top of the hero, which clips them; the headline types out.
+   Every letter is in place from the start, just unseen, so nothing moves; the cursor takes no room. */
+.frame-section { overflow: hidden; }
+.frame h1 .ch { visibility: hidden; }
+.frame h1 .ch.on { visibility: visible; }
+.frame h1 .ch:first-child { position: relative; }
+.frame h1 .dots { position: absolute; left: 0; top: 0; white-space: nowrap; visibility: visible; }
+.frame h1 .cur { display: inline-block; width: 0; position: relative; visibility: visible; }
+.frame h1 .cur::after { content: ""; position: absolute; left: .06em; bottom: .1em; width: .42em; height: .8em; background: var(--sauce); }
+.frame h1 .cur.off::after { visibility: hidden; }
 .frame-section { padding-top: 136px; }
 /* Bunting hung a little below the header line, with the frame moved down to match. */
 .bunting-drop { background-position: left 0 top 16px; }
@@ -323,11 +333,28 @@ footer.site .wrap { padding-block: 56px 32px; display: flex; flex-direction: col
   <section class="frame-section section bunting bunting-drop" style="padding-bottom: 48px;">
     <div class="wrap">
       <div class="frame center">
-        <div class="frame-seal"><img src="tommy-seal.png" alt="Tommy Sugo Pizza seal: The Secret's in the Sauce"></div>
+        <!-- The seal, drawn so js/tommy-intro.js can build it from falling pizza slices. Without the script it's just the seal. -->
+        <div class="frame-seal"><svg id="ti-logo" viewBox="-160 -160 320 320" role="img" aria-label="Tommy Sugo Pizza seal: The Secret's in the Sauce">
+          <g id="ti-toss">
+            <g id="ti-pizza"></g>
+            <g id="ti-seal">
+              <image href="tommy-seal.png" x="-160" y="-160" width="320" height="320"/>
+              <g id="ti-wink" style="display:none">
+                <rect x="-3.8" y="-18.6" width="25.2" height="10.8" fill="#ffffff"/>
+                <path d="M-2.4 -13.6 Q9 -6.8 20.4 -14.2" fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M-1.6 -13.2 L-5 -15.6 M0.8 -11.4 L-1.8 -13.2" fill="none" stroke="#000" stroke-width="1" stroke-linecap="round"/>
+              </g>
+              <g id="ti-sparkle" style="display:none">
+                <path d="M0 -10 Q1.6 -1.6 10 0 Q1.6 1.6 0 10 Q-1.6 1.6 -10 0 Q-1.6 -1.6 0 -10 Z" fill="#ec1c24"/>
+                <path d="M0 -5 Q.8 -.8 5 0 Q.8 .8 0 5 Q-.8 .8 -5 0 Q-.8 -.8 0 -5 Z" fill="#ffffff" transform="translate(9 -9) scale(.6)"/>
+              </g>
+            </g>
+          </g>
+        </svg></div>
         <h1 class="poster-xl">Last night a pizza saved my life.</h1>
-        <div class="bar" aria-hidden="true"></div>
-        <p class="lede">Hand-rolled thin bases. 7-hour slow-cooked Roma tomato sauce. One truck on the festival circuit, and one dark kitchen sending pizza to your door.</p>
-        <div class="btns" style="justify-content: center;">
+        <div class="bar" aria-hidden="true" data-intro="lede"></div>
+        <p class="lede" data-intro="lede">Hand-rolled thin bases. 7-hour slow-cooked Roma tomato sauce. One truck on the festival circuit, and one dark kitchen sending pizza to your door.</p>
+        <div class="btns" style="justify-content: center;" data-intro="btn">
           <a class="btn" href="#delivery">Order Pizza</a>
           <a class="btn btn-ghost" href="#menu">See the Menu</a>
         </div>
@@ -962,4 +989,5 @@ window.ORDER_COPY = {
 })();
 </script>
 
+<script src="js/tommy-intro.js"></script>
 </body></html>
