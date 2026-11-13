@@ -405,7 +405,11 @@
     });
 
     optDlg.showModal();
+    return optDlg;
   }
+
+  // js/add-more.js adds items from a sheet over the cart, with the same options dialog and cart refresh.
+  window.Order = { render: renderCart, openOptions: openOptions };
 
   // ---------- As a guest, or with an account ----------
   var A = window.Account;
