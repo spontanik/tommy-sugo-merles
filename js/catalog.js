@@ -86,6 +86,21 @@
     return s;
   }
 
+  // An item with sizes in Yoco (Single and Double, say) lists each size's price, one under the other. Anything else
+  // shows its one price.
+  function priceCell(cls, it) {
+    var sizes = (it.yoco_options || []).filter(function (v) { return v.label && money(v.price); });
+    if (sizes.length < 2) return priceSpan(cls, it.price);
+    var cell = el("span", (cls ? cls + " " : "") + "sizes");
+    sizes.forEach(function (v) {
+      var line = el("span", "size");
+      line.appendChild(el("span", "size-name", v.label));
+      line.appendChild(document.createTextNode(" " + money(v.price)));
+      cell.appendChild(line);
+    });
+    return cell;
+  }
+
   function stepper(label) {
     var st = el("div", "stepper");
     var minus = el("button", null, "−");
@@ -146,7 +161,8 @@
       var pz = el("div", "pz");
       if (thumb) pz.appendChild(thumb);
       pz.appendChild(el("span", "name", it.name));
-      ["price", "price_deliver"].forEach(function (c) { pz.appendChild(priceSpan("p", it[c])); });
+      // One price, the Collect price: the delivery apps set their own. A Deliver price kept in the admin isn't shown.
+      pz.appendChild(priceCell("p", it));
       if (desc) pz.appendChild(desc);
       if (order) pz.appendChild(order);
       return pz;
@@ -154,8 +170,7 @@
 
     var row = el("div", "row" + (hasDesc || thumb ? "" : " small") + (kind === "cd" ? " pr" : ""));
     row.appendChild(el("span", null, it.name));
-    row.appendChild(priceSpan(null, it.price));
-    if (kind === "cd") row.appendChild(priceSpan(null, it.price_deliver));
+    row.appendChild(priceCell(null, it));
     if (!hasDesc && !thumb && !order) return row;
     var item = el("div", "item");
     if (thumb) item.appendChild(thumb);
@@ -214,9 +229,9 @@
         if (keys.indexOf(s.key) < 0) gone[s.key] = true;
       });
       live.forEach(function (s) {
-        var usual = fromConfig.filter(function (c) { return c.key === s.key; })[0] || addBlock(kind, s.key);
+        // A section the page doesn't know yet gets its block from the page's template.
+        if (!fromConfig.filter(function (c) { return c.key === s.key; }).length) addBlock(kind, s.key);
         drawTitle(s);
-        if (kind === "menu") drawColumns(s, usual);
       });
       sections[kind] = live;
       order = order || {};
@@ -360,31 +375,6 @@
       if (words.length) head.appendChild(document.createTextNode(words.join(" ") + " "));
       head.appendChild(end);
     });
-  }
-
-  // The column labels in the page are written for the section's usual prices. Redraw them only if that has changed.
-  function drawColumns(sec, usual) {
-    if (!usual || usual.prices === sec.prices) return;
-    document.querySelectorAll('[data-menu-items="' + sec.key + '"]').forEach(function (slot) {
-      var head = slot.previousElementSibling;
-      if (brand === "merles") {
-        if (head) head.querySelectorAll(".ch").forEach(function (c) { c.hidden = sec.prices !== "cd"; });
-        return;
-      }
-      var old = head && head.classList.contains("pz-head") ? head : null;
-      if (sec.prices === "single" && !old) return;
-      var fresh = tommyColumns(sec, old && old.querySelector(".grp"));
-      if (old) old.replaceWith(fresh); else slot.parentNode.insertBefore(fresh, slot);
-    });
-  }
-
-  function tommyColumns(sec, group) {
-    var head = el("div", "pz-head");
-    head.appendChild(group || el("span", "tag grp"));
-    if (sec.prices === "cd") {
-      ["Collect", "Deliver"].forEach(function (t, i) { head.appendChild(el("span", i ? "tag ch" : "tag ch c1", t)); });
-    }
-    return head;
   }
 
   function drawMenu(rows) {
