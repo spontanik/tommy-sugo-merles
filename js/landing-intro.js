@@ -8,9 +8,9 @@
    from the left and the Kombi from the right, big, along the bottom of the doors. They meet in the middle with a
    friendly bump and stop. Their hatches fold up into awnings, and Tommy and Merle pop up at the counters. They turn to
    each other, then their faces spin up out of the trucks into the logos' places and open out into the full logos. The
-   trucks fade away as both doors' words and buttons come in. Then Events, Trucks & Catering comes in and the trucks
-   roll back in, small, either side of its heading; then the Shop comes in, and the shopfront builds itself above its
-   heading and opens its door.
+   trucks fade away as both doors' words and buttons come in. Then Events, Trucks & Catering and the Shop come in
+   together, as the trucks roll back in, small, either side of the Events heading; then the shopfront builds itself
+   above The Shop's heading and opens its door.
    (On a phone the trucks meet on a split screen of their own, then reappear either side of the Events heading, and
    the shopfront builds when The Shop is scrolled to.)
 
@@ -51,12 +51,11 @@
     fade: [5250, 5850],       // phone only: the split screen fades away under them
     crop: [6200, 6600],       // each face opens out into its full logo
     away: [6250, 6650],       // the trucks fade away from the doors as the doors' words come in
-    events: 7150,
-    backT: [7350, 7950], backM: [7500, 8100],  // and roll in either side of the Events heading
-    shop: 8150,
-    build: [8550, 9850],      // the shopfront builds itself above The Shop's heading
-    door: [10000, 10600],     // and its door swings open
-    end: 11200
+    events: 7150, shop: 7150, // Events and the Shop come in together,
+    backT: [7150, 7750], backM: [7300, 7900],  // as the trucks roll in either side of the Events heading
+    build: [8100, 9400],      // then the shopfront builds itself above The Shop's heading
+    door: [9550, 10150],      // and its door swings open
+    end: 10750
   };
   // Each truck in its own units: the road is y 0. Tommy's truck faces right, its back at x 0 and front bumper at 392;
   // with its awning up it's about 240 tall. The Kombi faces left, front bumper at -4, back at 416, and is drawn at KOMBI
@@ -425,7 +424,7 @@
     $("li-t-road").style.opacity = $("li-m-road").style.opacity = (1 - prog(t, T.away[0], T.away[1])).toFixed(3);
     svg.style.opacity = L.narrow ? (parked ? prog(t, T.crop[1], T.crop[1] + 500) : 1 - prog(t, T.fade[0], T.fade[1])).toFixed(3) : "";
 
-    // Then the page comes in: the logos (now the real ones) and both doors, then Events, then the Shop.
+    // Then the page comes in: the logos (now the real ones) and both doors, then Events and the Shop together.
     if (playing) {
       root.classList.toggle("logos-in", t >= T.crop[1]);
       root.classList.toggle("show-doors", t >= T.crop[1]);
