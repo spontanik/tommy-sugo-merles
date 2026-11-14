@@ -61,7 +61,7 @@
   // with its awning up it's about 240 tall. The Kombi faces left, front bumper at -4, back at 416, and is drawn at KOMBI
   // times Tommy's scale.
   var T_FRONT = 392, T_HIGH = 240, M_FRONT = -4, KOMBI = .76, RECOIL = 12;
-  var ENTRY = 2;                                   // how much bigger they drive in than they'd fit beside the doors' words
+  var ENTRY = 3.5;                                 // how much bigger they drive in than they'd fit beside the doors' words
   var T_FACE = { x: 100, y: -148, w: 72 };         // the faces in the trucks: centre and width, in truck units
   var M_FACE = { x: 219.7, y: -194, w: 55.5 };
   var TURN = 40, LEAN = 7;                         // how far they turn to each other, in degrees
@@ -207,8 +207,8 @@
       $("li-bd-m").setAttribute("x", vw / 2); $("li-bd-m").setAttribute("width", vw / 2); $("li-bd-m").setAttribute("height", vh);
     } else {
       // Wide: along the bottom of the two doors, meeting on the middle line. The doors are bare while they're there,
-      // so they're big: twice the size that would fit beside a door's button and under its paragraph, as long as
-      // they stay under the logos and inside their doors. They fade away as the doors' words come in.
+      // so they're big: three and a half times the size that would fit beside a door's button and under its
+      // paragraph, as long as they stay under the logos and inside their doors. They fade away as the doors' words come in.
       L.left = dT.left; L.right = dM.right; L.c = dT.right;
       L.road = dT.bottom - clamp(dT.height * .03, 8, 18);
       var bT = box(doorT.querySelector(".btn")), bM = box(doorM.querySelector(".btn"));
