@@ -21,6 +21,48 @@
         "python3 -m http.server ${PORT:-8126} --bind 127.0.0.1"
       ],
       "port": 8126
+    },
+    {
+      "name": "order-page-and-stock",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8127",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        ".claude/worktrees/order-page-and-stock"
+      ],
+      "port": 8127
+    },
+    {
+      "name": "remove-loyalty-line",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8131",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        ".claude/worktrees/remove-loyalty-line"
+      ],
+      "port": 8131
+    },
+    {
+      "name": "nav-word-icons",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8132",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        ".claude/worktrees/nav-word-icons"
+      ],
+      "port": 8132
     }
   ]
 }

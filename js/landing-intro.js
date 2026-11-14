@@ -1,16 +1,17 @@
-/* The landing page's two trucks, and its opening.
+/* The landing page's two trucks and shopfront, and its opening.
 
-   The trucks: Tommy Sugo's truck parks in the inside bottom corner of its black door, the Merle's Kombi in the inside
-   bottom corner of the paper one, nose to nose across the middle, hatches up as awnings. They're sized to fit beside the
-   door's button and under its paragraph, and the Kombi is a little smaller than Tommy's truck (it's the smaller vehicle).
-   On a phone, where the doors are stacked, each parks at the bottom of its own door. They stay there.
+   The trucks: Tommy Sugo's truck and the Merle's Kombi stand either side of the Events, Trucks & Catering heading,
+   facing in towards it, hatches up as awnings, sized to the heading (the Kombi a little smaller than Tommy's truck: it's
+   the smaller vehicle). A little Tommy Sugo shopfront stands just above The Shop's heading, door open. They stay there.
 
    The opening (once per visit): the page starts as the bare squares, no words. Tommy's truck putters in from the left
    and the Kombi from the right. They meet in the middle with a friendly bump and stop. Their hatches fold up into awnings,
    and Tommy and Merle pop up at the counters. They turn to each other, then their faces spin up out of the trucks into
    the logos' places and open out into the full logos. Then the page comes in: both doors' words and buttons, then
-   Events, Trucks & Catering, then the Shop. The trucks stay parked. (On a phone the trucks meet on a split screen of
-   their own, then reappear parked in their doors.)
+   Events, Trucks & Catering, then the Shop. Then the trucks fade away from the doors and reappear either side of the
+   Events heading, rolling in to it, and the shopfront builds itself above The Shop's heading and opens its door.
+   (On a phone the trucks meet on a split screen of their own, then reappear either side of the Events heading, and
+   the shopfront builds when The Shop is scrolled to.)
 
    The faces are the logo files themselves (tommy-seal.png, merles-logo.svg), cropped down to the face, so the hand-over
    to the real logos is exact. The drawing is #intro-stage in index.html; the inline script there hides the squares'
@@ -49,7 +50,12 @@
     spin: [5150, 6200],       // and spin up into the logos' places
     fade: [5250, 5850],       // phone only: the split screen fades away under them
     crop: [6200, 6600],       // each face opens out into its full logo
-    events: 7150, shop: 7700, end: 8600
+    events: 7150, shop: 7700,
+    away: [7950, 8400],       // the trucks fade away from the doors
+    backT: [8550, 9150], backM: [8700, 9300],  // and roll in either side of the Events heading
+    build: [9500, 10800],     // the shopfront builds itself on The Shop's heading
+    door: [10950, 11550],     // and its door swings open
+    end: 12200
   };
   // Each truck in its own units: the road is y 0. Tommy's truck faces right, its back at x 0 and front bumper at 392;
   // with its awning up it's about 240 tall. The Kombi faces left, front bumper at -4, back at 416, and is drawn at KOMBI
@@ -61,6 +67,10 @@
   // Where each face sits in its full logo. Tommy: the seal's inner circle, this fraction of its width as a radius.
   // Merle: merles-portrait.svg's box inside merles-logo.svg (both drawn on the same grid), as top, right, bottom, left.
   var SEAL_R = .345;
+  // The shopfront is about 300 wide and 222 tall in the same units. Beside the Events heading, Tommy's truck (awning
+  // and all) is this many times the heading's height; the gap between each truck and the words, in heading font sizes;
+  // and the gap between the shopfront and The Shop's heading.
+  var SHOP_H = 230, SHOP_W = 320, BESIDE = 1.25, GAP = .3, SHOP_GAP = .3;
   var MC = [1 / 535, 135 / 551, 181 / 535, 144 / 551];
 
   stage.hidden = false;
@@ -72,6 +82,9 @@
   var doorT = document.querySelector(".door.tommy"), doorM = document.querySelector(".door.merles");
   var logoT = doorT.querySelector(".logo"), logoM = doorM.querySelector(".logo");
   var tPuffs = $("li-t-puffs"), mPuffs = $("li-m-puffs"), bump = $("li-bump");
+  var evTile = document.querySelector(".shared.events"), shopTile = document.querySelector(".shared.shop");
+  var evH = evTile.querySelector("h2"), shopH = shopTile.querySelector("h2");
+  var shop = $("li-shop");
 
   // The awnings: Tommy's red stripes, Merle's black and white ones with a scalloped edge.
   (function () {
@@ -87,6 +100,14 @@
     var d = "M124 -286";
     for (var j = 0; j < 8; j++) d += " a12 11 0 0 0 24 0";
     $("li-m-scallop").setAttribute("d", d + " Z");
+    // The shopfront's awning: red and black stripes, a red scalloped edge.
+    g = $("li-s-stripes");
+    for (x = -150, i = 0; x < 150; x += 20, i++) {
+      if (i % 2 === 0) el("rect", { x: x, y: -177, width: 20, height: 28, fill: "#ec1c24" }, g);
+    }
+    d = "M-150 -150";
+    for (j = 0; j < 10; j++) d += " a15 9 0 0 0 30 0";
+    $("li-s-scallop").setAttribute("d", d + " Z");
   })();
 
   // ---- Pizza wheels (the same as the Events page truck's, from js/truck-arrival.js): each wheel is a small pizza drawn like the menu's pizza icons (black ink on paper, a crust band,
@@ -149,6 +170,23 @@
     return { left: x, top: y, right: x + w, bottom: y + h, width: w, height: h };
   }
   var L = {};
+  // A heading's type: its size, its line height, and how far down each line its capitals' tops and its baseline are.
+  var ctx = document.createElement("canvas").getContext("2d");
+  function type(h) {
+    var cs = getComputedStyle(h), fs = parseFloat(cs.fontSize), lh = parseFloat(cs.lineHeight) || fs * 1.02;
+    ctx.font = cs.fontWeight + " " + fs + "px " + cs.fontFamily;
+    var m = ctx.measureText("E");
+    if (!m.fontBoundingBoxAscent || !m.actualBoundingBoxAscent) return { fs: fs, lh: lh, cap: fs * .12, base: lh * .8 };
+    var lead = (lh - m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2;
+    return { fs: fs, lh: lh, cap: lead + m.fontBoundingBoxAscent - m.actualBoundingBoxAscent, base: lead + m.fontBoundingBoxAscent };
+  }
+  // Where a heading's words actually reach, left and right (its box can be wider than its lines).
+  function wordsBox(h) {
+    var r = document.createRange(), l = Infinity, rt = -Infinity;
+    r.selectNodeContents(h);
+    Array.prototype.forEach.call(r.getClientRects(), function (c) { if (c.width) { l = Math.min(l, c.left); rt = Math.max(rt, c.right); } });
+    return { left: l + window.scrollX, right: rt + window.scrollX };
+  }
   function faceBox(img, R, fx, fy, fw) {
     img.style.left = R.left + "px"; img.style.top = R.top + "px";
     img.style.width = R.width + "px"; img.style.height = R.height + "px";
@@ -164,8 +202,6 @@
       // afterwards each parks at the bottom of its own door, Tommy's on the right, the Kombi on the left.
       L.left = 0; L.right = vw; L.c = vw / 2; L.road = Math.round(vh * .62);
       L.s = Math.min(.5, (vw / 2 - 8) / (T_FRONT + RECOIL));
-      L.parkT = { x: dT.right - 14 - T_FRONT * L.s, road: dT.bottom - 16 };
-      L.parkM = { x: dM.left + 14 - M_FRONT * L.s * KOMBI, road: dM.bottom - 16 };
       $("li-bd-t").setAttribute("width", vw / 2); $("li-bd-t").setAttribute("height", vh);
       $("li-bd-m").setAttribute("x", vw / 2); $("li-bd-m").setAttribute("width", vw / 2); $("li-bd-m").setAttribute("height", vh);
     } else {
@@ -180,6 +216,20 @@
       L.s = clamp(Math.min(roomW / (T_FRONT + RECOIL), roomH / T_HIGH), .2, 1.1);
     }
     L.sM = L.s * KOMBI;
+    // Where they end up. The trucks: either side of the Events heading, facing in, standing on its (last) baseline, sized
+    // to the heading but never wider than the room beside its words.
+    var tE = box(evTile), hE = box(evH), wE = wordsBox(evH), ty = type(evH), gap = GAP * ty.fs;
+    var side = Math.min(wE.left - tE.left, tE.right - wE.right) - gap - 18;
+    L.sE = clamp(Math.min(BESIDE * hE.height / T_HIGH, side / (T_FRONT + 8)), .06, .5);
+    var roadE = hE.bottom - ty.lh + ty.base;
+    L.parkT = { x: wE.left - gap - T_FRONT * L.sE, road: roadE, dir: 1 };
+    L.parkM = { x: wE.right + gap - M_FRONT * L.sE * KOMBI, road: roadE, dir: -1 };
+    // The shopfront: a little above The Shop's heading, sized to the room over it.
+    var tS = box(shopTile), hS = box(shopH), tyS = type(shopH);
+    var bw = parseFloat(getComputedStyle(shopTile).borderTopWidth) || 0;
+    var roadS = hS.top + tyS.cap - SHOP_GAP * tyS.fs;
+    L.sS = clamp(Math.min((roadS - tS.top - bw - 8) / SHOP_H, (tS.width - 40) / SHOP_W), .12, .5);
+    L.shop = { x: tS.left + tS.width / 2, road: roadS };
     $("li-t-road").setAttribute("d", "M" + L.left + " " + L.road + " L" + L.c + " " + L.road);
     $("li-m-road").setAttribute("d", "M" + L.c + " " + L.road + " L" + L.right + " " + L.road);
     // Tommy comes in from off the left, the Kombi from off the right; their bumpers meet on the middle line.
@@ -236,6 +286,49 @@
     }
   }
 
+  // Fading away from the doors, then rolling in beside the Events heading: it fades in a little way out and rolls the
+  // rest of the way to its place.
+  function moveTo(t, w, x0, r0, s0, P, s1) {
+    var out = prog(t, T.away[0], T.away[1]);
+    if (t < w[0]) return { x: x0, road: r0, s: s0, o: 1 - out };
+    var p = prog(t, w[0], w[1]);
+    return { x: P.x - P.dir * (1 - easeOutCubic(p)) * 60 * s1, road: P.road, s: s1, o: clamp(p * 2.5, 0, 1) };
+  }
+
+  // The shopfront building itself: the walls go up, the windows and door pop in, the sign drops on, the awning rolls
+  // down; then the door swings open (in, on its left hinge) and the light inside comes on.
+  var easeOutBounce = function (p) {
+    var n = 7.5625, d = 2.75;
+    if (p < 1 / d) return n * p * p;
+    if (p < 2 / d) return n * (p -= 1.5 / d) * p + .75;
+    if (p < 2.5 / d) return n * (p -= 2.25 / d) * p + .9375;
+    return n * (p -= 2.625 / d) * p + .984375;
+  };
+  function part(id, k, tf) {
+    var g = $(id);
+    g.style.display = k <= .001 ? "none" : "";
+    g.setAttribute("transform", tf);
+  }
+  function drawShop(t) {
+    var b = prog(t, T.build[0], T.build[1]);
+    shop.style.display = b > 0 ? "" : "none";
+    if (!b) return;
+    shop.setAttribute("transform", "translate(" + L.shop.x.toFixed(2) + " " + L.shop.road.toFixed(2) + ") scale(" + L.sS.toFixed(4) + ")");
+    var w = prog(b, 0, .32), wk = w > 0 ? easeOutBack(w) : 0;
+    part("li-s-wall", wk, "scale(1 " + wk.toFixed(3) + ")");
+    var wi = prog(b, .28, .48), wik = wi > 0 ? easeOutBack(wi) : 0;
+    part("li-s-windows", wik, "translate(0 -86) scale(" + wik.toFixed(3) + ") translate(0 86)");
+    var dw = prog(b, .36, .56), dwk = dw > 0 ? easeOutBack(dw) : 0;
+    part("li-s-doorway", dwk, "translate(0 -66) scale(" + dwk.toFixed(3) + ") translate(0 66)");
+    var sg = prog(b, .5, .76);
+    part("li-s-sign", sg, "translate(0 " + (-(1 - easeOutBounce(sg)) * 110).toFixed(2) + ")");
+    var aw = prog(b, .72, .96), awk = aw > 0 ? easeOutBack(aw) : 0;
+    part("li-s-awning", awk, "translate(0 -176) scale(1 " + awk.toFixed(3) + ") translate(0 176)");
+    var o = easeInOut(prog(t, T.door[0], T.door[1]));
+    $("li-s-door").setAttribute("transform", "translate(-30 0) scale(" + (1 - .84 * o).toFixed(3) + " 1) translate(30 0)");
+    $("li-s-glow").setAttribute("opacity", o.toFixed(3));
+  }
+
   // A hatch folds up to its hinge, then opens out as the awning with a little overshoot; the counter fills up.
   function hatch(id, hinge, p) {
     var closed = Math.max(0, 1 - easeInOut(Math.min(p * 2, 1)));
@@ -261,14 +354,20 @@
 
   function render(t) {
     var s = L.s, sM = L.sM, x = xs(t), moving = x.p > 0 && x.p < 1 ? 1 : 0, d = t - T.drive[1];
-    // On a phone, once the faces are in place the trucks are in their own doors.
-    var parked = L.narrow && t >= T.crop[1];
-    var tx = parked ? L.parkT.x : x.t, tRoad = parked ? L.parkT.road : L.road;
-    var mx = parked ? L.parkM.x : x.m, mRoad = parked ? L.parkM.road : L.road;
+    // Where each truck is: driving in along the bottom of the doors, then fading away and rolling in beside the Events
+    // heading. On a phone, once the faces are in place the trucks are simply there beside it.
+    var tp, mp, parked = L.narrow && t >= T.crop[1];
+    if (L.narrow) {
+      tp = parked ? { x: L.parkT.x, road: L.parkT.road, s: L.sE, o: 1 } : { x: x.t, road: L.road, s: s, o: 1 };
+      mp = parked ? { x: L.parkM.x, road: L.parkM.road, s: L.sE * KOMBI, o: 1 } : { x: x.m, road: L.road, s: sM, o: 1 };
+    } else {
+      tp = moveTo(t, T.backT, x.t, L.road, s, L.parkT, L.sE);
+      mp = moveTo(t, T.backM, x.m, L.road, sM, L.parkM, L.sE * KOMBI);
+    }
 
     // Driving: the wheels roll with the distance, the bodies chug up and down, and the engines idle with a shiver once
     // stopped, until they're switched off.
-    var degT = (x.t - L.tStart) / (30 * s) * 180 / Math.PI, degM = (x.m - L.mStart) / (30 * sM) * 180 / Math.PI;
+    var degT = (tp.x - L.tStart) / (30 * tp.s) * 180 / Math.PI, degM = (mp.x - L.mStart) / (30 * mp.s) * 180 / Math.PI;
     tSpins.forEach(function (g) { g.setAttribute("transform", "rotate(" + degT.toFixed(2) + ")"); });
     mSpins.forEach(function (g) { g.setAttribute("transform", "rotate(" + degM.toFixed(2) + ")"); });
     var idle = d > 0 && t < T.spin[0] ? Math.sin(t / 45) * .35 : 0;
@@ -277,12 +376,15 @@
     // The bump: each nose kicks up and rocks back to rest.
     var imp = d > 0 ? 2.6 * Math.exp(-4.5 * d / 1000) * Math.sin(d / 1000 * 20) : 0;
     var chug = .5 * Math.sin(t / 170) * moving;
-    tTruck.setAttribute("transform", "translate(" + tx.toFixed(2) + " " + tRoad.toFixed(2) + ") scale(" + s.toFixed(4) + ")");
-    mTruck.setAttribute("transform", "translate(" + mx.toFixed(2) + " " + mRoad.toFixed(2) + ") scale(" + sM.toFixed(4) + ")");
+    tTruck.setAttribute("transform", "translate(" + tp.x.toFixed(2) + " " + tp.road.toFixed(2) + ") scale(" + tp.s.toFixed(4) + ")");
+    mTruck.setAttribute("transform", "translate(" + mp.x.toFixed(2) + " " + mp.road.toFixed(2) + ") scale(" + mp.s.toFixed(4) + ")");
+    tTruck.setAttribute("opacity", tp.o.toFixed(3));
+    mTruck.setAttribute("opacity", mp.o.toFixed(3));
     tBody.setAttribute("transform", "rotate(" + (-imp + chug).toFixed(3) + " 75 0) translate(0 " + bobT.toFixed(2) + ")");
     mBody.setAttribute("transform", "rotate(" + (imp - chug).toFixed(3) + " 330 0) translate(0 " + bobM.toFixed(2) + ")");
     drawPuffs(t);
     drawBump(t);
+    drawShop(shopClock == null ? t : shopClock);
 
     // The hatches open; the oven glows; Tommy and Merle pop up from behind their counters.
     var hT = prog(t, T.hatchT[0], T.hatchT[1]);
@@ -316,6 +418,7 @@
     // Phone: the split screen and the trucks on it fade away under the faces, then the trucks fade back in, parked.
     $("li-backdrop").setAttribute("display", L.narrow && !parked ? "inline" : "none");
     $("li-t-road").style.display = $("li-m-road").style.display = L.narrow ? "none" : "";
+    $("li-t-road").style.opacity = $("li-m-road").style.opacity = (1 - prog(t, T.away[0], T.away[1])).toFixed(3);
     svg.style.opacity = L.narrow ? (parked ? prog(t, T.crop[1], T.crop[1] + 500) : 1 - prog(t, T.fade[0], T.fade[1])).toFixed(3) : "";
 
     // Then the page comes in: the logos (now the real ones) and both doors, then Events, then the Shop.
@@ -328,10 +431,29 @@
   }
 
   // ---- Playback ----
-  var start = null, raf = null, begun = false, lastT = T.end;
+  var start = null, raf = null, begun = false, lastT = T.end, shopClock = null;
   function onResize() { layout(); render(lastT); }
+  // On a phone The Shop is well down the page, so after the opening its shopfront waits, and builds when it's scrolled to.
+  function buildShopOnView() {
+    if (!L.narrow || !("IntersectionObserver" in window)) return;
+    shopClock = T.build[0];
+    var io = new IntersectionObserver(function (en) {
+      if (!en[0].isIntersecting) return;
+      io.disconnect();
+      var t0 = null;
+      requestAnimationFrame(function step(now) {
+        if (t0 == null) t0 = now;
+        shopClock = T.build[0] + (now - t0);
+        if (shopClock >= T.door[1]) shopClock = null;
+        render(lastT);
+        if (shopClock != null) requestAnimationFrame(step);
+      });
+    }, { threshold: .5 });
+    io.observe(shopH);
+  }
   function settle() {
     // The page's final layout: parked and open, and the page's words all in.
+    var played = playing;
     playing = false;
     if (raf) cancelAnimationFrame(raf);
     root.classList.remove("intro", "logos-in", "show-doors", "show-events", "show-shop");
@@ -340,6 +462,7 @@
     window.removeEventListener("keydown", settle);
     lastT = T.end;
     layout();
+    if (played) buildShopOnView();
     render(lastT);
   }
   window.addEventListener("resize", onResize);
