@@ -95,7 +95,7 @@ input[type=range] { width: 100%; margin: 0; accent-color: var(--sauce); cursor: 
 </div>
 
 <div class="stage" id="stage">
-  <div class="screen" id="screen"><iframe id="frame" title="The landing page, playing its intro" src="index.html?intro=preview"></iframe></div>
+  <div class="screen" id="screen"><iframe id="frame" title="The landing page, playing its intro"></iframe></div>
   <span class="size-note" id="note"></span>
 </div>
 
@@ -173,7 +173,7 @@ input[type=range] { width: 100%; margin: 0; accent-color: var(--sauce); cursor: 
     fit();
     // Reload at the new size, so the page lays itself out (and picks its phone or desktop layout) from the start.
     api = null;
-    frame.src = "index.html?intro=preview&w=" + W;
+    load();
   });
   // Space plays and pauses, the arrow keys step.
   window.addEventListener("keydown", function (e) {
@@ -183,6 +183,9 @@ input[type=range] { width: 100%; margin: 0; accent-color: var(--sauce); cursor: 
     else if (e.key === "ArrowRight") { api.pause(); api.seek(api.time() + 100); }
   });
 
+  // Load the landing page fresh each time (the r= number), so the frame never runs an old copy the browser kept.
+  function load() { frame.src = "index.html?intro=preview&w=" + W + "&r=" + Date.now(); }
+  load();
   fit();
 })();
 </script>
