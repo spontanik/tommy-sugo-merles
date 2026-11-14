@@ -137,12 +137,14 @@ nav.main { gap: 4px 16px; }
 .frame-seal { position: absolute; top: calc(var(--seal) / -2); left: 50%; transform: translateX(-50%); width: max-content; padding: 0 20px; background: var(--surface); }
 .frame-seal img, .frame-seal svg { width: var(--seal); height: var(--seal); max-width: none; display: block; overflow: visible; }
 /* The home intro (js/tommy-intro.js): slices fall from the top of the hero, which clips them; the headline types out.
-   Every letter is in place from the start, just unseen, so nothing moves; the cursor takes no room. */
+   Every letter is in place from the start, just unseen, so nothing moves; the cursor takes no room. The dots sit on
+   the first letter with line-height: normal, so their baseline matches the letters' (the headline's tighter line-height
+   would lift them). */
 .frame-section { overflow: hidden; }
 .frame h1 .ch { visibility: hidden; }
 .frame h1 .ch.on { visibility: visible; }
 .frame h1 .ch:first-child { position: relative; }
-.frame h1 .dots { position: absolute; left: 0; top: 0; white-space: nowrap; visibility: visible; }
+.frame h1 .dots { position: absolute; left: 0; top: 0; line-height: normal; white-space: nowrap; visibility: visible; }
 .frame h1 .cur { display: inline-block; width: 0; position: relative; visibility: visible; }
 .frame h1 .cur::after { content: ""; position: absolute; left: .06em; bottom: .1em; width: .42em; height: .8em; background: var(--sauce); }
 .frame h1 .cur.off::after { visibility: hidden; }
