@@ -129,10 +129,10 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
    the bottom row two, with most of the row's spare room above the headings; on a phone The Shop gets extra space at the
    top, and the Events heading is kept narrower, on two lines, to leave room for the trucks either side of it.
    The opening starts with the bare squares: every word, logo and button hidden. The two trucks drive in along the
-   bottom of the doors, bump, open up, and the two faces spin up into the logos. Then the page comes in a square at a
-   time: both doors, then Events, then the Shop. Then the trucks fade away from the doors and reappear either side of
-   the Events heading, and the shopfront builds itself above The Shop's and opens its door. The squares can't be clicked until it's done; a click or key press
-   skips it. */
+   bottom of the doors, bump, open up, and the two faces spin up into the logos. The trucks fade away as both doors'
+   words come in; then Events and the Shop come in together as the trucks reappear either side of the Events heading,
+   and the shopfront builds itself above The Shop's and opens its door. The squares can't be clicked until it's done;
+   a click or key press skips it. */
 @media (min-width: 821px) {
   html.trucks body { grid-template-rows: auto 3fr 2fr auto; }
   .trucks .both { grid-template-rows: 2fr auto auto auto 1fr; }
@@ -163,18 +163,14 @@ html.intro { overflow: hidden; }
 #intro-stage .thin { stroke-width: 2; }
 </style>
 <script>
-/* Hide the squares' contents before they're drawn, so the page opens on the bare squares. It plays once per visit (per
-   browser tab session): coming back to the home page later in the same visit goes straight to the page. Not for people
-   who ask for less motion, or with ?intro=off; ?intro=on plays it again regardless. If js/landing-intro.js never runs,
-   the page shows normally after a moment. */
+/* Hide the squares' contents before they're drawn, so the page opens on the bare squares. It plays every time the page
+   loads. Not for people who ask for less motion, or with ?intro=off. If js/landing-intro.js never runs, the page shows
+   normally after a moment. */
 (function () {
   var q = location.search, root = document.documentElement;
   root.classList.add("trucks");
   if (/[?&]intro=off/.test(q)) return;
   if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  if (!/[?&]intro(=on|=preview|-t=)/.test(q)) {
-    try { if (sessionStorage.getItem("introSeen")) return; } catch (e) {}
-  }
   root.classList.add("intro");
   setTimeout(function () { if (!window.LandingIntro) root.classList.remove("intro"); }, 4000);
 })();
@@ -468,5 +464,6 @@ html.intro { overflow: hidden; }
 </div>
 
 <script src="js/sites.js"></script>
-<script src="js/landing-intro.js"></script>
+<!-- The ?v= number changes whenever the intro does, so browsers fetch the new script instead of an old copy. -->
+<script src="js/landing-intro.js?v=7"></script>
 </body></html>
