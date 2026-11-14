@@ -106,12 +106,12 @@ input[type=range] { width: 100%; margin: 0; accent-color: var(--sauce); cursor: 
   var stepEl = document.getElementById("step"), marksEl = document.getElementById("marks"), note = document.getElementById("note");
   var api = null, W = 1440, H = 900, scrubbing = false;
 
-  // The steps of the opening, by when each starts (from js/landing-intro.js's timeline once it's loaded).
+  // The steps of the opening, in order, by when each starts (from js/landing-intro.js's timeline once it's loaded).
   function stepsFrom(T) {
     return [
       [T.drive[0], "Drive in"], [T.drive[1], "Bump"], [T.hatchT[0], "Hatches"],
       [T.popT[0], "Faces up"], [T.turn[0], "Turn"], [T.spin[0], "Spin"], [T.crop[0], "Logos"],
-      [T.crop[1], "Doors"], [T.events, "Events"], [T.shop, "Shop"], [T.away[0], "Fade"], [T.backT[0], "Trucks back"],
+      [T.crop[1], "Doors"], [T.events, "Events"], [T.backT[0], "Trucks back"], [T.shop, "Shop"],
       [T.build[0], "Shopfront"], [T.door[0], "Door opens"]
     ];
   }

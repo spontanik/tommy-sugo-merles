@@ -4,20 +4,20 @@
    facing in towards it, hatches up as awnings, sized to the heading (the Kombi a little smaller than Tommy's truck: it's
    the smaller vehicle). A little Tommy Sugo shopfront stands just above The Shop's heading, door open. They stay there.
 
-   The opening (once per visit): the page starts as the bare squares, no words. Tommy's truck putters in from the left
-   and the Kombi from the right. They meet in the middle with a friendly bump and stop. Their hatches fold up into awnings,
-   and Tommy and Merle pop up at the counters. They turn to each other, then their faces spin up out of the trucks into
-   the logos' places and open out into the full logos. Then the page comes in: both doors' words and buttons, then
-   Events, Trucks & Catering, then the Shop. Then the trucks fade away from the doors and reappear either side of the
-   Events heading, rolling in to it, and the shopfront builds itself above The Shop's heading and opens its door.
+   The opening (every time the page loads): the page starts as the bare squares, no words. Tommy's truck putters in
+   from the left and the Kombi from the right, big, along the bottom of the doors. They meet in the middle with a
+   friendly bump and stop. Their hatches fold up into awnings, and Tommy and Merle pop up at the counters. They turn to
+   each other, then their faces spin up out of the trucks into the logos' places and open out into the full logos. The
+   trucks fade away as both doors' words and buttons come in. Then Events, Trucks & Catering comes in and the trucks
+   roll back in, small, either side of its heading; then the Shop comes in, and the shopfront builds itself above its
+   heading and opens its door.
    (On a phone the trucks meet on a split screen of their own, then reappear either side of the Events heading, and
    the shopfront builds when The Shop is scrolled to.)
 
    The faces are the logo files themselves (tommy-seal.png, merles-logo.svg), cropped down to the face, so the hand-over
    to the real logos is exact. The drawing is #intro-stage in index.html; the inline script there hides the squares'
-   contents before they're drawn, and only once per visit (this notes in sessionStorage that it has played). A click,
-   tap or key press skips to the end. ?intro=off skips it, ?intro=on plays it again, and ?intro-t=5200 holds it at that
-   moment (in ms), for checking one step of it. */
+   contents before they're drawn. A click, tap or key press skips to the end. ?intro=off skips it, and ?intro-t=5200
+   holds it at that moment (in ms), for checking one step of it. */
 (function () {
   var root = document.documentElement, stage = document.getElementById("intro-stage");
   if (!stage) return;
@@ -50,17 +50,19 @@
     spin: [5150, 6200],       // and spin up into the logos' places
     fade: [5250, 5850],       // phone only: the split screen fades away under them
     crop: [6200, 6600],       // each face opens out into its full logo
-    events: 7150, shop: 7700,
-    away: [7950, 8400],       // the trucks fade away from the doors
-    backT: [8550, 9150], backM: [8700, 9300],  // and roll in either side of the Events heading
-    build: [9500, 10800],     // the shopfront builds itself on The Shop's heading
-    door: [10950, 11550],     // and its door swings open
-    end: 12200
+    away: [6250, 6650],       // the trucks fade away from the doors as the doors' words come in
+    events: 7150,
+    backT: [7350, 7950], backM: [7500, 8100],  // and roll in either side of the Events heading
+    shop: 8150,
+    build: [8550, 9850],      // the shopfront builds itself above The Shop's heading
+    door: [10000, 10600],     // and its door swings open
+    end: 11200
   };
   // Each truck in its own units: the road is y 0. Tommy's truck faces right, its back at x 0 and front bumper at 392;
   // with its awning up it's about 240 tall. The Kombi faces left, front bumper at -4, back at 416, and is drawn at KOMBI
   // times Tommy's scale.
   var T_FRONT = 392, T_HIGH = 240, M_FRONT = -4, KOMBI = .76, RECOIL = 12;
+  var ENTRY = 2;                                   // how much bigger they drive in than they'd fit beside the doors' words
   var T_FACE = { x: 100, y: -148, w: 72 };         // the faces in the trucks: centre and width, in truck units
   var M_FACE = { x: 219.7, y: -194, w: 55.5 };
   var TURN = 40, LEAN = 7;                         // how far they turn to each other, in degrees
@@ -198,22 +200,24 @@
     var dT = box(doorT), dM = box(doorM), bd = $("li-backdrop");
     L.narrow = vw <= 820;
     if (L.narrow) {
-      // A phone stacks the doors. For the opening the trucks get two halves of the screen of their own to meet in;
-      // afterwards each parks at the bottom of its own door, Tommy's on the right, the Kombi on the left.
+      // A phone stacks the doors. For the opening the trucks get two halves of the screen of their own to meet in (as
+      // big as half the screen allows); afterwards they're beside the Events heading.
       L.left = 0; L.right = vw; L.c = vw / 2; L.road = Math.round(vh * .62);
       L.s = Math.min(.5, (vw / 2 - 8) / (T_FRONT + RECOIL));
       $("li-bd-t").setAttribute("width", vw / 2); $("li-bd-t").setAttribute("height", vh);
       $("li-bd-m").setAttribute("x", vw / 2); $("li-bd-m").setAttribute("width", vw / 2); $("li-bd-m").setAttribute("height", vh);
     } else {
-      // Wide: along the bottom of the two doors, parked nose to nose in their inside corners. Each truck has to fit
-      // beside its door's button and under its paragraph.
+      // Wide: along the bottom of the two doors, meeting on the middle line. The doors are bare while they're there,
+      // so they're big: twice the size that would fit beside a door's button and under its paragraph, as long as
+      // they stay under the logos and inside their doors. They fade away as the doors' words come in.
       L.left = dT.left; L.right = dM.right; L.c = dT.right;
       L.road = dT.bottom - clamp(dT.height * .03, 8, 18);
       var bT = box(doorT.querySelector(".btn")), bM = box(doorM.querySelector(".btn"));
       var pT = box(doorT.querySelector(".lede")), pM = box(doorM.querySelector(".lede"));
       var roomW = Math.min(dT.right - bT.right, bM.left - dM.left) - 20;
       var roomH = L.road - Math.max(pT.bottom, pM.bottom) - 14;
-      L.s = clamp(Math.min(roomW / (T_FRONT + RECOIL), roomH / T_HIGH), .2, 1.1);
+      var under = L.road - Math.max(box(logoT).bottom, box(logoM).bottom) - 24;
+      L.s = clamp(Math.min(ENTRY * Math.min(roomW / (T_FRONT + RECOIL), roomH / T_HIGH), under / T_HIGH, (L.c - L.left - 24) / (T_FRONT + RECOIL)), .2, 1.6);
     }
     L.sM = L.s * KOMBI;
     // Where they end up. The trucks: either side of the Events heading, facing in, standing on its (last) baseline, sized
@@ -489,7 +493,6 @@
   function begin() {
     if (begun || !playing) return;
     begun = true;
-    if (!preview) { try { sessionStorage.setItem("introSeen", "1"); } catch (e) {} }
     raf = requestAnimationFrame(frame);
   }
 
