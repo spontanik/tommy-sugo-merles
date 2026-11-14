@@ -94,12 +94,11 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 .shared.shop p { color: var(--muted-on-black); font-family: var(--tommy-sans); font-weight: 500; }
 .shared.shop .btn { background: var(--sauce); color: var(--black); border: 2px solid var(--sauce); font-family: var(--tommy-poster); font-weight: 600; font-size: 17px; letter-spacing: 0.06em; }
 .shared.shop:hover .btn { background: var(--paper); border-color: var(--paper); }
-.footnote { margin: 0; background: var(--shade); color: var(--muted-on-paper); text-align: center; font-family: var(--tommy-sans); font-size: 12px; padding: 6px max(16px, env(safe-area-inset-left, 0px)); }
 @media (min-width: 821px) {
   /* Below the top strip: the doors take exactly two thirds of the height and the bottom row one third, whatever the
      screen (both measured outside edge to outside edge, red line included). Only if a square's content needs more
      room than its share does that row grow. */
-  body { display: grid; grid-template-rows: auto 2fr 1fr auto; min-height: 100vh; min-height: 100dvh; }
+  body { display: grid; grid-template-rows: auto 2fr 1fr; min-height: 100vh; min-height: 100dvh; }
   /* Each pair of squares shares one set of rows (spacer, then logo / heading / text / button for the doors,
      heading / text / button for the bottom row, then spacer). Every row is as tall as the taller square needs, so the
      buttons, headings and logos line up across the pair however much text either square has. The spacers keep the
@@ -118,7 +117,6 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
   .top { padding-block: 8px; }
   .shared { padding-block: 10px; gap: 4px; }
   .shared h2 { font-size: 24px; }
-  .footnote { padding-block: 3px; }
 }
 /* All four buttons are exactly the same size (width and height, border included), whatever their wording or brand. */
 .door .btn, .shared .btn { box-sizing: border-box; width: 264px; max-width: 100%; height: clamp(40px, 5.2vh, 52px); min-height: 0; padding: 0 16px; white-space: nowrap; }
@@ -134,20 +132,20 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
    and the shopfront builds itself above The Shop's and opens its door. The squares can't be clicked until it's done;
    a click or key press skips it. */
 @media (min-width: 821px) {
-  html.trucks body { grid-template-rows: auto 3fr 2fr auto; }
+  html.trucks body { grid-template-rows: auto 3fr 2fr; }
   .trucks .both { grid-template-rows: 2fr auto auto auto 1fr; }
 }
 @media (max-width: 820px) { .trucks .shared.shop { padding-top: 168px; } .trucks .shared.events h2 { padding-inline: 76px; } }
 html.intro { overflow: hidden; }
 .intro main, .intro .both { pointer-events: none; }
-.intro .top p, .intro .door > *, .intro .shared > *, .intro .footnote { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .6s cubic-bezier(.2, .8, .2, 1); }
+.intro .top p, .intro .door > *, .intro .shared > * { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .6s cubic-bezier(.2, .8, .2, 1); }
 .intro .door > :nth-child(3), .intro .shared > :nth-child(2) { transition-delay: .09s; }
 .intro .door > :nth-child(4), .intro .shared > :nth-child(3) { transition-delay: .18s; }
 .intro .door > .logo { transform: none; transition: none; }
 .intro.logos-in .door > .logo,
 .intro.show-doors .top p, .intro.show-doors .door > *,
 .intro.show-events .events > *,
-.intro.show-shop .shop > *, .intro.show-shop .footnote { opacity: 1; transform: none; }
+.intro.show-shop .shop > * { opacity: 1; transform: none; }
 /* Laid over the page from its top-left corner and drawn in page pixels, so the parked trucks scroll with the page. */
 #intro-stage { position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: 5; pointer-events: none; }
 #intro-stage svg { position: absolute; top: 0; left: 0; display: block; width: 100%; height: 1px; overflow: visible; }
@@ -206,7 +204,6 @@ html.intro { overflow: hidden; }
     <span class="btn">Shop Both →</span>
   </a>
 </section>
-<p class="footnote">Website prototype for the Tommy Sugo and Merle's teams. Prices, areas and links are placeholders.</p>
 
 <!-- The two trucks and the shopfront, drawn here and laid out and moved by js/landing-intro.js: the trucks drive in
      during the opening and stay parked on the Events heading afterwards, and the shopfront stays on The Shop's. The faces
@@ -465,5 +462,5 @@ html.intro { overflow: hidden; }
 
 <script src="js/sites.js"></script>
 <!-- The ?v= number changes whenever the intro does, so browsers fetch the new script instead of an old copy. -->
-<script src="js/landing-intro.js?v=7"></script>
+<script src="js/landing-intro.js?v=8"></script>
 </body></html>
