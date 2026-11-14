@@ -1,18 +1,19 @@
 /* The landing page's two trucks and shopfront, and its opening.
 
-   The trucks: Tommy Sugo's truck and the Merle's Kombi stand either side of the Events, Trucks & Catering heading,
-   facing in towards it, hatches up as awnings, sized to the heading (the Kombi a little smaller than Tommy's truck: it's
-   the smaller vehicle). A little Tommy Sugo shopfront stands just above The Shop's heading, door open. They stay there.
+   The trucks: Tommy Sugo's truck and the Merle's Kombi stand nose to nose just above the Events, Trucks & Catering
+   heading, hatches up as awnings (the Kombi a little smaller than Tommy's truck: it's the smaller vehicle). A little
+   Tommy Sugo shopfront stands just above The Shop's heading, door open. The tops of the trucks and of the shopfront
+   are the same distance below the tops of their squares. They stay there.
 
    The opening (every time the page loads): the page starts as the bare squares, no words. Tommy's truck putters in
    from the left and the Kombi from the right, big, along the bottom of the doors. They meet in the middle with a
    friendly bump and stop. Their hatches fold up into awnings, and Tommy and Merle pop up at the counters. They turn to
    each other, then their faces spin up out of the trucks into the logos' places and open out into the full logos. The
    trucks fade away as both doors' words and buttons come in. Then Events, Trucks & Catering and the Shop come in
-   together, as the trucks roll back in, small, either side of the Events heading; then the shopfront builds itself
-   above The Shop's heading and opens its door.
-   (On a phone the trucks meet on a split screen of their own, then reappear either side of the Events heading, and
-   the shopfront builds when The Shop is scrolled to.)
+   together, as the trucks roll back in from either side, smaller, to meet above the Events heading; then the
+   shopfront builds itself above The Shop's heading and opens its door.
+   (On a phone the trucks meet on a split screen of their own, then reappear above the Events heading, and the
+   shopfront builds when The Shop is scrolled to.)
 
    The faces are the logo files themselves (tommy-seal.png, merles-logo.svg), cropped down to the face, so the hand-over
    to the real logos is exact. The drawing is #intro-stage in index.html; the inline script there hides the squares'
@@ -68,10 +69,12 @@
   // Where each face sits in its full logo. Tommy: the seal's inner circle, this fraction of its width as a radius.
   // Merle: merles-portrait.svg's box inside merles-logo.svg (both drawn on the same grid), as top, right, bottom, left.
   var SEAL_R = .345;
-  // The shopfront is about 300 wide and 222 tall in the same units. Beside the Events heading, Tommy's truck (awning
-  // and all) is this many times the heading's height; the gap between each truck and the words, in heading font sizes;
-  // and the gap between the shopfront and The Shop's heading.
-  var SHOP_H = 230, SHOP_W = 320, BESIDE = 1.25, GAP = .3, SHOP_GAP = .3;
+  // Above the headings, in these units: the two trucks nose to nose are about 720 wide, and the top of Tommy's awning
+  // (the highest point of the pair) is 238 above the road; the shopfront is about 300 wide and its sign's top is 222
+  // above the ground. Both stand ABOVE heading font sizes above their heading's capitals. The shopfront is SHOP_FILL of
+  // the most the room above its heading (and the Events one) would take; the trucks are sized so their tops are the
+  // same distance below the top of their square as the shopfront's are below the top of its.
+  var PAIR_W = 730, TRUCKS_TOP = 238, SHOP_W = 320, SHOP_TOP = 222, SHOP_FILL = .6375, ABOVE = .3;
   var MC = [1 / 535, 135 / 551, 181 / 535, 144 / 551];
 
   stage.hidden = false;
@@ -181,13 +184,6 @@
     var lead = (lh - m.fontBoundingBoxAscent - m.fontBoundingBoxDescent) / 2;
     return { fs: fs, lh: lh, cap: lead + m.fontBoundingBoxAscent - m.actualBoundingBoxAscent, base: lead + m.fontBoundingBoxAscent };
   }
-  // Where a heading's words actually reach, left and right (its box can be wider than its lines).
-  function wordsBox(h) {
-    var r = document.createRange(), l = Infinity, rt = -Infinity;
-    r.selectNodeContents(h);
-    Array.prototype.forEach.call(r.getClientRects(), function (c) { if (c.width) { l = Math.min(l, c.left); rt = Math.max(rt, c.right); } });
-    return { left: l + window.scrollX, right: rt + window.scrollX };
-  }
   function faceBox(img, R, fx, fy, fw) {
     img.style.left = R.left + "px"; img.style.top = R.top + "px";
     img.style.width = R.width + "px"; img.style.height = R.height + "px";
@@ -215,19 +211,20 @@
       L.s = clamp(Math.min(ENTRY * dT.width / (T_FRONT + RECOIL), under / T_HIGH), .2, 3);
     }
     L.sM = L.s * KOMBI;
-    // Where they end up. The trucks: either side of the Events heading, facing in, standing on its (last) baseline, sized
-    // to the heading but never wider than the room beside its words.
-    var tE = box(evTile), hE = box(evH), wE = wordsBox(evH), ty = type(evH), gap = GAP * ty.fs;
-    var side = Math.min(wE.left - tE.left, tE.right - wE.right) - gap - 18;
-    L.sE = clamp(Math.min(BESIDE * hE.height / T_HIGH, side / (T_FRONT + 8)), .06, .5);
-    var roadE = hE.bottom - ty.lh + ty.base;
-    L.parkT = { x: wE.left - gap - T_FRONT * L.sE, road: roadE, dir: 1 };
-    L.parkM = { x: wE.right + gap - M_FRONT * L.sE * KOMBI, road: roadE, dir: -1 };
-    // The shopfront: a little above The Shop's heading, sized to the room over it.
-    var tS = box(shopTile), hS = box(shopH), tyS = type(shopH);
-    var bw = parseFloat(getComputedStyle(shopTile).borderTopWidth) || 0;
-    var roadS = hS.top + tyS.cap - SHOP_GAP * tyS.fs;
-    L.sS = clamp(Math.min((roadS - tS.top - bw - 8) / SHOP_H, (tS.width - 40) / SHOP_W), .12, .5);
+    // Where they end up: a little above each heading. The shopfront is sized to the room over its heading; the trucks
+    // to leave the same gap above them as the shopfront has (and never wider than their square).
+    var bw = function (e) { return parseFloat(getComputedStyle(e).borderTopWidth) || 0; };
+    var tE = box(evTile), hE = box(evH), tyE = type(evH), topE = tE.top + bw(evTile);
+    var tS = box(shopTile), hS = box(shopH), tyS = type(shopH), topS = tS.top + bw(shopTile);
+    var roadE = hE.top + tyE.cap - ABOVE * tyE.fs, roadS = hS.top + tyS.cap - ABOVE * tyS.fs;
+    var room = Math.min((roadE - topE - 8) / TRUCKS_TOP, (tE.width - 40) / PAIR_W);
+    L.sS = clamp(Math.min(SHOP_FILL * room, (roadS - topS - 8) / SHOP_TOP, (tS.width - 40) / SHOP_W), .1, .5);
+    var gap = roadS - SHOP_TOP * L.sS - topS;
+    L.sE = clamp(Math.min((roadE - topE - gap) / TRUCKS_TOP, (tE.width - 40) / PAIR_W), .1, .6);
+    // Where the noses meet: right of the middle, so the pair is centred (Tommy's truck is the longer one).
+    var cE = tE.left + tE.width / 2 + ((T_FRONT + 4) - (416 + 4 - M_FRONT) * KOMBI) / 2 * L.sE;
+    L.parkT = { x: cE - (T_FRONT + 4) * L.sE, road: roadE, dir: 1 };
+    L.parkM = { x: cE - (M_FRONT - 4) * L.sE * KOMBI, road: roadE, dir: -1 };
     L.shop = { x: tS.left + tS.width / 2, road: roadS };
     $("li-t-road").setAttribute("d", "M" + L.left + " " + L.road + " L" + L.c + " " + L.road);
     $("li-m-road").setAttribute("d", "M" + L.c + " " + L.road + " L" + L.right + " " + L.road);
