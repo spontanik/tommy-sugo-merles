@@ -122,7 +122,55 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 }
 /* All four buttons are exactly the same size (width and height, border included), whatever their wording or brand. */
 .door .btn, .shared .btn { box-sizing: border-box; width: 264px; max-width: 100%; height: clamp(40px, 5.2vh, 52px); min-height: 0; padding: 0 16px; white-space: nowrap; }
+
+/* The trucks (js/landing-intro.js). Each door has its truck parked in its inside bottom corner, hatch open, sized to fit
+   beside the button and under the paragraph. On a phone they park at the bottom of their own doors, which get extra room
+   below the button for them (only when the script runs: html.trucks).
+   The opening starts with the bare squares: every word, logo and button hidden. The two trucks drive in, bump, open up,
+   and the two faces spin up into the logos. Then the page comes in a square at a time: both doors, then Events, then
+   the Shop. The squares can't be clicked until it's done; a click or key press skips it. */
+@media (max-width: 820px) { .trucks .door { padding-bottom: 168px; } }
+html.intro { overflow: hidden; }
+.intro main, .intro .both { pointer-events: none; }
+.intro .top p, .intro .door > *, .intro .shared > *, .intro .footnote { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .6s cubic-bezier(.2, .8, .2, 1); }
+.intro .door > :nth-child(3), .intro .shared > :nth-child(2) { transition-delay: .09s; }
+.intro .door > :nth-child(4), .intro .shared > :nth-child(3) { transition-delay: .18s; }
+.intro .door > .logo { transform: none; transition: none; }
+.intro.logos-in .door > .logo,
+.intro.show-doors .top p, .intro.show-doors .door > *,
+.intro.show-events .events > *,
+.intro.show-shop .shop > *, .intro.show-shop .footnote { opacity: 1; transform: none; }
+/* Laid over the page from its top-left corner and drawn in page pixels, so the parked trucks scroll with the page. */
+#intro-stage { position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: 5; pointer-events: none; }
+#intro-stage svg { position: absolute; top: 0; left: 0; display: block; width: 100%; height: 1px; overflow: visible; }
+.li-face { position: absolute; display: block; max-width: none; margin: 0; opacity: 0; will-change: transform, clip-path; }
+/* Tommy Sugo's truck: black with paper lines, and a red copy printed a little off-register (as on the Events page). */
+#intro-stage .t-ink { fill: var(--black); stroke: var(--paper); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+#intro-stage .t-line { fill: none; stroke: var(--paper); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+#intro-stage .t-reg { fill: none; stroke: var(--sauce); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+/* Merle's truck: white with black ink, and a black copy off-register (as in merles-truck.html). */
+#intro-stage .m-ink { fill: #fff; stroke: var(--black); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+#intro-stage .m-line { fill: none; stroke: var(--black); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+#intro-stage .m-reg { fill: var(--black); stroke: var(--black); stroke-width: 3; stroke-linejoin: round; }
+#intro-stage .thin { stroke-width: 2; }
 </style>
+<script>
+/* Hide the squares' contents before they're drawn, so the page opens on the bare squares. It plays once per visit (per
+   browser tab session): coming back to the home page later in the same visit goes straight to the page. Not for people
+   who ask for less motion, or with ?intro=off; ?intro=on plays it again regardless. If js/landing-intro.js never runs,
+   the page shows normally after a moment. */
+(function () {
+  var q = location.search, root = document.documentElement;
+  root.classList.add("trucks");
+  if (/[?&]intro=off/.test(q)) return;
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!/[?&]intro(=on|=preview|-t=)/.test(q)) {
+    try { if (sessionStorage.getItem("introSeen")) return; } catch (e) {}
+  }
+  root.classList.add("intro");
+  setTimeout(function () { if (!window.LandingIntro) root.classList.remove("intro"); }, 4000);
+})();
+</script>
 
 <div class="top"><p>Pizza or schnitz? Why not both.</p></div>
 
@@ -156,5 +204,200 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
 </section>
 <p class="footnote">Website prototype for the Tommy Sugo and Merle's teams. Prices, areas and links are placeholders.</p>
 
+<!-- The two trucks, drawn here and laid out and moved by js/landing-intro.js: they drive in during the opening and stay
+     parked afterwards. The faces that spin up into the logos are the logo files themselves, cropped down to the face. -->
+<div id="intro-stage" hidden aria-hidden="true">
+  <svg id="li-svg">
+    <defs>
+      <!-- Tommy Sugo's truck, facing right. Its own units: the road is y 0, the back is x 0, the front bumper x 392. -->
+      <clipPath id="li-t-window"><rect x="30" y="-188" width="230" height="80"/></clipPath>
+      <clipPath id="li-t-awning-clip"><polygon points="30,-188 260,-188 274,-236 16,-236"/></clipPath>
+      <clipPath id="li-t-face-clip"><circle cx="100" cy="-148" r="36"/></clipPath>
+      <radialGradient id="li-t-glow" cx="50%" cy="40%" r="70%">
+        <stop offset="0" stop-color="#ff5a3c" stop-opacity=".55"/>
+        <stop offset="1" stop-color="#ec1c24" stop-opacity="0"/>
+      </radialGradient>
+      <g id="li-t-shapes">
+        <rect x="0" y="-200" width="300" height="160"/>
+        <path d="M300 -40 L300 -165 L340 -165 L372 -112 L386 -107 L386 -40 Z"/>
+        <rect x="278" y="-222" width="16" height="22"/>
+        <rect x="272" y="-228" width="28" height="6"/>
+        <rect x="378" y="-54" width="14" height="12"/>
+      </g>
+      <polygon id="li-t-awning-shape" points="30,-188 260,-188 274,-236 16,-236"/>
+
+      <!-- Merle's camper bus, facing left. Its own units: the road is y 0, the front bumper x -4, the back x 416. -->
+      <path id="li-m-body-path" d="M24 -38 L12 -54 C4 -92 4 -150 10 -190 C16 -232 40 -248 86 -250 L372 -250 C398 -250 410 -236 410 -212 L410 -58 C410 -44 402 -38 390 -38 Z"/>
+      <clipPath id="li-m-body-clip"><use href="#li-m-body-path"/></clipPath>
+      <clipPath id="li-m-window"><rect x="140" y="-232" width="160" height="76"/></clipPath>
+      <clipPath id="li-m-awning-clip"><polygon points="140,-232 300,-232 316,-286 124,-286"/></clipPath>
+    </defs>
+
+    <!-- On a phone the squares are stacked, so the opening brings its own two halves to drive on. -->
+    <g id="li-backdrop" display="none">
+      <rect id="li-bd-t" fill="#000"/>
+      <rect id="li-bd-m" fill="#f2f2f2"/>
+    </g>
+    <path id="li-t-road" fill="none" stroke="#f2f2f2" stroke-width="2" opacity=".55"/>
+    <path id="li-m-road" fill="none" stroke="#000" stroke-width="2" opacity=".35"/>
+    <g id="li-t-puffs"></g>
+    <g id="li-m-puffs"></g>
+
+    <g id="li-t">
+      <g id="li-t-body">
+        <use href="#li-t-shapes" class="t-reg" transform="translate(3.5 3)"/>
+        <use href="#li-t-shapes" class="t-ink"/>
+        <path d="M308 -156 L336 -156 L362 -114 L308 -114 Z" fill="#1d1d1b" stroke="#f2f2f2" stroke-width="3" stroke-linejoin="round"/>
+        <path class="t-line thin" d="M318 -150 L332 -150"/>
+        <path class="t-line" d="M306 -106 L306 -46 M314 -84 L326 -84"/>
+        <rect x="378" y="-98" width="8" height="12" fill="#f2f2f2"/>
+        <rect x="-5" y="-94" width="6" height="16" fill="#ec1c24"/>
+        <text x="120" y="-70" fill="#f2f2f2" font-family="Oswald, 'Arial Narrow', Impact, sans-serif" font-weight="700" font-size="28" letter-spacing="1.5">TOMMY SUGO</text>
+        <text x="121" y="-52" fill="#ec1c24" font-family="Oswald, 'Arial Narrow', Impact, sans-serif" font-weight="600" font-size="11.5" letter-spacing="2.6">PIZZA · ON THE CIRCUIT</text>
+
+        <!-- Inside, seen once the hatch lifts: the oven's glow, and Tommy, who pops up at the counter -->
+        <g clip-path="url(#li-t-window)">
+          <rect x="30" y="-188" width="230" height="80" fill="#2a0608"/>
+          <rect x="156" y="-180" width="88" height="62" fill="#000" stroke="#f2f2f2" stroke-width="2.5"/>
+          <rect x="172" y="-152" width="56" height="26" fill="#160304" stroke="#f2f2f2" stroke-width="2"/>
+          <polygon points="178,-126 186,-146 192,-131 199,-150 206,-131 213,-144 221,-126" fill="#ec1c24"/>
+          <polygon points="186,-126 192,-138 199,-129 206,-140 213,-126" fill="#ff8a5c"/>
+          <rect id="li-t-glow-rect" x="30" y="-188" width="230" height="80" fill="url(#li-t-glow)" opacity="0"/>
+          <g id="li-t-face">
+            <image href="tommy-seal.png" x="47.8" y="-200.2" width="104.4" height="104.4" clip-path="url(#li-t-face-clip)"/>
+          </g>
+        </g>
+        <rect x="24" y="-112" width="242" height="7" fill="#f2f2f2"/>
+        <g id="li-t-boxes" opacity="0">
+          <rect x="196" y="-121" width="40" height="9" fill="#f2f2f2"/>
+          <rect x="200" y="-130" width="36" height="9" fill="#f2f2f2" stroke="#000" stroke-width="1"/>
+        </g>
+
+        <!-- The hatch, hinged along its top edge: it folds up and becomes the awning -->
+        <g id="li-t-hatch">
+          <rect class="t-reg" x="33.5" y="-185" width="230" height="80"/>
+          <rect class="t-ink" x="30" y="-188" width="230" height="80"/>
+          <path class="t-line thin" d="M36 -183 L254 -183"/>
+          <image href="images/truck-seal.png" x="113" y="-182" width="68" height="68"/>
+          <rect x="238" y="-126" width="14" height="5" fill="#f2f2f2"/>
+        </g>
+        <g id="li-t-awning">
+          <use href="#li-t-awning-shape" class="t-reg" transform="translate(3.5 3)"/>
+          <use href="#li-t-awning-shape" class="t-ink"/>
+          <g clip-path="url(#li-t-awning-clip)" id="li-t-stripes"></g>
+          <use href="#li-t-awning-shape" fill="none" stroke="#f2f2f2" stroke-width="3" stroke-linejoin="round"/>
+        </g>
+        <path id="li-t-struts" class="t-line thin" d="M34 -110 L19 -233 M256 -110 L271 -233" opacity="0"/>
+
+        <circle cx="75" cy="-30" r="37" fill="#000"/>
+        <circle cx="335" cy="-30" r="37" fill="#000"/>
+        <path class="t-line" d="M38 -40 A37 37 0 0 1 112 -40 M298 -40 A37 37 0 0 1 372 -40"/>
+      </g>
+      <!-- Pizza wheels in thin black tyres, as on the Events page truck: drawn by js/landing-intro.js inside the spinning
+           group so the toppings roll. -->
+      <g transform="translate(75 -30)">
+        <circle r="30" class="t-ink" style="fill:#121211"/>
+        <g class="li-t-spin" data-pizza="3"></g>
+      </g>
+      <g transform="translate(335 -30)">
+        <circle r="30" class="t-ink" style="fill:#121211"/>
+        <g class="li-t-spin" data-pizza="11"></g>
+      </g>
+    </g>
+
+    <g id="li-m">
+      <g id="li-m-body">
+        <use href="#li-m-body-path" class="m-reg" transform="translate(4 4)"/>
+        <use href="#li-m-body-path" class="m-ink"/>
+        <g clip-path="url(#li-m-body-clip)">
+          <path d="M-10 -146 H430 V0 H-10 Z M-10 -146 L-10 -182 L34 -146 Z" fill="#d3d2d2"/>
+          <rect x="-10" y="-152" width="440" height="9" fill="#000"/>
+          <path class="m-line thin" d="M362 -128 l8 -8 M362 -118 l8 -8 M362 -108 l8 -8 M376 -128 l8 -8 M376 -118 l8 -8 M376 -108 l8 -8 M390 -128 l8 -8 M390 -118 l8 -8 M390 -108 l8 -8"/>
+        </g>
+        <use href="#li-m-body-path" fill="none" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+        <path class="m-line thin" d="M60 -238 H392"/>
+        <path d="M18 -226 C24 -236 32 -238 40 -238 L40 -168 L13 -168 C12 -190 13 -210 18 -226 Z" fill="#1d1d1b" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+        <path class="m-line thin" d="M22 -222 L32 -230"/>
+        <rect x="46" y="-234" width="72" height="68" rx="8" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <path d="M50 -230 L66 -230 L66 -170 L50 -170 Z" fill="#3a3a38"/>
+        <path class="m-line thin" d="M66 -232 L66 -168"/>
+        <path d="M80 -226 L104 -226" stroke="#f2f2f2" stroke-width="2" stroke-linecap="round"/>
+        <path class="m-line" d="M40 -238 L40 -46 M124 -238 L124 -46"/>
+        <rect x="104" y="-126" width="14" height="5" rx="2" fill="#000"/>
+        <rect x="316" y="-234" width="34" height="66" rx="8" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <rect x="358" y="-234" width="36" height="66" rx="10" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <path d="M322 -226 L340 -226 M364 -226 L384 -226" stroke="#f2f2f2" stroke-width="2" stroke-linecap="round"/>
+        <image href="images/merles-wordmark.svg" x="146" y="-134" width="150" height="39"/>
+        <text x="221" y="-78" text-anchor="middle" fill="#000" font-family="Montserrat, Arial, sans-serif" font-weight="800" font-size="9" letter-spacing="2.4">SCHNITZ · AROUND THE CORNER</text>
+        <circle cx="14" cy="-98" r="11" fill="#fff" stroke="#000" stroke-width="3"/>
+        <circle cx="14" cy="-98" r="5" fill="#d3d2d2"/>
+        <rect x="8" y="-128" width="10" height="6" rx="2" fill="#000"/>
+        <rect x="-4" y="-58" width="48" height="11" rx="5" fill="#000"/>
+        <rect x="372" y="-58" width="44" height="11" rx="5" fill="#000"/>
+        <rect x="404" y="-124" width="7" height="16" rx="2" fill="#000"/>
+
+        <!-- Inside, seen once the hatch lifts: the menu board, and Merle, who pops up at the counter -->
+        <g clip-path="url(#li-m-window)">
+          <rect x="140" y="-232" width="160" height="76" fill="#f2f2f2"/>
+          <rect x="148" y="-224" width="36" height="28" fill="#000"/>
+          <path d="M153 -216 H176 M153 -209 H179 M153 -202 H170" stroke="#f2f2f2" stroke-width="2" stroke-linecap="round"/>
+          <g id="li-m-face">
+            <image href="images/merles-portrait.svg" x="191.95" y="-230" width="55.5" height="72"/>
+          </g>
+        </g>
+        <rect x="132" y="-158" width="176" height="8" fill="#000"/>
+        <g id="li-m-goods" opacity="0">
+          <rect x="148" y="-172" width="36" height="14" rx="7" fill="#fff" stroke="#000" stroke-width="2"/>
+          <rect x="158" y="-172" width="6" height="14" fill="#d3d2d2"/>
+          <path d="M282 -158 L282 -178 Q282 -184 287 -184 L289 -184 Q294 -184 294 -178 L294 -158 Z M286 -184 L286 -190 L290 -190 L290 -184" fill="#000"/>
+        </g>
+
+        <g id="li-m-hatch">
+          <rect class="m-reg" x="143" y="-229" width="160" height="76"/>
+          <rect class="m-ink" x="140" y="-232" width="160" height="76"/>
+          <image href="images/merles-portrait.svg" x="196" y="-229" width="48" height="62"/>
+          <path class="m-line thin" d="M146 -226 H294"/>
+          <rect x="276" y="-176" width="14" height="5" rx="2" fill="#000"/>
+        </g>
+        <g id="li-m-awning">
+          <polygon class="m-reg" points="143,-229 303,-229 319,-283 127,-283"/>
+          <g clip-path="url(#li-m-awning-clip)" id="li-m-stripes"></g>
+          <polygon points="140,-232 300,-232 316,-286 124,-286" fill="none" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+          <path id="li-m-scallop" fill="#fff" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/>
+        </g>
+        <path id="li-m-struts" class="m-line thin" d="M144 -158 L128 -282 M296 -158 L312 -282" opacity="0"/>
+
+        <circle cx="82" cy="-30" r="38" fill="#f2f2f2"/>
+        <circle cx="330" cy="-30" r="38" fill="#f2f2f2"/>
+        <path class="m-line" d="M44 -42 A38 38 0 0 1 120 -42 M292 -42 A38 38 0 0 1 368 -42"/>
+      </g>
+      <g transform="translate(82 -30)">
+        <circle r="30" fill="#000" transform="translate(3 3)"/>
+        <circle r="30" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <g class="li-m-spin">
+          <circle r="16" fill="#fff" stroke="#000" stroke-width="2.5"/>
+          <circle r="6" fill="#d3d2d2" stroke="#000" stroke-width="2"/>
+          <path d="M0 -11 L0 -14 M0 11 L0 14 M-11 0 L-14 0 M11 0 L14 0" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g transform="translate(330 -30)">
+        <circle r="30" fill="#000" transform="translate(3 3)"/>
+        <circle r="30" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <g class="li-m-spin">
+          <circle r="16" fill="#fff" stroke="#000" stroke-width="2.5"/>
+          <circle r="6" fill="#d3d2d2" stroke="#000" stroke-width="2"/>
+          <path d="M0 -11 L0 -14 M0 11 L0 14 M-11 0 L-14 0 M11 0 L14 0" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- The friendly bump: a little burst and a heart where the bumpers meet -->
+    <g id="li-bump"></g>
+  </svg>
+  <img class="li-face" id="li-face-t" src="tommy-seal.png" alt="">
+  <img class="li-face" id="li-face-m" src="merles-logo.svg" alt="">
+</div>
+
 <script src="js/sites.js"></script>
+<script src="js/landing-intro.js"></script>
 </body></html>
