@@ -18,7 +18,8 @@
 
    The faces are the logo files themselves (tommy-seal.png, merles-logo.svg), cropped down to the face, so the hand-over
    to the real logos is exact. The drawing is #intro-stage in index.html; the inline script there hides the squares'
-   contents before they're drawn. The page scrolls while it plays (it's all drawn in page pixels, so it scrolls along).
+   contents before they're drawn. The page scrolls while it plays (it's all drawn in page pixels, so it scrolls along);
+   on a phone only once the faces have landed as the logos (index.html holds it still until html.logos-in).
    A click, tap or key press (other than the scrolling keys) skips to the end. ?intro=off skips it, and ?intro-t=5200
    holds it at that moment (in ms), for checking one step of it. */
 (function () {
