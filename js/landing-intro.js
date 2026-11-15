@@ -18,7 +18,7 @@
 
    The faces are the logo files themselves (tommy-seal.png, merles-logo.svg), cropped down to the face, so the hand-over
    to the real logos is exact. The drawing is #intro-stage in index.html; the inline script there hides the squares'
-   contents before they're drawn. A click, tap or key press skips to the end. ?intro=off skips it, and ?intro-t=5200
+   contents before they're drawn. A click, tap, key press or scroll skips to the end. ?intro=off skips it, and ?intro-t=5200
    holds it at that moment (in ms), for checking one step of it. */
 (function () {
   var root = document.documentElement, stage = document.getElementById("intro-stage");
@@ -461,6 +461,8 @@
     faceT.remove(); faceM.remove();
     document.removeEventListener("click", settle, true);
     window.removeEventListener("keydown", settle);
+    window.removeEventListener("wheel", settle);
+    window.removeEventListener("touchmove", settle);
     lastT = T.end;
     layout();
     if (played) buildShopOnView();
@@ -480,6 +482,10 @@
     if (prev == null) prev = now;
     if (!paused) lastT += (now - prev) * speed;
     prev = now;
+    // The page can't scroll while it plays, so it lets go as soon as nothing on screen is moving any more: on a phone
+    // once Events' and the Shop's words are in (the shopfront builds later, when it's scrolled to), on a wider screen
+    // once the shop door is open.
+    if (!preview && lastT >= (L.narrow ? T.events + 800 : T.door[1])) return settle();
     if (lastT >= T.end) {
       if (!preview) return settle();
       lastT = T.end; paused = true;
@@ -513,6 +519,9 @@
   } else {
     document.addEventListener("click", settle, true);
     window.addEventListener("keydown", settle);
+    // Trying to scroll skips it too, so the page scrolls straight away instead of seeming stuck.
+    window.addEventListener("wheel", settle, { passive: true });
+    window.addEventListener("touchmove", settle, { passive: true });
   }
   // Start once the pictures are in (the trucks' seal, Merle's portrait, the logos), or after a moment regardless.
   if (document.readyState === "complete") begin();
