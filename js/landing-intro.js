@@ -18,7 +18,8 @@
 
    The faces are the logo files themselves (tommy-seal.png, merles-logo.svg), cropped down to the face, so the hand-over
    to the real logos is exact. The drawing is #intro-stage in index.html; the inline script there hides the squares'
-   contents before they're drawn. A click, tap, key press or scroll skips to the end. ?intro=off skips it, and ?intro-t=5200
+   contents before they're drawn. The page scrolls while it plays (it's all drawn in page pixels, so it scrolls along).
+   A click, tap or key press (other than the scrolling keys) skips to the end. ?intro=off skips it, and ?intro-t=5200
    holds it at that moment (in ms), for checking one step of it. */
 (function () {
   var root = document.documentElement, stage = document.getElementById("intro-stage");
@@ -194,6 +195,7 @@
   }
   function layout() {
     var vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    L.vw = vw;
     var dT = box(doorT), dM = box(doorM), bd = $("li-backdrop");
     L.narrow = vw <= 820;
     if (L.narrow) {
@@ -433,7 +435,13 @@
 
   // ---- Playback ----
   var start = null, raf = null, begun = false, lastT = T.end, shopClock = null;
-  function onResize() { layout(); render(lastT); }
+  function remeasure() { layout(); render(lastT); }
+  // The page scrolls while it plays. On a phone that shows and hides the address bar, which changes only the screen's
+  // height: the trucks stay where they are rather than jumping mid-drive. A change of width lays it all out again.
+  function onResize() {
+    if (playing && L.narrow && document.documentElement.clientWidth === L.vw) return;
+    remeasure();
+  }
   // On a phone The Shop is well down the page, so after the opening its shopfront waits, and builds when it's scrolled to.
   function buildShopOnView() {
     if (!L.narrow || !("IntersectionObserver" in window)) return;
@@ -460,9 +468,7 @@
     root.classList.remove("intro", "logos-in", "show-doors", "show-events", "show-shop");
     faceT.remove(); faceM.remove();
     document.removeEventListener("click", settle, true);
-    window.removeEventListener("keydown", settle);
-    window.removeEventListener("wheel", settle);
-    window.removeEventListener("touchmove", settle);
+    window.removeEventListener("keydown", onKey);
     lastT = T.end;
     layout();
     if (played) buildShopOnView();
@@ -470,8 +476,11 @@
   }
   window.addEventListener("resize", onResize);
   // Measure again once the fonts and pictures are in, in case they moved things.
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(onResize);
-  window.addEventListener("load", onResize);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
+  window.addEventListener("load", remeasure);
+  // A key press skips to the end, except the keys that scroll the page: scrolling leaves it playing.
+  var SCROLL_KEYS = /^(ArrowUp|ArrowDown|PageUp|PageDown|Home|End| |Spacebar)$/;
+  function onKey(e) { if (!SCROLL_KEYS.test(e.key)) settle(); }
 
   if (!playing) { settle(); return; }
 
@@ -482,9 +491,9 @@
     if (prev == null) prev = now;
     if (!paused) lastT += (now - prev) * speed;
     prev = now;
-    // The page can't scroll while it plays, so it lets go as soon as nothing on screen is moving any more: on a phone
-    // once Events' and the Shop's words are in (the shopfront builds later, when it's scrolled to), on a wider screen
-    // once the shop door is open.
+    // It finishes (and the squares can be clicked) as soon as nothing on screen is moving any more: on a phone once
+    // Events' and the Shop's words are in (the shopfront builds later, when it's scrolled to), on a wider screen once
+    // the shop door is open.
     if (!preview && lastT >= (L.narrow ? T.events + 800 : T.door[1])) return settle();
     if (lastT >= T.end) {
       if (!preview) return settle();
@@ -518,10 +527,7 @@
     };
   } else {
     document.addEventListener("click", settle, true);
-    window.addEventListener("keydown", settle);
-    // Trying to scroll skips it too, so the page scrolls straight away instead of seeming stuck.
-    window.addEventListener("wheel", settle, { passive: true });
-    window.addEventListener("touchmove", settle, { passive: true });
+    window.addEventListener("keydown", onKey);
   }
   // Start once the pictures are in (the trucks' seal, Merle's portrait, the logos), or after a moment regardless.
   if (document.readyState === "complete") begin();
