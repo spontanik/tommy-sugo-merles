@@ -129,14 +129,13 @@ a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
    The opening starts with the bare squares: every word, logo and button hidden. The two trucks drive in along the
    bottom of the doors, bump, open up, and the two faces spin up into the logos. The trucks fade away as both doors'
    words come in; then Events and the Shop come in together as the trucks roll back in to meet above the Events heading,
-   and the shopfront builds itself above The Shop's and opens its door. The squares can't be clicked until it's done;
-   a click or key press skips it. */
+   and the shopfront builds itself above The Shop's and opens its door. The page scrolls while it plays, but the squares
+   can't be clicked until it's done; a click or key press skips it. */
 @media (min-width: 821px) {
   html.trucks body { grid-template-rows: auto 3fr 2fr; }
   .trucks .both { grid-template-rows: 2fr auto auto auto 1fr; }
 }
 @media (max-width: 820px) { .trucks .shared { padding-top: 168px; } }
-html.intro { overflow: hidden; }
 .intro main, .intro .both { pointer-events: none; }
 .intro .top p, .intro .door > *, .intro .shared > * { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .6s cubic-bezier(.2, .8, .2, 1); }
 .intro .door > :nth-child(3), .intro .shared > :nth-child(2) { transition-delay: .09s; }
@@ -462,5 +461,5 @@ html.intro { overflow: hidden; }
 
 <script src="js/sites.js"></script>
 <!-- The ?v= number changes whenever the intro does, so browsers fetch the new script instead of an old copy. -->
-<script src="js/landing-intro.js?v=12"></script>
+<script src="js/landing-intro.js?v=15"></script>
 </body></html>

@@ -54,6 +54,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .bar nav a:hover, .bar nav a[aria-current] { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
 .bar nav a.btn { color: var(--black); min-height: 44px; font-size: 15px; padding: 0 18px; }
 @media (max-width: 640px) { .bar nav .hide-sm { display: none; } }
+/* On a phone the bar takes two rows, kept close together; on a phone on its side it scrolls away with the page,
+   so it doesn't cover the little height there is. */
+@media (max-width: 640px) { .bar .wrap { row-gap: 0; } }
+@media (max-height: 500px) { .bar { position: static; } }
 
 /* Hero: words on black, and the truck. On wide screens the words take the left half and the truck parks in the right;
    its road runs just under the buttons, so it drives in behind the words. On narrower screens the truck has its own

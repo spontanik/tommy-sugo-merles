@@ -52,6 +52,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 .bar nav a:hover, .bar nav a[aria-current] { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
 .bar nav a.btn { color: var(--black); min-height: 44px; font-size: 15px; padding: 0 18px; }
 @media (max-width: 640px) { .bar nav .hide-sm { display: none; } }
+/* On a phone the bar takes two rows, kept close together; on a phone on its side it scrolls away with the page,
+   so it doesn't cover the little height there is. */
+@media (max-width: 640px) { .bar .wrap { row-gap: 0; } }
+@media (max-height: 500px) { .bar { position: static; } }
 
 /* Heading on black. */
 .hero { background: var(--black); color: var(--paper); }
