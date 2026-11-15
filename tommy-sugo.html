@@ -82,6 +82,11 @@ header.site .wrap { display: flex; flex-wrap: wrap; align-items: center; justify
 /* The name never squashes: it keeps its shape and, below about 480px wide, scales down. */
 .lockup { flex: none; display: flex; align-items: center; gap: clamp(6px, 2.5vw, 12px); text-decoration: none; color: var(--ink); }
 .lockup span { font-family: var(--poster); font-weight: 700; font-size: clamp(15px, 5.2vw, 26px); letter-spacing: 0.04em; text-transform: uppercase; line-height: 1; white-space: nowrap; }
+/* The name is a full-height tap target, and on the narrowest phones a touch smaller so the row still fits. */
+.lockup { min-height: 44px; }
+@media (max-width: 359px) { .lockup span { font-size: clamp(14px, 4.4vw, 16px); } }
+/* A phone on its side: the header slims down so it and the order bar leave most of the screen for the page. */
+@media (max-height: 500px) { header.site .wrap { padding-block: 6px; } }
 nav.main { display: flex; flex-wrap: wrap; gap: 4px 28px; align-items: center; }
 .nav { color: var(--ink); font-weight: 700; font-size: 16px; text-decoration: none; padding: 10px 0; border-bottom: 3px solid transparent; }
 .nav:hover, .nav[aria-current="page"] { border-bottom-color: var(--sauce); }

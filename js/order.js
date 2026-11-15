@@ -42,6 +42,8 @@
     ".order-bar{position:sticky;bottom:0;z-index:10;background:var(--surface);color:var(--ink);border-top:3px solid var(--ink);padding-bottom:env(safe-area-inset-bottom,0px)}" +
     ".order-bar-in{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:12px;padding-bottom:12px;font-weight:700}" +
     'main[data-view="cart"]:not([hidden]) ~ .order-bar{display:none}' +
+    // A phone on its side has little height to spare: a slimmer bar.
+    "@media (max-height:500px){.order-bar-in{padding-top:6px;padding-bottom:6px}.order-bar .btn{min-height:44px}}" +
     ".opt-dlg{width:min(520px,calc(100vw - 32px));max-height:calc(100vh - 32px);padding:0;background:var(--surface);color:var(--ink);border:3px solid var(--ink)}" +
     ".opt-dlg::backdrop{background:rgba(0,0,0,.6)}" +
     ".opt-dlg form{display:flex;flex-direction:column;gap:20px;padding:24px}" +

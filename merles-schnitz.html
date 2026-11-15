@@ -60,7 +60,9 @@ header.site.menu-open { max-height: 100dvh; overflow-y: auto; }
 html { scroll-padding-top: calc(var(--head-h, 80px) + 16px); }
 header.site .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px; padding-block: 16px; }
 /* The logo never squashes: it keeps its shape and, below about 400px wide, scales down. */
-.home-link { flex: none; display: flex; }
+.home-link { flex: none; display: flex; align-items: center; min-height: 44px; }
+/* A phone on its side: the header slims down so it and the order bar leave most of the screen for the page. */
+@media (max-height: 500px) { header.site .wrap { padding-block: 6px; } }
 .home-link img { flex: none; width: clamp(124px, 42.7vw, 171px); max-width: 100%; height: auto; display: block; }
 /* On a narrow phone, once every link is already in the menu, the logo gives up width before the header icons do (it
    keeps its shape), so the row never runs off the screen. Only then, or js/site-menu.js would keep links in the row

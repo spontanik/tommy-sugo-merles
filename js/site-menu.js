@@ -42,6 +42,11 @@
     on + " .menu-btn{display:inline-flex;order:1;margin:0}" +
     on + " .nav-icons-slot{order:2}" +
     on + " .nav.nav-icon{width:38px}" +
+    // Narrow phones: Menu and the icons sit a little slimmer and closer (each still 44px tall), so the row fits a 320px
+    // screen instead of running off the right-hand edge, and Merle's logo keeps a readable size.
+    "@media (max-width:400px){" + on + " .wrap{gap:6px}" + on + " .nav-icons{gap:4px}" + on + " .nav.nav-icon{width:36px}}" +
+    "@media (max-width:359px){" + on + " .nav-icons{gap:2px}" + on + " .nav.nav-icon{width:34px}" +
+      on + " .nav.nav-icon svg{width:32px;height:32px}" + on + " .menu-btn{width:40px}}" +
     // Open: the tucked links stack full width under the top row, each on its own rule, with the main button last.
     on + ".menu-open .menu-drawer{display:block}" +
     on + ".menu-open .menu-panel{display:flex;flex-direction:column;align-items:stretch;gap:0;border-top:2px solid " + rule + "}" +
