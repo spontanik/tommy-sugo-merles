@@ -2,8 +2,9 @@
 
    The trucks: Tommy Sugo's truck and the Merle's Kombi stand nose to nose just above the Events, Trucks & Catering
    heading, hatches up as awnings (the Kombi a little smaller than Tommy's truck: it's the smaller vehicle). A little
-   Tommy Sugo shopfront stands just above The Shop's heading, door open. The tops of the trucks and of the shopfront
-   are the same distance below the tops of their squares. They stay there.
+   Tommy Sugo shopfront stands just above The Shop's heading, door open. Each is the same share of its square's height
+   as the logos are of their doors', and sits midway between the top of its square and the top of its heading's
+   words. They stay there.
 
    The opening (every time the page loads): the page starts as the bare squares, no words. Tommy's truck putters in
    from the left and the Kombi from the right, big, along the bottom of the doors. They meet in the middle with a
@@ -69,12 +70,13 @@
   // Where each face sits in its full logo. Tommy: the seal's inner circle, this fraction of its width as a radius.
   // Merle: merles-portrait.svg's box inside merles-logo.svg (both drawn on the same grid), as top, right, bottom, left.
   var SEAL_R = .345;
-  // Above the headings, in these units: the two trucks nose to nose are about 720 wide, and the top of Tommy's awning
-  // (the highest point of the pair) is 238 above the road; the shopfront is about 300 wide and its sign's top is 222
-  // above the ground. Both stand ABOVE heading font sizes above their heading's capitals. The shopfront is SHOP_FILL of
-  // the most the room above its heading (and the Events one) would take; the trucks are sized so their tops are the
-  // same distance below the top of their square as the shopfront's are below the top of its.
-  var PAIR_W = 730, TRUCKS_TOP = 238, SHOP_W = 320, SHOP_TOP = 222, SHOP_FILL = .6375, ABOVE = .3;
+  // Above the headings, in these units: the two trucks nose to nose are about 720 wide; the top of Tommy's awning (the
+  // highest point of the pair) is 238 above the road, and the bottom of his wheel arches (the lowest) 7 below it. The
+  // shopfront is about 300 wide and its sign's top is 222 above the ground it stands on.
+  // Each is sized like the logos above: the logo's share of its door's height is the picture's share of its square's
+  // height. Then it sits midway between the top of its square and the top of its heading's capitals, the same gap
+  // above as below (at least MIN_GAP, and never wider than its square).
+  var PAIR_W = 730, TRUCKS_TOP = 238, TRUCKS_BOTTOM = 7, SHOP_W = 320, SHOP_TOP = 222, MIN_GAP = 12;
   var MC = [1 / 535, 135 / 551, 181 / 535, 144 / 551];
 
   stage.hidden = false;
@@ -211,16 +213,19 @@
       L.s = clamp(Math.min(ENTRY * dT.width / (T_FRONT + RECOIL), under / T_HIGH), .2, 3);
     }
     L.sM = L.s * KOMBI;
-    // Where they end up: a little above each heading. The shopfront is sized to the room over its heading; the trucks
-    // to leave the same gap above them as the shopfront has (and never wider than their square).
+    // Where they end up: above each heading, sized like the logos and centred in the room above the heading's words.
     var bw = function (e) { return parseFloat(getComputedStyle(e).borderTopWidth) || 0; };
+    var share = (box(logoT).height / dT.height + box(logoM).height / dM.height) / 2;
     var tE = box(evTile), hE = box(evH), tyE = type(evH), topE = tE.top + bw(evTile);
     var tS = box(shopTile), hS = box(shopH), tyS = type(shopH), topS = tS.top + bw(shopTile);
-    var roadE = hE.top + tyE.cap - ABOVE * tyE.fs, roadS = hS.top + tyS.cap - ABOVE * tyS.fs;
-    var room = Math.min((roadE - topE - 8) / TRUCKS_TOP, (tE.width - 40) / PAIR_W);
-    L.sS = clamp(Math.min(SHOP_FILL * room, (roadS - topS - 8) / SHOP_TOP, (tS.width - 40) / SHOP_W), .1, .5);
-    var gap = roadS - SHOP_TOP * L.sS - topS;
-    L.sE = clamp(Math.min((roadE - topE - gap) / TRUCKS_TOP, (tE.width - 40) / PAIR_W), .1, .6);
+    var capE = hE.top + tyE.cap, capS = hS.top + tyS.cap;
+    var pairH = TRUCKS_TOP + TRUCKS_BOTTOM;
+    L.sS = clamp(Math.min(share * (tS.bottom - topS) / SHOP_TOP, (capS - topS - 2 * MIN_GAP) / SHOP_TOP,
+      (tS.width - 40) / SHOP_W), .1, 1);
+    L.sE = clamp(Math.min(share * (tE.bottom - topE) / pairH, (capE - topE - 2 * MIN_GAP) / pairH,
+      (tE.width - 40) / PAIR_W), .1, 1);
+    var gapS = (capS - topS - SHOP_TOP * L.sS) / 2, gapE = (capE - topE - pairH * L.sE) / 2;
+    var roadS = capS - gapS, roadE = capE - gapE - TRUCKS_BOTTOM * L.sE;
     // Where the noses meet: right of the middle, so the pair is centred (Tommy's truck is the longer one).
     var cE = tE.left + tE.width / 2 + ((T_FRONT + 4) - (416 + 4 - M_FRONT) * KOMBI) / 2 * L.sE;
     L.parkT = { x: cE - (T_FRONT + 4) * L.sE, road: roadE, dir: 1 };
