@@ -26,6 +26,32 @@
       "has": [
         {
           "type": "host",
+          "value": "^(tommy|merles)\\.spontanik\\.co\\.za$"
+        }
+      ],
+      "status": 307,
+      "headers": {
+        "Location": "https://spontanik.co.za/"
+      }
+    },
+    {
+      "src": "/(?!coming-soon\\.html$)[^/]+\\.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "^spontanik\\.co\\.za$"
+        }
+      ],
+      "status": 307,
+      "headers": {
+        "Location": "https://spontanik.co.za/"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "has": [
+        {
+          "type": "host",
           "value": "(www\\.)?merles\\.co\\.za"
         }
       ],
