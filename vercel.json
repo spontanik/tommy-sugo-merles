@@ -3,6 +3,13 @@
   "routes": [
     {
       "src": "/(.*)",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(.*)",
       "has": [
         {
           "type": "host",
