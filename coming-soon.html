@@ -1,0 +1,477 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Tommy Sugo &amp; Merle's</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;700&family=Montserrat:wght@500;700;800&family=Oswald:wght@600;700&display=swap">
+<style>
+/* The coming-soon front page: a copy of index.html with the four buttons turned into "Coming soon" labels that
+   don't link anywhere. Served at spontanik.co.za/ until the sites launch (see vercel.json). */
+/* Two doors, side by side: Tommy Sugo's black festival ground on the left, Merle's printed paper on the right, joined by the neutrals the two brands share. Single-theme by design. */
+:root {
+  --black: #000000;
+  --paper: #f2f2f2;
+  --shade: #d3d2d2;
+  --muted-on-black: #d3d2d2;
+  --muted-on-paper: #4a4a48;
+  --sauce: #ec1c24;
+  --tommy-poster: Oswald, "Arial Narrow", Impact, sans-serif;
+  --tommy-sans: Archivo, "Helvetica Neue", Arial, sans-serif;
+  --merles-poster: Impact, Anton, "Arial Narrow", sans-serif;
+  --merles-sans: "Proxima Nova", Montserrat, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--black); font-family: var(--merles-sans); font-size: 16px; line-height: 1.5; }
+/* On a laptop or desktop all four squares fit on one screen: the page is exactly the screen's height, the doors take
+   what the bottom row leaves, and their logos, headings and spacing scale with the height. A phone stacks them. */
+
+h1, h2 { text-wrap: balance; }
+a:focus-visible { outline: 3px solid currentColor; outline-offset: 3px; }
+
+.top { background: var(--shade); color: var(--black); text-align: center; padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top p { margin: 0; font-family: var(--merles-sans); font-size: 14px; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; }
+
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 820px) { .doors { grid-template-columns: minmax(0, 1fr); } }
+.door { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(8px, 1.8vh, 24px); text-align: center; min-height: 0; padding-block: clamp(12px, 3vh, 72px); padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+.door .tag { margin: 0; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; }
+.door h1 { margin: 0; text-transform: uppercase; line-height: 1.02; font-size: clamp(26px, min(5.2vw, 5.7vh), 68px); max-width: 600px; }
+/* Door headings are always two lines, one per .line, so the two headings' lines sit level at any screen size. */
+.door h1 .line { display: block; white-space: nowrap; }
+.door .lede { margin: 0; max-width: 480px; font-size: clamp(14px, 2.1vh, 18px); line-height: 1.4; }
+@media (max-width: 820px) { .door { padding-block: 56px; gap: 20px; } .door h1 { font-size: clamp(26px, 8.4vw, 56px); } }
+.door .logo { display: block; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 28px; text-decoration: none; text-transform: uppercase; cursor: pointer; }
+
+/* Tommy Sugo door */
+.tommy { background: var(--black); color: var(--paper); font-family: var(--tommy-sans); }
+.tommy .tag { font-family: var(--tommy-poster); font-weight: 600; color: var(--sauce); }
+.tommy h1 { font-family: var(--tommy-poster); font-weight: 700; letter-spacing: 0.01em; }
+.tommy .lede { color: var(--muted-on-black); font-weight: 500; }
+.tommy .logo { width: clamp(64px, 14vh, 200px); height: clamp(64px, 14vh, 200px); }
+@media (max-width: 820px) { .tommy .logo { width: 160px; height: 160px; } }
+.tommy .btn { background: var(--sauce); color: var(--black); border: 2px solid var(--sauce); font-family: var(--tommy-poster); font-weight: 600; font-size: 18px; letter-spacing: 0.06em; }
+.tommy .btn:hover { background: var(--paper); border-color: var(--paper); }
+
+/* Merle's door */
+/* No edge on the side: the split between the doors sits exactly in the middle, in line with the bottom row's. */
+.merles { background: var(--paper); color: var(--black); }
+@media (max-width: 820px) { .merles { border-top: 8px solid var(--black); } }
+.merles .tag { font-family: var(--merles-sans); font-weight: 800; letter-spacing: 0.28em; }
+.merles h1 { font-family: var(--merles-poster); font-weight: 400; }
+.merles .lede { color: var(--muted-on-paper); font-weight: 500; }
+.merles .logo { width: auto; height: clamp(64px, 14vh, 200px); max-width: 100%; }
+@media (max-width: 820px) { .merles .logo { height: 160px; } }
+.merles .btn { background: var(--black); color: var(--paper); border: 3px solid var(--black); font-family: var(--merles-sans); font-weight: 800; font-size: 15px; letter-spacing: 0.08em; }
+.merles .btn:hover { background: var(--paper); color: var(--black); }
+
+/* The bottom row, half the doors' height or less: two separate squares that checkerboard with the doors above.
+   Events, Trucks & Catering (left) wears Merle's colours, under Tommy Sugo's door; The Shop (right) wears Tommy Sugo's,
+   under Merle's. No photos: it stays as clean as the doors. */
+/* One sauce-red line runs right across above the row. On a phone the Shop comes before Events (Tommy, Merle's, Shop,
+   Events), with the same red line between them. */
+.both { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 8px solid var(--sauce); }
+@media (max-width: 820px) {
+  .both { grid-template-columns: minmax(0, 1fr); }
+  .shared.shop { order: -1; }
+  .shared.events { border-top: 8px solid var(--sauce); }
+}
+.shared { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(4px, 1.1vh, 12px); text-align: center; text-decoration: none; padding: clamp(14px, 2.6vh, 32px) max(24px, env(safe-area-inset-right, 0px)) clamp(14px, 2.6vh, 32px) max(24px, env(safe-area-inset-left, 0px)); }
+@media (max-width: 820px) { .shared { padding-block: 40px; } }
+.shared h2 { margin: 0; font-size: clamp(24px, min(3vw, 4.2vh), 40px); line-height: 1.02; max-width: 520px; }
+.shared p { margin: 0; max-width: 560px; font-size: clamp(14px, 1.9vh, 16px); line-height: 1.4; }
+
+
+/* Events in Merle's colours: paper, heavy black, Anton. */
+.shared.events { background: var(--paper); color: var(--black); }
+.shared.events h2 { font-family: var(--merles-poster); font-weight: 400; }
+.shared.events p { color: var(--muted-on-paper); font-family: var(--merles-sans); font-weight: 500; }
+.shared.events .btn { background: var(--black); color: var(--paper); border: 3px solid var(--black); font-family: var(--merles-sans); font-weight: 800; font-size: 14px; letter-spacing: 0.08em; }
+.shared.events:hover .btn { background: var(--paper); color: var(--black); }
+
+/* The Shop in Tommy Sugo's colours: black, sauce red, Oswald. */
+.shared.shop { background: var(--black); color: var(--paper); }
+.shared.shop h2 { font-family: var(--tommy-poster); font-weight: 700; text-transform: uppercase; letter-spacing: 0.01em; }
+.shared.shop p { color: var(--muted-on-black); font-family: var(--tommy-sans); font-weight: 500; }
+.shared.shop .btn { background: var(--sauce); color: var(--black); border: 2px solid var(--sauce); font-family: var(--tommy-poster); font-weight: 600; font-size: 17px; letter-spacing: 0.06em; }
+.shared.shop:hover .btn { background: var(--paper); border-color: var(--paper); }
+@media (min-width: 821px) {
+  /* Below the top strip: the doors take exactly two thirds of the height and the bottom row one third, whatever the
+     screen (both measured outside edge to outside edge, red line included). Only if a square's content needs more
+     room than its share does that row grow. */
+  body { display: grid; grid-template-rows: auto 2fr 1fr; min-height: 100vh; min-height: 100dvh; }
+  /* Each pair of squares shares one set of rows (spacer, then logo / heading / text / button for the doors,
+     heading / text / button for the bottom row, then spacer). Every row is as tall as the taller square needs, so the
+     buttons, headings and logos line up across the pair however much text either square has. The spacers keep the
+     content centred in the square. */
+  .doors { grid-template-rows: 1fr auto auto auto auto 1fr; }
+  .both { grid-template-rows: 1fr auto auto auto 1fr; }
+  .door, .shared { grid-row: 1 / -1; display: grid; grid-template-rows: subgrid; justify-items: center; align-content: stretch; }
+  .door > *, .shared > * { align-self: start; }
+  .door > :nth-child(1), .shared > :nth-child(1) { grid-row: 2; align-self: end; }
+  .door > :nth-child(2), .shared > :nth-child(2) { grid-row: 3; }
+  .door > :nth-child(3), .shared > :nth-child(3) { grid-row: 4; }
+  .door > :nth-child(4), .shared > :nth-child(4) { grid-row: 5; }
+}
+@media (min-width: 821px) and (max-height: 700px) {
+  /* Short laptop screens: a little less padding everywhere so all four squares still fit without scrolling. */
+  .top { padding-block: 8px; }
+  .shared { padding-block: 10px; gap: 4px; }
+  .shared h2 { font-size: 24px; }
+}
+/* All four buttons are exactly the same size (width and height, border included), whatever their wording or brand. */
+.door .btn, .shared .btn { box-sizing: border-box; width: 264px; max-width: 100%; height: clamp(40px, 5.2vh, 52px); min-height: 0; padding: 0 16px; white-space: nowrap; }
+
+/* The trucks and the shopfront (js/landing-intro.js). The two trucks end up nose to nose just above the Events
+   heading, hatches open, and a little shopfront stands just above The Shop's heading. So when the script runs
+   (html.trucks) the bottom row gets more room above its headings: on a laptop or desktop the doors take three fifths
+   of the height and the bottom row two, with most of the row's spare room above the headings; on a phone both squares
+   get extra space at the top.
+   The opening starts with the bare squares: every word, logo and button hidden. The two trucks drive in along the
+   bottom of the doors, bump, open up, and the two faces spin up into the logos. The trucks fade away as both doors'
+   words come in; then Events and the Shop come in together as the trucks roll back in to meet above the Events heading,
+   and the shopfront builds itself above The Shop's and opens its door. The page scrolls while it plays (on a phone,
+   only once the faces have landed as the logos: until then the trucks' split screen fills the screen), but the squares
+   can't be clicked until it's done; a click or key press skips it. */
+@media (min-width: 821px) {
+  html.trucks body { grid-template-rows: auto 3fr 2fr; }
+  .trucks .both { grid-template-rows: 2fr auto auto auto 1fr; }
+}
+@media (max-width: 820px) {
+  .trucks .shared { padding-top: 168px; }
+  html.intro:not(.logos-in), html.intro:not(.logos-in) body { overflow: hidden; }
+}
+.intro main, .intro .both { pointer-events: none; }
+.intro .top p, .intro .door > *, .intro .shared > * { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .6s cubic-bezier(.2, .8, .2, 1); }
+.intro .door > :nth-child(3), .intro .shared > :nth-child(2) { transition-delay: .09s; }
+.intro .door > :nth-child(4), .intro .shared > :nth-child(3) { transition-delay: .18s; }
+.intro .door > .logo { transform: none; transition: none; }
+.intro.logos-in .door > .logo,
+.intro.show-doors .top p, .intro.show-doors .door > *,
+.intro.show-events .events > *,
+.intro.show-shop .shop > * { opacity: 1; transform: none; }
+/* Laid over the page from its top-left corner and drawn in page pixels, so the parked trucks scroll with the page. */
+#intro-stage { position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: 5; pointer-events: none; }
+#intro-stage svg { position: absolute; top: 0; left: 0; display: block; width: 100%; height: 1px; overflow: visible; }
+.li-face { position: absolute; display: block; max-width: none; margin: 0; opacity: 0; will-change: transform, clip-path; }
+/* Tommy Sugo's truck: black with paper lines, and a red copy printed a little off-register (as on the Events page). */
+#intro-stage .t-ink { fill: var(--black); stroke: var(--paper); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+#intro-stage .t-line { fill: none; stroke: var(--paper); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+#intro-stage .t-reg { fill: none; stroke: var(--sauce); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+/* Merle's truck: white with black ink, and a black copy off-register (as in merles-truck.html). */
+#intro-stage .m-ink { fill: #fff; stroke: var(--black); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+#intro-stage .m-line { fill: none; stroke: var(--black); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+#intro-stage .m-reg { fill: var(--black); stroke: var(--black); stroke-width: 3; stroke-linejoin: round; }
+#intro-stage .thin { stroke-width: 2; }
+
+/* Coming soon: the same page, but nothing opens. The buttons are plain labels and don't change on hover. */
+.btn { cursor: default; }
+.tommy .btn:hover, .shared.shop:hover .btn { background: var(--sauce); border-color: var(--sauce); }
+.merles .btn:hover, .shared.events:hover .btn { background: var(--black); color: var(--paper); }
+</style>
+<script>
+/* Hide the squares' contents before they're drawn, so the page opens on the bare squares. It plays every time the page
+   loads. Not for people who ask for less motion, or with ?intro=off. If js/landing-intro.js never runs, the page shows
+   normally after a moment. */
+(function () {
+  var q = location.search, root = document.documentElement;
+  root.classList.add("trucks");
+  if (/[?&]intro=off/.test(q)) return;
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  root.classList.add("intro");
+  setTimeout(function () { if (!window.LandingIntro) root.classList.remove("intro"); }, 4000);
+})();
+</script>
+
+<div class="top"><p>Pizza or schnitz? Why not both.</p></div>
+
+<main class="doors">
+  <section class="door tommy" aria-labelledby="tommy-h">
+    <img class="logo" src="tommy-seal.png" alt="Tommy Sugo Pizza seal: The Secret's in the Sauce">
+    <h1 id="tommy-h"><span class="line">Last night a pizza</span> <span class="line">saved my life.</span></h1>
+    <p class="lede">Hand-rolled thin bases and a 7-hour slow-cooked Roma tomato sauce. On the festival circuit, and delivered from our dark kitchen.</p>
+    <span class="btn">Coming soon</span>
+  </section>
+
+  <section class="door merles" aria-labelledby="merles-h">
+    <img class="logo" src="merles-logo.svg" alt="Merle's Schnitz, Around the Corner">
+    <h1 id="merles-h"><span class="line">Let's get</span> <span class="line">schnitzfaced.</span></h1>
+    <p class="lede">Proper chicken schnitz from a delivery kitchen. No counter, no queue, straight to your door.</p>
+    <span class="btn">Coming soon</span>
+  </section>
+</main>
+
+<section class="both" aria-label="For both brands">
+  <div class="shared events">
+    <h2 id="events-h">Events, Trucks &amp; Catering</h2>
+    <p>Hire one truck or both, bring them to your festival, or have the whole day catered.</p>
+    <span class="btn">Coming soon</span>
+  </div>
+  <div class="shared shop">
+    <h2 id="shop-h">The Shop</h2>
+    <p>Frozen pizza, frozen schnitz and the sauces from both kitchens, in one order.</p>
+    <span class="btn">Coming soon</span>
+  </div>
+</section>
+
+<!-- The two trucks and the shopfront, drawn here and laid out and moved by js/landing-intro.js: the trucks drive in
+     during the opening and stay parked on the Events heading afterwards, and the shopfront stays on The Shop's. The faces
+     that spin up into the logos are the logo files themselves, cropped down to the face. -->
+<div id="intro-stage" hidden aria-hidden="true">
+  <svg id="li-svg">
+    <defs>
+      <!-- Tommy Sugo's truck, facing right. Its own units: the road is y 0, the back is x 0, the front bumper x 392. -->
+      <clipPath id="li-t-window"><rect x="30" y="-188" width="230" height="80"/></clipPath>
+      <clipPath id="li-t-awning-clip"><polygon points="30,-188 260,-188 274,-236 16,-236"/></clipPath>
+      <clipPath id="li-t-face-clip"><circle cx="100" cy="-148" r="36"/></clipPath>
+      <radialGradient id="li-t-glow" cx="50%" cy="40%" r="70%">
+        <stop offset="0" stop-color="#ff5a3c" stop-opacity=".55"/>
+        <stop offset="1" stop-color="#ec1c24" stop-opacity="0"/>
+      </radialGradient>
+      <g id="li-t-shapes">
+        <rect x="0" y="-200" width="300" height="160"/>
+        <path d="M300 -40 L300 -165 L340 -165 L372 -112 L386 -107 L386 -40 Z"/>
+        <rect x="278" y="-222" width="16" height="22"/>
+        <rect x="272" y="-228" width="28" height="6"/>
+        <rect x="378" y="-54" width="14" height="12"/>
+      </g>
+      <polygon id="li-t-awning-shape" points="30,-188 260,-188 274,-236 16,-236"/>
+
+      <!-- Merle's camper bus, facing left. Its own units: the road is y 0, the front bumper x -4, the back x 416. -->
+      <path id="li-m-body-path" d="M24 -38 L12 -54 C4 -92 4 -150 10 -190 C16 -232 40 -248 86 -250 L372 -250 C398 -250 410 -236 410 -212 L410 -58 C410 -44 402 -38 390 -38 Z"/>
+      <clipPath id="li-m-body-clip"><use href="#li-m-body-path"/></clipPath>
+      <clipPath id="li-m-window"><rect x="140" y="-232" width="160" height="76"/></clipPath>
+      <clipPath id="li-m-awning-clip"><polygon points="140,-232 300,-232 316,-286 124,-286"/></clipPath>
+
+      <!-- The shopfront, in Tommy Sugo's colours. Its own units: it stands on y 0, centred on x 0. -->
+      <polygon id="li-s-awning-shape" points="-136,-176 136,-176 150,-150 -150,-150"/>
+      <clipPath id="li-s-awning-clip"><use href="#li-s-awning-shape"/></clipPath>
+      <radialGradient id="li-s-glow-grad" cx="50%" cy="55%" r="75%">
+        <stop offset="0" stop-color="#ffc79a" stop-opacity=".95"/>
+        <stop offset=".55" stop-color="#ff5a3c" stop-opacity=".7"/>
+        <stop offset="1" stop-color="#ec1c24" stop-opacity=".25"/>
+      </radialGradient>
+    </defs>
+
+    <!-- On a phone the squares are stacked, so the opening brings its own two halves to drive on. -->
+    <g id="li-backdrop" display="none">
+      <rect id="li-bd-t" fill="#000"/>
+      <rect id="li-bd-m" fill="#f2f2f2"/>
+    </g>
+    <path id="li-t-road" fill="none" stroke="#f2f2f2" stroke-width="2" opacity=".55"/>
+    <path id="li-m-road" fill="none" stroke="#000" stroke-width="2" opacity=".35"/>
+    <g id="li-t-puffs"></g>
+    <g id="li-m-puffs"></g>
+
+    <!-- The shopfront, built on top of The Shop's heading once the trucks have landed: the walls go up, the windows and
+         door pop in, the sign drops on, the awning rolls down, and the door swings open onto the lit shop inside. -->
+    <g id="li-shop" style="display:none">
+      <g id="li-s-wall">
+        <rect class="t-reg" x="-126.5" y="-167" width="260" height="167"/>
+        <rect class="t-ink" x="-130" y="-170" width="260" height="170"/>
+        <path class="t-line thin" opacity=".35" d="M-122 -158 h22 M-92 -158 h12 M-62 -158 h10 M84 -158 h24 M112 -158 h10 M-122 -18 h14 M104 -18 h16"/>
+      </g>
+      <g id="li-s-windows">
+        <rect class="t-ink" x="-114" y="-128" width="70" height="84" style="fill:#2a0608"/>
+        <circle cx="-79" cy="-98" r="17" fill="#f2f2f2"/>
+        <circle cx="-79" cy="-98" r="12.5" fill="#ec1c24"/>
+        <circle cx="-84" cy="-102" r="2.6" fill="#f2f2f2"/>
+        <circle cx="-73" cy="-100" r="2.6" fill="#f2f2f2"/>
+        <circle cx="-80" cy="-91" r="2.6" fill="#f2f2f2"/>
+        <rect x="-99" y="-64" width="40" height="6" fill="#f2f2f2" stroke="#2a0608" stroke-width="1"/>
+        <rect x="-102" y="-58" width="46" height="7" fill="#f2f2f2" stroke="#2a0608" stroke-width="1"/>
+        <rect x="-120" y="-44" width="82" height="6" fill="#f2f2f2"/>
+        <rect class="t-ink" x="44" y="-128" width="70" height="84" style="fill:#2a0608"/>
+        <rect x="58" y="-120" width="42" height="24" fill="#f2f2f2"/>
+        <text x="79" y="-105" text-anchor="middle" fill="#000" font-family="Montserrat, Arial, sans-serif" font-weight="800" font-size="7.5" letter-spacing="1">SCHNITZ</text>
+        <path d="M51 -51 V-74 Q51 -80 55.5 -82 V-90 H60.5 V-82 Q65 -80 65 -74 V-51 Z M72 -51 V-74 Q72 -80 76.5 -82 V-90 H81.5 V-82 Q86 -80 86 -74 V-51 Z M93 -51 V-74 Q93 -80 97.5 -82 V-90 H102.5 V-82 Q107 -80 107 -74 V-51 Z" fill="#ec1c24"/>
+        <path d="M51 -68 H65 M72 -68 H86 M93 -68 H107" stroke="#f2f2f2" stroke-width="6"/>
+        <rect x="38" y="-44" width="82" height="6" fill="#f2f2f2"/>
+      </g>
+      <g id="li-s-doorway">
+        <rect x="-30" y="-132" width="60" height="132" fill="#2a0608"/>
+        <rect id="li-s-glow" x="-30" y="-132" width="60" height="132" fill="url(#li-s-glow-grad)" opacity="0"/>
+        <g id="li-s-door">
+          <rect class="t-ink" x="-30" y="-132" width="60" height="132"/>
+          <rect x="-20" y="-122" width="40" height="46" fill="#1d1d1b" stroke="#f2f2f2" stroke-width="2"/>
+          <rect x="-15" y="-107" width="30" height="14" fill="#ec1c24"/>
+          <text x="0" y="-96.5" text-anchor="middle" fill="#f2f2f2" font-family="Oswald, 'Arial Narrow', Impact, sans-serif" font-weight="700" font-size="10" letter-spacing="1">OPEN</text>
+          <circle cx="20" cy="-62" r="3.5" fill="#f2f2f2"/>
+          <path class="t-line thin" d="M-20 -22 H20"/>
+        </g>
+        <rect x="-30" y="-132" width="60" height="132" fill="none" stroke="#f2f2f2" stroke-width="3"/>
+      </g>
+      <g id="li-s-awning">
+        <use href="#li-s-awning-shape" class="t-ink"/>
+        <g clip-path="url(#li-s-awning-clip)" id="li-s-stripes"></g>
+        <path id="li-s-scallop" fill="#ec1c24" stroke="#f2f2f2" stroke-width="2.5" stroke-linejoin="round"/>
+        <use href="#li-s-awning-shape" fill="none" stroke="#f2f2f2" stroke-width="3" stroke-linejoin="round"/>
+      </g>
+      <g id="li-s-sign">
+        <rect class="t-reg" x="-138.5" y="-219" width="284" height="46"/>
+        <rect class="t-ink" x="-142" y="-222" width="284" height="46"/>
+        <text x="0" y="-190" text-anchor="middle" fill="#f2f2f2" font-family="Oswald, 'Arial Narrow', Impact, sans-serif" font-weight="700" font-size="22" letter-spacing="1.5">PIZZA <tspan fill="#ec1c24">·</tspan> SCHNITZ <tspan fill="#ec1c24">·</tspan> SAUCE</text>
+      </g>
+    </g>
+
+    <g id="li-t">
+      <g id="li-t-body">
+        <use href="#li-t-shapes" class="t-reg" transform="translate(3.5 3)"/>
+        <use href="#li-t-shapes" class="t-ink"/>
+        <path d="M308 -156 L336 -156 L362 -114 L308 -114 Z" fill="#1d1d1b" stroke="#f2f2f2" stroke-width="3" stroke-linejoin="round"/>
+        <path class="t-line thin" d="M318 -150 L332 -150"/>
+        <path class="t-line" d="M306 -106 L306 -46 M314 -84 L326 -84"/>
+        <rect x="378" y="-98" width="8" height="12" fill="#f2f2f2"/>
+        <rect x="-5" y="-94" width="6" height="16" fill="#ec1c24"/>
+        <text x="120" y="-70" fill="#f2f2f2" font-family="Oswald, 'Arial Narrow', Impact, sans-serif" font-weight="700" font-size="28" letter-spacing="1.5">TOMMY SUGO</text>
+        <text x="121" y="-52" fill="#ec1c24" font-family="Oswald, 'Arial Narrow', Impact, sans-serif" font-weight="600" font-size="11.5" letter-spacing="2.6">PIZZA · ON THE CIRCUIT</text>
+
+        <!-- Inside, seen once the hatch lifts: the oven's glow, and Tommy, who pops up at the counter -->
+        <g clip-path="url(#li-t-window)">
+          <rect x="30" y="-188" width="230" height="80" fill="#2a0608"/>
+          <rect x="156" y="-180" width="88" height="62" fill="#000" stroke="#f2f2f2" stroke-width="2.5"/>
+          <rect x="172" y="-152" width="56" height="26" fill="#160304" stroke="#f2f2f2" stroke-width="2"/>
+          <polygon points="178,-126 186,-146 192,-131 199,-150 206,-131 213,-144 221,-126" fill="#ec1c24"/>
+          <polygon points="186,-126 192,-138 199,-129 206,-140 213,-126" fill="#ff8a5c"/>
+          <rect id="li-t-glow-rect" x="30" y="-188" width="230" height="80" fill="url(#li-t-glow)" opacity="0"/>
+          <g id="li-t-face">
+            <image href="tommy-seal.png" x="47.8" y="-200.2" width="104.4" height="104.4" clip-path="url(#li-t-face-clip)"/>
+          </g>
+        </g>
+        <rect x="24" y="-112" width="242" height="7" fill="#f2f2f2"/>
+        <g id="li-t-boxes" opacity="0">
+          <rect x="196" y="-121" width="40" height="9" fill="#f2f2f2"/>
+          <rect x="200" y="-130" width="36" height="9" fill="#f2f2f2" stroke="#000" stroke-width="1"/>
+        </g>
+
+        <!-- The hatch, hinged along its top edge: it folds up and becomes the awning -->
+        <g id="li-t-hatch">
+          <rect class="t-reg" x="33.5" y="-185" width="230" height="80"/>
+          <rect class="t-ink" x="30" y="-188" width="230" height="80"/>
+          <path class="t-line thin" d="M36 -183 L254 -183"/>
+          <image href="images/truck-seal.png" x="113" y="-182" width="68" height="68"/>
+          <rect x="238" y="-126" width="14" height="5" fill="#f2f2f2"/>
+        </g>
+        <g id="li-t-awning">
+          <use href="#li-t-awning-shape" class="t-reg" transform="translate(3.5 3)"/>
+          <use href="#li-t-awning-shape" class="t-ink"/>
+          <g clip-path="url(#li-t-awning-clip)" id="li-t-stripes"></g>
+          <use href="#li-t-awning-shape" fill="none" stroke="#f2f2f2" stroke-width="3" stroke-linejoin="round"/>
+        </g>
+        <path id="li-t-struts" class="t-line thin" d="M34 -110 L19 -233 M256 -110 L271 -233" opacity="0"/>
+
+        <circle cx="75" cy="-30" r="37" fill="#000"/>
+        <circle cx="335" cy="-30" r="37" fill="#000"/>
+        <path class="t-line" d="M38 -40 A37 37 0 0 1 112 -40 M298 -40 A37 37 0 0 1 372 -40"/>
+      </g>
+      <!-- Pizza wheels in thin black tyres, as on the Events page truck: drawn by js/landing-intro.js inside the spinning
+           group so the toppings roll. -->
+      <g transform="translate(75 -30)">
+        <circle r="30" class="t-ink" style="fill:#121211"/>
+        <g class="li-t-spin" data-pizza="3"></g>
+      </g>
+      <g transform="translate(335 -30)">
+        <circle r="30" class="t-ink" style="fill:#121211"/>
+        <g class="li-t-spin" data-pizza="11"></g>
+      </g>
+    </g>
+
+    <g id="li-m">
+      <g id="li-m-body">
+        <use href="#li-m-body-path" class="m-reg" transform="translate(4 4)"/>
+        <use href="#li-m-body-path" class="m-ink"/>
+        <g clip-path="url(#li-m-body-clip)">
+          <path d="M-10 -146 H430 V0 H-10 Z M-10 -146 L-10 -182 L34 -146 Z" fill="#d3d2d2"/>
+          <rect x="-10" y="-152" width="440" height="9" fill="#000"/>
+          <path class="m-line thin" d="M362 -128 l8 -8 M362 -118 l8 -8 M362 -108 l8 -8 M376 -128 l8 -8 M376 -118 l8 -8 M376 -108 l8 -8 M390 -128 l8 -8 M390 -118 l8 -8 M390 -108 l8 -8"/>
+        </g>
+        <use href="#li-m-body-path" fill="none" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+        <path class="m-line thin" d="M60 -238 H392"/>
+        <path d="M18 -226 C24 -236 32 -238 40 -238 L40 -168 L13 -168 C12 -190 13 -210 18 -226 Z" fill="#1d1d1b" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+        <path class="m-line thin" d="M22 -222 L32 -230"/>
+        <rect x="46" y="-234" width="72" height="68" rx="8" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <path d="M50 -230 L66 -230 L66 -170 L50 -170 Z" fill="#3a3a38"/>
+        <path class="m-line thin" d="M66 -232 L66 -168"/>
+        <path d="M80 -226 L104 -226" stroke="#f2f2f2" stroke-width="2" stroke-linecap="round"/>
+        <path class="m-line" d="M40 -238 L40 -46 M124 -238 L124 -46"/>
+        <rect x="104" y="-126" width="14" height="5" rx="2" fill="#000"/>
+        <rect x="316" y="-234" width="34" height="66" rx="8" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <rect x="358" y="-234" width="36" height="66" rx="10" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <path d="M322 -226 L340 -226 M364 -226 L384 -226" stroke="#f2f2f2" stroke-width="2" stroke-linecap="round"/>
+        <image href="images/merles-wordmark.svg" x="146" y="-134" width="150" height="39"/>
+        <!-- The pay-off line spans exactly the wordmark's width above it (x 146 to 296), so both sit on the panel between
+             the door (x 124) and the back wheel arch (from x 292, lower down), clear of each. -->
+        <text x="146" y="-82" textLength="150" lengthAdjust="spacing" fill="#000" font-family="Montserrat, Arial, sans-serif" font-weight="800" font-size="6">SCHNITZ · AROUND THE CORNER</text>
+        <circle cx="14" cy="-98" r="11" fill="#fff" stroke="#000" stroke-width="3"/>
+        <circle cx="14" cy="-98" r="5" fill="#d3d2d2"/>
+        <rect x="8" y="-128" width="10" height="6" rx="2" fill="#000"/>
+        <rect x="-4" y="-58" width="48" height="11" rx="5" fill="#000"/>
+        <rect x="372" y="-58" width="44" height="11" rx="5" fill="#000"/>
+        <rect x="404" y="-124" width="7" height="16" rx="2" fill="#000"/>
+
+        <!-- Inside, seen once the hatch lifts: the menu board, and Merle, who pops up at the counter -->
+        <g clip-path="url(#li-m-window)">
+          <rect x="140" y="-232" width="160" height="76" fill="#f2f2f2"/>
+          <rect x="148" y="-224" width="36" height="28" fill="#000"/>
+          <path d="M153 -216 H176 M153 -209 H179 M153 -202 H170" stroke="#f2f2f2" stroke-width="2" stroke-linecap="round"/>
+          <g id="li-m-face">
+            <image href="images/merles-portrait.svg" x="191.95" y="-230" width="55.5" height="72"/>
+          </g>
+        </g>
+        <rect x="132" y="-158" width="176" height="8" fill="#000"/>
+        <g id="li-m-goods" opacity="0">
+          <rect x="148" y="-172" width="36" height="14" rx="7" fill="#fff" stroke="#000" stroke-width="2"/>
+          <rect x="158" y="-172" width="6" height="14" fill="#d3d2d2"/>
+          <path d="M282 -158 L282 -178 Q282 -184 287 -184 L289 -184 Q294 -184 294 -178 L294 -158 Z M286 -184 L286 -190 L290 -190 L290 -184" fill="#000"/>
+        </g>
+
+        <g id="li-m-hatch">
+          <rect class="m-reg" x="143" y="-229" width="160" height="76"/>
+          <rect class="m-ink" x="140" y="-232" width="160" height="76"/>
+          <image href="images/merles-portrait.svg" x="196" y="-229" width="48" height="62"/>
+          <path class="m-line thin" d="M146 -226 H294"/>
+          <rect x="276" y="-176" width="14" height="5" rx="2" fill="#000"/>
+        </g>
+        <g id="li-m-awning">
+          <polygon class="m-reg" points="143,-229 303,-229 319,-283 127,-283"/>
+          <g clip-path="url(#li-m-awning-clip)" id="li-m-stripes"></g>
+          <polygon points="140,-232 300,-232 316,-286 124,-286" fill="none" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+          <path id="li-m-scallop" fill="#fff" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/>
+        </g>
+        <path id="li-m-struts" class="m-line thin" d="M144 -158 L128 -282 M296 -158 L312 -282" opacity="0"/>
+
+        <circle cx="82" cy="-30" r="38" fill="#f2f2f2"/>
+        <circle cx="330" cy="-30" r="38" fill="#f2f2f2"/>
+        <path class="m-line" d="M44 -42 A38 38 0 0 1 120 -42 M292 -42 A38 38 0 0 1 368 -42"/>
+      </g>
+      <g transform="translate(82 -30)">
+        <circle r="30" fill="#000" transform="translate(3 3)"/>
+        <circle r="30" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <g class="li-m-spin">
+          <circle r="16" fill="#fff" stroke="#000" stroke-width="2.5"/>
+          <circle r="6" fill="#d3d2d2" stroke="#000" stroke-width="2"/>
+          <path d="M0 -11 L0 -14 M0 11 L0 14 M-11 0 L-14 0 M11 0 L14 0" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+        </g>
+      </g>
+      <g transform="translate(330 -30)">
+        <circle r="30" fill="#000" transform="translate(3 3)"/>
+        <circle r="30" fill="#1d1d1b" stroke="#000" stroke-width="3"/>
+        <g class="li-m-spin">
+          <circle r="16" fill="#fff" stroke="#000" stroke-width="2.5"/>
+          <circle r="6" fill="#d3d2d2" stroke="#000" stroke-width="2"/>
+          <path d="M0 -11 L0 -14 M0 11 L0 14 M-11 0 L-14 0 M11 0 L14 0" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+        </g>
+      </g>
+    </g>
+
+    <!-- The friendly bump: a little burst and a heart where the bumpers meet -->
+    <g id="li-bump"></g>
+  </svg>
+  <img class="li-face" id="li-face-t" src="tommy-seal.png" alt="">
+  <img class="li-face" id="li-face-m" src="merles-logo.svg" alt="">
+</div>
+
+<!-- The ?v= number changes whenever the intro does, so browsers fetch the new script instead of an old copy. -->
+<script src="js/landing-intro.js?v=15"></script>
+</body></html>

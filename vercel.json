@@ -141,6 +141,16 @@
         }
       ],
       "dest": "/admin/index.html"
+    },
+    {
+      "src": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "spontanik\\.co\\.za"
+        }
+      ],
+      "dest": "/coming-soon.html"
     }
   ]
 }
