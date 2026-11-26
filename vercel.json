@@ -113,6 +113,16 @@
       }
     },
     {
+      "src": "/test-shop",
+      "has": [
+        {
+          "type": "host",
+          "value": "admin\\.spontanik\\.co\\.za"
+        }
+      ],
+      "dest": "/admin/test-shop.html"
+    },
+    {
       "src": "/admin(/.*)?",
       "has": [
         {

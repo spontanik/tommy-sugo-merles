@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Test Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&family=Oswald:wght@600;700&display=swap">
+<style>
+:root {
+  --ground: #f2f2f2;
+  --ink: #000;
+  --muted: #4a4a48;
+  --shade: #d3d2d2;
+  --raised: #fff;
+  --warn: #ffe27a;
+  --sans: Archivo, "Helvetica Neue", Arial, sans-serif;
+  --poster: Oswald, "Arial Narrow", Impact, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.5 var(--sans); }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font: 700 40px/1 var(--poster); text-transform: uppercase; margin: 0 0 8px; }
+h2 { font: 700 24px/1.1 var(--poster); text-transform: uppercase; margin: 32px 0 12px; }
+h3 { font-size: 16px; margin: 0; }
+.banner { background: var(--warn); border: 2px solid #000; padding: 12px 16px; font-weight: 700; margin: 16px 0; }
+.hint { color: var(--muted); font-size: 14px; margin: 4px 0; }
+.err { color: #b00020; font-weight: 700; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.btn { font: 700 14px/1 var(--sans); text-transform: uppercase; letter-spacing: .06em; background: #000; color: #f2f2f2; border: 2px solid #000; padding: 12px 16px; cursor: pointer; }
+.btn.ghost { background: transparent; color: #000; }
+.btn:disabled { opacity: .5; cursor: default; }
+.btn.small { padding: 8px 10px; font-size: 12px; }
+.input { font: 16px var(--sans); padding: 10px 12px; border: 2px solid #000; background: var(--raised); width: 100%; }
+label { display: block; font-weight: 700; font-size: 14px; margin: 12px 0 4px; }
+.card { background: var(--raised); border: 2px solid #000; padding: 16px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.item { background: var(--raised); border: 2px solid #000; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.item .price { font-weight: 800; }
+.item .sku { color: var(--muted); font-size: 12px; }
+.item .btn { margin-top: auto; }
+.tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; padding: 2px 6px; background: var(--shade); }
+.tag.ok { background: #000; color: #f2f2f2; }
+.tag.bad { background: #b00020; color: #fff; }
+.cart { position: sticky; top: 16px; }
+.cart ul, .orders { list-style: none; margin: 0; padding: 0; }
+.cart li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--shade); }
+.cart .total { font-weight: 800; font-size: 18px; margin: 12px 0; }
+.orders li { background: var(--raised); border: 2px solid #000; padding: 12px; margin-bottom: 8px; }
+.orders .head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+dialog { border: 2px solid #000; padding: 0; max-width: 460px; width: calc(100% - 32px); }
+dialog form { padding: 16px; }
+fieldset { border: 2px solid var(--shade); margin: 12px 0; padding: 8px 12px; }
+legend { font-weight: 700; padding: 0 4px; }
+fieldset label { font-weight: 400; display: flex; gap: 8px; align-items: center; margin: 4px 0; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1>Test shop</h1>
+    <div class="row" id="who" hidden><span class="hint" id="who-email"></span><button class="btn ghost small" type="button" id="sign-out">Sign out</button></div>
+  </div>
+  <p class="banner">Hidden test page, not linked from the site. The menu comes from Lightspeed, and orders go to the Lightspeed test business marked paid with the payment method saved in Settings. No money changes hands, and nothing here touches the Tommy Sugo or Merle's menus or orders.</p>
+  <p class="err" id="error" role="alert" hidden></p>
+
+  <!-- Sign in: the same admin account as /admin -->
+  <section id="signin" class="card" hidden>
+    <h2 style="margin-top:0">Sign in</h2>
+    <form id="signin-form">
+      <label for="email">Email</label><input class="input" id="email" type="email" autocomplete="username" required>
+      <label for="password">Password</label><input class="input" id="password" type="password" autocomplete="current-password" required>
+      <p><button class="btn" type="submit">Sign in</button></p>
+    </form>
+  </section>
+
+  <!-- First-time setup, the same as Settings → Lightspeed kitchen POS on Tommy Sugo -->
+  <section id="setup" class="card" hidden>
+    <h2 style="margin-top:0">Connect Lightspeed</h2>
+    <p class="hint">This saves the same settings as the Lightspeed card in Tommy Sugo's Settings. Paste the access token from TabletPOS here only, not into email or chat.</p>
+    <div id="setup-token">
+      <label for="token">Access token</label>
+      <div class="row"><input class="input" id="token" type="password" autocomplete="new-password" spellcheck="false" style="flex:1"><button class="btn" type="button" id="save-token">Save token</button></div>
+    </div>
+    <div id="setup-choices" hidden>
+      <label for="location">Location</label><select class="input" id="location"></select>
+      <label for="payment">Payment method the orders are paid with</label><select class="input" id="payment"></select>
+      <label for="profile">Order profile</label><select class="input" id="profile"></select>
+      <p class="hint" id="readiness"></p>
+      <p><button class="btn" type="button" id="save-setup">Save and load the menu</button></p>
+    </div>
+  </section>
+
+  <section id="shop" hidden>
+    <div class="row">
+      <p class="hint" id="setup-line" style="flex:1"></p>
+      <select class="input" id="menu-pick" style="width:auto" hidden aria-label="Menu"></select>
+      <button class="btn ghost small" type="button" id="reload">Reload menu</button>
+    </div>
+    <div class="layout">
+      <div id="menu"></div>
+      <aside class="cart card">
+        <h2 style="margin-top:0">Order</h2>
+        <ul id="cart-lines"></ul>
+        <p class="hint" id="cart-empty">Nothing added yet.</p>
+        <p class="total" id="cart-total"></p>
+        <label for="cust-name">Name on the order</label><input class="input" id="cust-name" autocomplete="off" value="Test Order">
+        <label for="cust-phone">Phone (optional)</label><input class="input" id="cust-phone" autocomplete="off" inputmode="tel">
+        <p><button class="btn" type="button" id="place" disabled>Place test order</button></p>
+      </aside>
+    </div>
+
+    <h2>Test orders</h2>
+    <p class="hint">"Sent" means Lightspeed received it. "In POS" means a POS device took it. Ready and Closed come from the POS. This list refreshes every 10 seconds.</p>
+    <ul class="orders" id="orders"></ul>
+  </section>
+</main>
+
+<dialog id="options">
+  <form method="dialog" id="options-form">
+    <h3 id="options-title"></h3>
+    <div id="options-body"></div>
+    <p class="err" id="options-err" hidden></p>
+    <div class="row"><button class="btn" type="submit" value="add">Add</button><button class="btn ghost" type="submit" value="cancel" formnovalidate>Cancel</button></div>
+  </form>
+</dialog>
+
+<script src="../js/supabase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function () {
+  var conf = window.SITE_SUPABASE || {};
+  var db = window.supabase.createClient(conf.url, conf.key);
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { menu: null, menuId: null, menus: [], cart: [], ordersTimer: null };
+
+  function h(tag, attrs, kids) {
+    var e = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === "class") e.className = attrs[k];
+      else if (k === "text") e.textContent = attrs[k];
+      else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] !== false && attrs[k] != null) e.setAttribute(k, attrs[k] === true ? "" : attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === "string" ? document.createTextNode(c) : c); });
+    return e;
+  }
+  var money = function (n) { return "R" + Number(n).toFixed(2); };
+  function showError(message) { $("error").textContent = message || ""; $("error").hidden = !message; }
+
+  async function call(fn, body) {
+    var res = await db.functions.invoke(fn, { body: body });
+    if (res.error) {
+      var detail = null;
+      try { detail = await res.error.context.json(); } catch (e) {}
+      var err = new Error((detail && detail.error) || "Couldn't reach the server. Try again in a moment.");
+      throw err;
+    }
+    return res.data || {};
+  }
+
+  // ---------- Signing in ----------
+  async function start() {
+    var s = await db.auth.getSession();
+    var session = s.data && s.data.session;
+    $("signin").hidden = !!session;
+    $("who").hidden = !session;
+    if (!session) return;
+    $("who-email").textContent = session.user.email;
+    await loadMenu();
+    loadOrders();
+  }
+  $("signin-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    showError("");
+    var res = await db.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+    if (res.error) { showError(res.error.message); return; }
+    start();
+  });
+  $("sign-out").addEventListener("click", async function () { await db.auth.signOut(); location.reload(); });
+
+  // ---------- Setup ----------
+  function fillSelect(sel, rows, value, label, blank) {
+    sel.textContent = "";
+    if (blank) sel.appendChild(h("option", { value: "", text: blank }));
+    rows.forEach(function (r) { sel.appendChild(h("option", { value: r.value, text: label(r), selected: String(r.value) === String(value) })); });
+  }
+  async function showSetup(hasToken) {
+    $("shop").hidden = true;
+    $("setup").hidden = false;
+    $("setup-choices").hidden = true;
+    if (!hasToken) return;
+    var loc = $("location").value;
+    var opts = await call("lightspeed-admin", { action: "options", location: loc });
+    if (!opts.ok) throw new Error(opts.error);
+    if (!loc && opts.locations.length) {
+      opts = await call("lightspeed-admin", { action: "options", location: opts.locations[0].id });
+      if (!opts.ok) throw new Error(opts.error);
+      loc = opts.locations[0].id;
+    }
+    fillSelect($("location"), opts.locations.map(function (l) { return { value: l.id, name: l.name }; }), loc, function (r) { return r.name + " (" + r.value + ")"; });
+    fillSelect($("payment"), (opts.paymentMethods || []).map(function (p) { return { value: p.code, name: p.name }; }), "", function (r) { return r.name + " (" + r.value + ")"; }, "None: send orders unpaid");
+    var profiles = opts.orderProfiles || [];
+    var takeaway = profiles.filter(function (p) { return p.mode === "TAKE_AWAY"; })[0];
+    fillSelect($("profile"), profiles.map(function (p) { return { value: p.code, name: p.name, mode: p.mode }; }), takeaway ? takeaway.code : "", function (r) { return r.name + " (" + r.value + (r.mode ? ", " + r.mode.toLowerCase().replace("_", " ") : "") + ")"; }, "Lightspeed's default");
+    var ready = opts.readiness;
+    $("readiness").textContent = ready ? "Ready for online orders: " + (ready.status === "READY" ? "yes" : "no") +
+      (ready.posStatus ? " (sales period " + String(ready.posStatus.salesPeriod || "?").toLowerCase() + ", " + (ready.posStatus.availableDevices ? "a POS device is online" : "no POS device online") + ")" : "") + "." : "";
+    if (opts.problems && opts.problems.length) showError("Some lists didn't load: " + opts.problems.join(" "));
+    $("setup-choices").hidden = false;
+  }
+  $("location").addEventListener("change", function () { showSetup(true).catch(function (e) { showError(e.message); }); });
+  $("save-token").addEventListener("click", async function () {
+    var b = this, value = $("token").value.trim();
+    if (!value) { showError("Paste the access token first."); return; }
+    b.disabled = true; showError("");
+    try {
+      var res = await call("lightspeed-admin", { action: "save_token", token: value });
+      if (!res.ok) throw new Error(res.error);
+      $("token").value = "";
+      await showSetup(true);
+    } catch (e) { showError(e.message); }
+    b.disabled = false;
+  });
+  $("save-setup").addEventListener("click", async function () {
+    var b = this, sel = $("location");
+    b.disabled = true; showError("");
+    try {
+      var res = await call("lightspeed-admin", { action: "save_settings", location: sel.value,
+        locationName: (sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : "").replace(/ \(\d+\)$/, ""),
+        paymentMethod: $("payment").value, orderProfile: $("profile").value, mode: "test" });
+      if (!res.ok) throw new Error(res.error);
+      $("setup").hidden = true;
+      await loadMenu();
+    } catch (e) { showError(e.message); }
+    b.disabled = false;
+  });
+
+  // ---------- Menu ----------
+  async function loadMenu(menuId) {
+    showError("");
+    $("menu").textContent = "";
+    $("menu").appendChild(h("p", { class: "hint", text: "Loading the menu from Lightspeed…" }));
+    var res;
+    try { res = await call("lightspeed-test", { action: "menu", menuId: menuId || state.menuId }); }
+    catch (e) { showError(e.message); return; }
+    if (res.needsSetup) {
+      var status = await call("lightspeed-admin", { action: "status" }).catch(function () { return {}; });
+      await showSetup(!!(status.connection && status.connection.lightspeed_token_hint)).catch(function (e) { showError(e.message); });
+      return;
+    }
+    if (!res.ok) { showError(res.error); $("menu").textContent = ""; return; }
+    $("setup").hidden = true;
+    $("shop").hidden = false;
+    var s = res.setup;
+    $("setup-line").textContent = "Location " + s.location + " · paid with " + (s.paymentMethod || "nothing (orders arrive unpaid)") + " · order profile " + (s.orderProfile || "default") + ". Change these in Tommy Sugo's Settings.";
+    state.menus = res.menus; state.menuId = res.menuId; state.menu = res.menu;
+    var pick = $("menu-pick");
+    pick.hidden = res.menus.length < 2;
+    fillSelect(pick, res.menus.map(function (m) { return { value: m.id, name: m.name }; }), res.menuId, function (r) { return r.name; });
+    drawMenu();
+  }
+  $("menu-pick").addEventListener("change", function () { state.cart = []; drawCart(); loadMenu(this.value); });
+  $("reload").addEventListener("click", function () { loadMenu(); });
+
+  function drawMenu() {
+    var box = $("menu");
+    box.textContent = "";
+    if (!state.menu || !state.menu.groups.length) {
+      box.appendChild(h("p", { class: "hint", text: "This Lightspeed location has no online-ordering menu yet. Ask TabletPOS to set one up, then reload." }));
+      return;
+    }
+    state.menu.groups.forEach(function (g) {
+      box.appendChild(h("h2", { text: g.name }));
+      box.appendChild(h("div", { class: "items" }, g.items.map(function (item) {
+        var extras = item.modifierGroups.length || item.instructions.length;
+        return h("div", { class: "item" }, [
+          h("h3", { text: item.name }),
+          h("span", { class: "sku", text: "SKU " + item.sku }),
+          h("span", { class: "price", text: money(item.price) }),
+          item.combo ? h("span", { class: "tag", text: "Combo: not in the test shop yet" }) : null,
+          item.combo ? null : h("button", { class: "btn small", type: "button", text: extras ? "Choose" : "Add", onclick: function () {
+            if (extras) chooseOptions(item); else addToCart(item, [], []);
+          } })
+        ]);
+      })));
+    });
+  }
+
+  function chooseOptions(item) {
+    var body = $("options-body");
+    body.textContent = "";
+    $("options-title").textContent = item.name + " · " + money(item.price);
+    $("options-err").hidden = true;
+    item.modifierGroups.forEach(function (g) {
+      var single = g.max === 1;
+      var rule = g.min && g.max === g.min ? "choose " + g.min : g.min ? "choose at least " + g.min : g.max ? "up to " + g.max : "optional";
+      body.appendChild(h("fieldset", { "data-group": g.sku, "data-min": g.min, "data-max": g.max === null ? "" : g.max }, [h("legend", { text: g.name + " (" + rule + ")" })].concat(
+        g.options.map(function (o) {
+          return h("label", {}, [h("input", { type: single ? "radio" : "checkbox", name: "m-" + g.sku, value: o.sku, "data-kind": "modifier" }), o.name + (o.price ? " +" + money(o.price) : "")]);
+        }))));
+    });
+    item.instructions.forEach(function (g) {
+      body.appendChild(h("fieldset", {}, [h("legend", { text: g.name + (g.multi ? "" : " (choose one)") })].concat(
+        g.options.map(function (o) {
+          return h("label", {}, [h("input", { type: g.multi ? "checkbox" : "radio", name: "i-" + g.id, value: o.id, "data-kind": "instruction" }), o.name]);
+        }))));
+    });
+    var dlg = $("options");
+    dlg.returnValue = "";
+    dlg.onclose = function () {
+      if (dlg.returnValue !== "add") return;
+      var checked = Array.prototype.slice.call(body.querySelectorAll("input:checked"));
+      var modifiers = checked.filter(function (i) { return i.getAttribute("data-kind") === "modifier"; }).map(function (i) { return i.value; });
+      var instructions = checked.filter(function (i) { return i.getAttribute("data-kind") === "instruction"; }).map(function (i) { return i.value; });
+      addToCart(item, modifiers, instructions);
+    };
+    $("options-form").onsubmit = function (e) {
+      if (e.submitter && e.submitter.value === "cancel") return;
+      var bad = Array.prototype.filter.call(body.querySelectorAll("fieldset[data-group]"), function (f) {
+        var n = f.querySelectorAll("input:checked").length, min = Number(f.getAttribute("data-min")), max = f.getAttribute("data-max");
+        return n < min || (max !== "" && n > Number(max));
+      })[0];
+      if (bad) {
+        e.preventDefault();
+        $("options-err").textContent = "Check your choice for " + bad.querySelector("legend").textContent + ".";
+        $("options-err").hidden = false;
+      }
+    };
+    dlg.showModal();
+  }
+
+  // ---------- Cart ----------
+  function addToCart(item, modifiers, instructions) {
+    var extras = 0, names = [];
+    item.modifierGroups.forEach(function (g) { g.options.forEach(function (o) { if (modifiers.indexOf(o.sku) >= 0) { extras += o.price; names.push(o.name); } }); });
+    item.instructions.forEach(function (g) { g.options.forEach(function (o) { if (instructions.indexOf(o.id) >= 0) names.push(o.name); }); });
+    state.cart.push({ sku: item.sku, qty: 1, modifiers: modifiers, instructions: instructions, name: item.name + (names.length ? " · " + names.join(", ") : ""), each: item.price + extras });
+    drawCart();
+  }
+  function drawCart() {
+    var ul = $("cart-lines");
+    ul.textContent = "";
+    var total = 0;
+    state.cart.forEach(function (l, i) {
+      total += l.each * l.qty;
+      ul.appendChild(h("li", {}, [
+        h("span", {}, [h("strong", { text: l.qty + " × " }), l.name]),
+        h("span", { class: "row" }, [money(l.each * l.qty),
+          h("button", { class: "btn ghost small", type: "button", text: "+", "aria-label": "One more", onclick: function () { if (l.qty < 20) l.qty++; drawCart(); } }),
+          h("button", { class: "btn ghost small", type: "button", text: "−", "aria-label": "One fewer", onclick: function () { l.qty--; if (!l.qty) state.cart.splice(i, 1); drawCart(); } })])
+      ]));
+    });
+    $("cart-empty").hidden = state.cart.length > 0;
+    $("cart-total").textContent = state.cart.length ? "Total " + money(total) : "";
+    $("place").disabled = !state.cart.length;
+  }
+  $("place").addEventListener("click", async function () {
+    var b = this;
+    b.disabled = true; showError("");
+    try {
+      var res = await call("lightspeed-test", { action: "place", menuId: state.menuId, name: $("cust-name").value, phone: $("cust-phone").value,
+        cart: state.cart.map(function (l) { return { sku: l.sku, qty: l.qty, modifiers: l.modifiers, instructions: l.instructions }; }) });
+      if (!res.ok) throw new Error(res.error + (res.number ? " (test order #" + res.number + ")" : ""));
+      state.cart = [];
+      drawCart();
+    } catch (e) { showError(e.message); }
+    b.disabled = !state.cart.length;
+    loadOrders();
+  });
+
+  // ---------- Test orders ----------
+  var LABELS = { sending: "Sending", sent: "Sent", in_pos: "In POS", ready: "Ready", closed: "Closed", failed: "Failed", cancelled: "Cancelled" };
+  async function loadOrders() {
+    clearTimeout(state.ordersTimer);
+    try {
+      var res = await call("lightspeed-test", { action: "orders" });
+      if (res.ok) drawOrders(res.orders || []);
+    } catch (e) { /* shown next time something is done */ }
+    state.ordersTimer = setTimeout(loadOrders, 10000);
+  }
+  function drawOrders(rows) {
+    var ul = $("orders");
+    ul.textContent = "";
+    if (!rows.length) { ul.appendChild(h("li", { class: "hint", text: "No test orders yet." })); return; }
+    rows.forEach(function (o) {
+      var cls = o.lightspeed_status === "failed" || o.lightspeed_status === "cancelled" ? "tag bad" : ["in_pos", "ready", "closed"].indexOf(o.lightspeed_status) >= 0 ? "tag ok" : "tag";
+      ul.appendChild(h("li", {}, [
+        h("div", { class: "head" }, [h("strong", { text: "#" + o.number + " · " + o.customer_name }), h("span", { class: cls, text: LABELS[o.lightspeed_status] || o.lightspeed_status }),
+          h("span", { class: "hint", text: new Date(o.created_at).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" }) + " · " + money(o.total) + " · ref " + o.reference })]),
+        h("p", { class: "hint", text: (o.lines || []).map(function (l) { return l.qty + " × " + l.name; }).join("; ") }),
+        o.lightspeed_error ? h("p", { class: "err", text: o.lightspeed_error }) : null
+      ]));
+    });
+  }
+
+  if (!conf.url || !conf.key) { showError("Supabase isn't connected: js/supabase-config.js is missing its settings."); return; }
+  start();
+})();
+</script>
+</body>
+</html>

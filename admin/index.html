@@ -169,6 +169,9 @@ textarea.input { min-height: 88px; resize: vertical; }
 .yoco-body { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
 .yoco-body p { margin: 0; }
 .yoco-status { font-weight: 700; }
+.ls-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ls-link { display: grid; grid-template-columns: minmax(0, 1fr) 160px minmax(0, 1fr); gap: 8px; align-items: center; }
+@media (max-width: 640px) { .ls-link { grid-template-columns: 1fr; gap: 4px; padding-bottom: 8px; border-bottom: 1px solid var(--shade); } }
 .inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .inline .input { flex: 1 1 260px; width: auto; }
 .yoco-body details summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
@@ -815,7 +818,10 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var ordersKnown = null; // order ids already seen, to flag new ones
   var ordersRows = [];
   var ordersCodes = {}; // what's been typed into each collection code box, kept across redraws
-  var ORDER_COLUMNS = "id,number,status,brands,customer_name,customer_email,customer_phone,collect_from,total,payment_mode,payment_provider,created_at,paid_at,yoco_order_id,yoco_order_error,email_sent_at,email_error,order_lines(brand,name,qty,unit_price,position)";
+  var ORDER_COLUMNS = "id,number,status,brands,customer_name,customer_email,customer_phone,collect_from,total,payment_mode,payment_provider,created_at,paid_at,yoco_order_id,yoco_order_error,email_sent_at,email_error,lightspeed_status,lightspeed_error,order_lines(brand,name,qty,unit_price,position)";
+  // Whether paid orders go to the kitchen's Lightspeed POS (set up in Tommy Sugo's Settings), and what each state reads as.
+  var lightspeedOn = false;
+  var LIGHTSPEED_LABELS = { sent: "Sent to Lightspeed", in_pos: "In Lightspeed", ready: "Ready in Lightspeed", closed: "Closed in Lightspeed" };
   // "one": orders holding the selected brand (a mixed order shows for both brands). "both": every order, for one screen
   // in the kitchen. Remembered on this computer.
   var ordersScope = "one";
@@ -855,7 +861,12 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     // Paid orders only: unpaid ones, and ones released for not being paid in time, aren't the kitchen's business.
     var query = db.from("orders").select(ORDER_COLUMNS).not("paid_at", "is", null);
     query = ordersScope === "both" ? query.overlaps("brands", YOCO_BRANDS) : query.contains("brands", [brand]);
-    var res = await query.order("created_at", { ascending: false }).limit(100);
+    var results = await Promise.all([
+      query.order("created_at", { ascending: false }).limit(100),
+      db.from("yoco_connections").select("lightspeed_location_id").eq("brand", "tommy").maybeSingle()
+    ]);
+    var res = results[0];
+    lightspeedOn = !!(results[1].data && results[1].data.lightspeed_location_id);
     if (seq !== loadSeq) return;
     if (res.error) {
       toast("Couldn't load orders: " + res.error.message, true);
@@ -918,6 +929,13 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       actions.appendChild(resend);
     }
     if (o.yoco_order_error) problems.push(h("p", { class: "notice", text: "Not recorded in Yoco: " + o.yoco_order_error }));
+    if (o.lightspeed_error) problems.push(h("p", { class: "notice", text: "Lightspeed: " + o.lightspeed_error }));
+    if (lightspeedOn && ORDER_ACTIVE.indexOf(o.status) >= 0 && (!o.lightspeed_status || o.lightspeed_status === "failed")) {
+      var toPos = h("button", { class: "btn ghost", type: "button", text: "Send to Lightspeed", onclick: function () {
+        runOrderAct(toPos, "send_to_lightspeed", o.id, null, "Order #" + o.number + " sent to Lightspeed.");
+      } });
+      actions.appendChild(toPos);
+    }
     var test = o.payment_mode === "test";
     if (!payfast && !o.yoco_order_id && o.status !== "cancelled" && (o.yoco_order_error || test)) {
       var toYoco = h("button", { class: "btn ghost", type: "button", text: "Send to Yoco", onclick: function () {
@@ -932,7 +950,8 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
         h("span", { class: "tag" + (o.status === "received" ? " sold" : ""), text: ORDER_LABELS[o.status] }),
         test ? h("span", { class: "tag", text: "Test" }) : null,
         payfast ? h("span", { class: "tag", text: "PayFast" }) : null,
-        o.yoco_order_id ? h("span", { class: "tag", text: "In Yoco" }) : null
+        o.yoco_order_id ? h("span", { class: "tag", text: "In Yoco" }) : null,
+        LIGHTSPEED_LABELS[o.lightspeed_status] ? h("span", { class: "tag", text: LIGHTSPEED_LABELS[o.lightspeed_status] }) : null
       ])),
       h("p", { class: "hint", text: when + (o.customer_phone ? " · " + o.customer_phone : "") + " · " + o.customer_email }),
       h("ul", { class: "order-lines" }, lines.map(function (l) {
@@ -1579,9 +1598,177 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     box.appendChild(yocoConnection(st, conn));
     box.appendChild(yocoSync(st, conn));
     box.appendChild(yocoMatching());
+    box.appendChild(lightspeedCard());
     box.appendChild(payfastPayments(st, conn));
     box.appendChild(yocoPayments(st, conn));
     box.appendChild(yocoEmails(conn));
+  }
+
+  // ---------- Settings: the kitchen's Lightspeed K-Series POS ----------
+  // Paid website orders for both brands go to one Lightspeed location, set up on Tommy Sugo (the paying account). The
+  // access token goes to the lightspeed-admin edge function and is never sent back. "options" asks Lightspeed itself,
+  // so it's only called when someone presses Load.
+  var lsState = null;
+
+  async function lightspeed(action, extra) {
+    var res = await db.functions.invoke("lightspeed-admin", { body: Object.assign({ action: action }, extra || {}) });
+    if (res.error) {
+      var detail = null;
+      try { detail = await res.error.context.json(); } catch (e) {}
+      throw new Error((detail && detail.error) || "Couldn't reach the Lightspeed connection. Try again in a moment.");
+    }
+    if (!res.data || !res.data.ok) throw new Error((res.data && res.data.error) || "Something went wrong talking to Lightspeed.");
+    return res.data;
+  }
+
+  async function loadLightspeed(keepOptions) {
+    var seq = loadSeq, options = keepOptions && lsState ? lsState.options : null;
+    var next;
+    try { next = { status: await lightspeed("status"), options: options }; } catch (e) { next = { error: e.message, options: options }; }
+    if (seq !== loadSeq) return;
+    lsState = next;
+    drawYoco();
+  }
+
+  async function lsAct(button, label, fn, done, keepOptions) {
+    var was = button.textContent;
+    button.disabled = true;
+    if (label) button.textContent = label;
+    try {
+      await fn();
+      if (done) toast(done);
+      await loadLightspeed(keepOptions);
+    } catch (e) {
+      toast(e.message, true);
+      button.disabled = false;
+      if (label) button.textContent = was;
+    }
+  }
+
+  function lightspeedCard() {
+    if (state.brand !== "tommy") {
+      return yocoCard("Lightspeed kitchen POS", [h("p", { class: "yoco-status", text: "Merle's orders go to the kitchen's Lightspeed POS through Tommy Sugo's setup." }),
+        h("p", { class: "hint", text: "Change it in Tommy Sugo's Settings." })]);
+    }
+    if (!lsState) {
+      loadLightspeed();
+      return yocoCard("Lightspeed kitchen POS", [h("p", { text: "Loading…" })]);
+    }
+    if (lsState.error && !lsState.status) return yocoCard("Lightspeed kitchen POS", [h("p", { class: "notice", text: lsState.error })]);
+    var conn = lsState.status.connection || {};
+    var opts = lsState.options;
+    var connected = !!conn.lightspeed_location_id;
+    var kids = [];
+
+    kids.push(h("p", { class: "yoco-status", text: !conn.lightspeed_token_hint ? "Not connected: paid orders don't go to Lightspeed."
+      : !connected ? "Token saved (ending ••" + conn.lightspeed_token_hint + "). Choose the location below to switch it on."
+      : (conn.lightspeed_mode === "live" ? "Live: paid orders go to " : "Test: paid orders, test payments included, go to ") +
+        (conn.lightspeed_location_name || "location " + conn.lightspeed_location_id) + "." }));
+    kids.push(h("p", { class: "hint", text: "Orders arrive in the POS as paid to-go orders, with each customer's choices on the docket. The POS (an iPad) has to be on and online to take them. Statuses come back from Lightspeed: Ready in the POS marks the order ready here, and closing the bill marks it collected." }));
+
+    // 1. The access token
+    var tokenInput = h("input", { class: "input", id: "ls-token", type: "password", autocomplete: "new-password", spellcheck: "false",
+      placeholder: conn.lightspeed_token_hint ? "Saved, ending ••" + conn.lightspeed_token_hint : "Paste the access token" });
+    var saveToken = h("button", { class: "btn", type: "button", text: conn.lightspeed_token_hint ? "Replace token" : "Save token", onclick: function () {
+      var value = tokenInput.value.trim();
+      if (!value) { toast("Paste the access token first.", true); tokenInput.focus(); return; }
+      lsAct(saveToken, "Checking with Lightspeed…", async function () { await lightspeed("save_token", { token: value }); }, "Access token saved.");
+    } });
+    kids.push(h("div", { class: "fld" }, [h("label", { for: "ls-token", text: "Lightspeed access token" }), h("div", { class: "inline" }, [tokenInput, saveToken]),
+      h("p", { class: "hint", text: "From TabletPOS. Paste it here only: not into email or chat. It's stored encrypted and can't be read back. Saving checks it with Lightspeed." })]));
+
+    if (conn.lightspeed_token_hint) {
+      // 2. Where orders go
+      var load = h("button", { class: "btn ghost", type: "button", text: opts ? "Reload from Lightspeed" : "Load from Lightspeed", onclick: function () {
+        var loc = $("ls-location") ? $("ls-location").value : String(conn.lightspeed_location_id || "");
+        var was = load.textContent;
+        load.disabled = true;
+        load.textContent = "Asking Lightspeed…";
+        lightspeed("options", { location: loc }).then(function (res) {
+          if (!res.paymentMethods && res.locations.length === 1 && !loc) return lightspeed("options", { location: res.locations[0].id });
+          return res;
+        }).then(function (res) {
+          lsState.options = res;
+          drawYoco();
+          if (res.problems && res.problems.length) toast("Some lists didn't load: " + res.problems.join(" "), true);
+        }).catch(function (e) {
+          toast(e.message, true);
+          load.disabled = false;
+          load.textContent = was;
+        });
+      } });
+      kids.push(h("div", { class: "inline" }, [load]));
+
+      if (opts) {
+        var chosenLoc = String(conn.lightspeed_location_id || (opts.locations[0] && opts.locations[0].id) || "");
+        var locSel = h("select", { class: "input", id: "ls-location", onchange: function () { load.click(); } },
+          opts.locations.map(function (l) { return h("option", { value: l.id, text: l.name + " (" + l.id + ")", selected: l.id === chosenLoc }); }));
+        var pmSel = h("select", { class: "input", id: "ls-payment" }, [h("option", { value: "", text: "None: send orders unpaid" })].concat(
+          (opts.paymentMethods || []).map(function (p) { return h("option", { value: p.code, text: p.name + " (" + p.code + ")", selected: p.code === conn.lightspeed_payment_method }); })));
+        var opSel = h("select", { class: "input", id: "ls-profile" }, [h("option", { value: "", text: "Lightspeed's default" })].concat(
+          (opts.orderProfiles || []).map(function (p) { return h("option", { value: p.code, text: p.name + " (" + p.code + (p.mode ? ", " + p.mode.toLowerCase().replace("_", " ") : "") + ")", selected: p.code === conn.lightspeed_order_profile }); })));
+        var modeSel = h("select", { class: "input", id: "ls-mode" }, [
+          h("option", { value: "test", text: "Test: a demo business; test payments are sent too", selected: conn.lightspeed_mode !== "live" }),
+          h("option", { value: "live", text: "Live: the kitchen; only real payments are sent", selected: conn.lightspeed_mode === "live" })
+        ]);
+        var ready = opts.readiness;
+        var readyLine = !ready ? null : h("p", { class: "hint", text: "Ready for online orders: " + (ready.status === "READY" ? "yes" : "no") +
+          (ready.posStatus ? " (sales period " + String(ready.posStatus.salesPeriod || "?").toLowerCase() + ", " + (ready.posStatus.availableDevices ? "a POS device is online" : "no POS device online") + ")" : "") + "." });
+        var saveSettings = h("button", { class: "btn", type: "button", text: connected ? "Save changes" : "Save and switch on", onclick: function () {
+          if (!pmSel.value && !confirm("No payment method is chosen, so orders will arrive in the POS unpaid. Carry on?")) return;
+          if (modeSel.value === "live" && conn.lightspeed_mode !== "live" && !confirm("Switch to live? Paid website orders will go to the kitchen's POS.")) return;
+          var locName = locSel.options[locSel.selectedIndex] ? locSel.options[locSel.selectedIndex].text : "";
+          lsAct(saveSettings, "Saving…", async function () {
+            await lightspeed("save_settings", { location: locSel.value, locationName: locName.replace(/ \(\d+\)$/, ""), paymentMethod: pmSel.value, orderProfile: opSel.value, mode: modeSel.value });
+          }, "Lightspeed settings saved, and Lightspeed will report back on orders.", true);
+        } });
+        kids.push(h("div", { class: "fld" }, [h("label", { for: "ls-location", text: "Location" }), locSel, readyLine]));
+        kids.push(h("div", { class: "fld" }, [h("label", { for: "ls-payment", text: "Payment method for website payments" }), pmSel,
+          h("p", { class: "hint", text: "Ask TabletPOS to add one called PayFast, so website takings show separately in Lightspeed and Xero." })]));
+        kids.push(h("div", { class: "fld" }, [h("label", { for: "ls-profile", text: "Order profile" }), opSel,
+          h("p", { class: "hint", text: "Choose the take-away one, so orders print and route like collections." })]));
+        kids.push(h("div", { class: "fld" }, [h("label", { for: "ls-mode", text: "Mode" }), modeSel]));
+        kids.push(h("div", { class: "inline" }, [saveSettings]));
+      }
+
+      // 3. Which Lightspeed item each website item is
+      var slots = lsState.status.slots || [];
+      var items = opts && opts.items ? opts.items : null;
+      var known = {};
+      (items || []).forEach(function (i) { known[i.sku] = i.name; });
+      var list = items ? h("datalist", { id: "ls-items" }, items.map(function (i) { return h("option", { value: i.sku, text: i.name + (i.active ? "" : " (inactive)") }); })) : null;
+      var linked = slots.filter(function (s) { return s.sku; }).length;
+      var rows = slots.map(function (s) {
+        var input = h("input", { class: "input", type: "text", autocomplete: "off", spellcheck: "false", list: items ? "ls-items" : null,
+          "data-kind": s.kind, "data-item": s.item_id, "data-variant": s.variant_id, "data-was": s.sku, value: s.sku, placeholder: "SKU",
+          "aria-label": "Lightspeed SKU for " + s.name, oninput: function () {
+            name.textContent = this.value.trim() ? (known[this.value.trim()] || (items ? "Not a Lightspeed SKU at this location" : "")) : "";
+          } });
+        var name = h("span", { class: "hint", text: s.sku ? (known[s.sku] || (items ? "Not a Lightspeed SKU at this location" : "")) : "" });
+        return h("li", { class: "ls-link" }, [
+          h("span", {}, [h("span", { class: "tag brand-" + s.brand, text: brandInfo(s.brand).label }), " ", s.kind === "shop" ? "Shop · " : "", s.name, s.hidden ? " (hidden)" : ""]),
+          input, name
+        ]);
+      });
+      var saveLinks = h("button", { class: "btn", type: "button", text: "Save item links", onclick: function () {
+        var changed = Array.prototype.filter.call(document.querySelectorAll(".ls-link input"), function (i) { return i.value.trim() !== (i.getAttribute("data-was") || ""); })
+          .map(function (i) { return { kind: i.getAttribute("data-kind"), item_id: i.getAttribute("data-item"), variant_id: i.getAttribute("data-variant") || "", sku: i.value.trim() }; });
+        if (!changed.length) { toast("Nothing has changed."); return; }
+        lsAct(saveLinks, "Saving…", async function () { await lightspeed("save_skus", { links: changed }); }, "Item links saved.", true);
+      } });
+      kids.push(h("h3", { text: "Item links (" + linked + " of " + slots.length + " linked)" }));
+      kids.push(h("p", { class: "hint", text: "Each website item needs the SKU of the Lightspeed item it's rung up as. An order with an unlinked item isn't sent; the Orders screen says which item is missing, and you can send it again once it's linked." + (items ? "" : " Press Load from Lightspeed to pick from Lightspeed's items.") }));
+      if (list) kids.push(list);
+      kids.push(h("ul", { class: "ls-links" }, rows));
+      kids.push(h("div", { class: "inline" }, [saveLinks]));
+
+      var remove = h("button", { class: "btn ghost", type: "button", text: "Disconnect Lightspeed", onclick: function () {
+        if (!confirm("Disconnect Lightspeed? Paid orders stop going to the POS, and the saved token is deleted. Item links are kept.")) return;
+        lsAct(remove, "Disconnecting…", async function () { await lightspeed("remove"); }, "Lightspeed disconnected.");
+      } });
+      kids.push(h("div", { class: "inline" }, [remove]));
+    }
+    return yocoCard("Lightspeed kitchen POS", kids);
   }
 
   function payfastPayments(st, conn) {
