@@ -156,6 +156,52 @@ each payment. Yoco Checkout is only used if PayFast's details are removed.
 3. `order.html` is the customer's page, reached by a private link. It shows the code and the order's progress.
 4. The **Orders** tab in the admin moves an order through Preparing and Ready. Marking it collected needs the customer's code, which staff can't see.
 
+### The kitchen's Lightspeed POS
+
+Paid orders for both brands go to the kitchen's **Lightspeed Restaurant K-Series** POS as paid to-go orders. It's set up
+in Tommy Sugo's **Settings** under **Lightspeed kitchen POS**:
+
+1. Save the access token from TabletPOS. It's checked with Lightspeed, then kept in Vault and never shown again.
+2. **Load from Lightspeed**, then choose:
+   - the location;
+   - the payment method website payments are booked to (e.g. PayFast);
+   - the take-away order profile;
+   - **Test** (a demo business, where test payments are sent too) or **Live** (only real payments are sent).
+
+   Saving registers the `lightspeed-webhook` function with Lightspeed under a fresh password.
+3. Link every website item, and each size or type of an item that has several, to a Lightspeed SKU.
+
+Then:
+
+- **Sending.** `payfast-notify` and `yoco-payment-webhook` call `sendToLightspeed` (`_shared/lightspeed.ts`) once an
+  order is confirmed.
+  - Each line goes at the price the customer paid, and the customer's choices go on the docket as the order note.
+  - The collection code isn't sent.
+  - An order with an unlinked item isn't sent. The Orders screen says why, and **Send to Lightspeed** tries again.
+- **Coming back.** Lightspeed reports on each order to `lightspeed-webhook`:
+  - in the POS, or failed;
+  - Ready in the POS marks the order Ready here;
+  - closing the bill marks it Collected;
+  - a cancellation is flagged for a person to deal with, because the order needs a refund.
+- **Logging.** Every call made with the token is logged in `lightspeed_api_log` and kept for 13 months, because
+  TabletPOS's API authorisation asks for 12.
+- **The POS device.** The POS (an iPad running Lightspeed's app) must be online to take orders.
+
+Deploy `lightspeed-admin` and `lightspeed-webhook` with `verify_jwt` off, each with all of `_shared`.
+
+**The test shop** (admin.spontanik.co.za/test-shop, which serves `admin/test-shop.html`) isn't linked from anywhere and
+needs an admin sign-in. It's for trying Lightspeed without touching the real menus.
+
+- **Menu:** it builds its menu from Lightspeed's own online-ordering menu, parsed in `_shared/lightspeed-menu.ts`.
+  - Extras are sent as sub-items, and kitchen instructions as modifiers.
+  - Combos can't be ordered yet.
+- **Orders:** they go to the Lightspeed location saved in Settings, marked paid with the saved payment method.
+  - Lightspeed prices them; no money changes hands.
+  - They're kept in `lightspeed_test_orders`, apart from real orders, and `lightspeed-webhook` records their status
+    there.
+- **Live mode:** while Settings are on Live, `lightspeed-test` refuses to run, so a test order can't reach the kitchen.
+- **Setup:** if Lightspeed isn't connected yet, the page offers the same setup as the Settings card.
+
 ### Customer accounts
 
 Checkout starts as a guest: name, email and cell number, no account needed. **Have an account? Sign in** opens sign-in

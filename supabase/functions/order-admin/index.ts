@@ -2,6 +2,7 @@
 // Staff never see a collection code: it's checked here against what the customer gives them.
 import { adminClient } from "../_shared/yoco.ts";
 import { CORS, recordInYoco, reply, sendOrderEmail } from "../_shared/orders.ts";
+import { getLightspeed, sendToLightspeed } from "../_shared/lightspeed.ts";
 
 const NEXT: Record<string, { from: string; at: string }> = {
   preparing: { from: "received", at: "preparing_at" },
@@ -63,6 +64,19 @@ Deno.serve(async (req) => {
       if (order.status === "pending_payment") return reply({ ok: false, error: "This order hasn't been paid." });
       await recordInYoco(db, order);
       return reply({ ok: true });
+    case "send_to_lightspeed": {
+      if (order.status === "pending_payment") return reply({ ok: false, error: "This order hasn't been paid." });
+      if (order.status === "cancelled") return reply({ ok: false, error: "This order is cancelled." });
+      if (["sent", "in_pos", "ready", "closed"].includes(order.lightspeed_status)) {
+        return reply({ ok: false, error: "This order is already in Lightspeed." });
+      }
+      if (!await getLightspeed(db)) return reply({ ok: false, error: "Lightspeed isn't connected in Settings." });
+      await sendToLightspeed(db, order);
+      const { data: after } = await db.from("orders").select("lightspeed_status, lightspeed_error").eq("id", order.id).single();
+      if (after?.lightspeed_status === "failed") return reply({ ok: false, error: after.lightspeed_error ?? "Lightspeed didn't take it." });
+      if (after?.lightspeed_status === "skipped") return reply({ ok: false, error: "Test orders aren't sent to the live Lightspeed kitchen." });
+      return reply({ ok: true });
+    }
     default:
       return reply({ ok: false, error: "Unknown action." }, 400);
   }

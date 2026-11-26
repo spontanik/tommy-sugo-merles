@@ -5,6 +5,7 @@
 import { adminClient } from "../_shared/yoco.ts";
 import { accountOf, getPayfast, sendOrderEmail } from "../_shared/orders.ts";
 import { confirmWithPayfast, notificationSignatureValid, parseNotification } from "../_shared/payfast.ts";
+import { sendToLightspeed } from "../_shared/lightspeed.ts";
 
 const ok = () => new Response("ok");
 
@@ -77,6 +78,7 @@ Deno.serve(async (req) => {
       const stock = await db.rpc("take_order_stock", { p_order_id: paid.id });
       if (stock.error) log("stock not taken", { reason: stock.error.message });
       await sendOrderEmail(db, paid);
+      await sendToLightspeed(db, paid);
       log("confirmed");
     } else if (order.payment_id === fields.pf_payment_id) {
       log("already confirmed");

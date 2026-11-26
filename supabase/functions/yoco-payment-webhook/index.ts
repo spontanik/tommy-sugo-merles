@@ -3,6 +3,7 @@
 import { adminClient, BRANDS, getSecret } from "../_shared/yoco.ts";
 import { verifyWebhook } from "../_shared/yoco-catalogue.ts";
 import { brandsPaidThrough, recordInYoco, sendOrderEmail } from "../_shared/orders.ts";
+import { sendToLightspeed } from "../_shared/lightspeed.ts";
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Use POST.", { status: 405 });
@@ -61,6 +62,7 @@ Deno.serve(async (req) => {
       if (stock.error) console.error(JSON.stringify({ event: event.id, order: paid.id, outcome: "stock not taken", reason: stock.error.message }));
       await sendOrderEmail(db, paid);
       if (paid.payment_mode === "live") await recordInYoco(db, paid);
+      await sendToLightspeed(db, paid);
     }
     console.log(JSON.stringify({ event: event.id, order: order.id, outcome: paid ? "confirmed" : "already confirmed" }));
     return new Response("ok");
