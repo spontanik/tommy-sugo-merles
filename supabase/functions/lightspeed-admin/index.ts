@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
         const clean = (v: unknown) => (typeof v === "string" && /^[A-Za-z0-9 _.-]{1,60}$/.test(v.trim()) ? v.trim() : null);
         // Register (or re-register) where Lightspeed reports on orders, with a fresh password.
         const password = randomPassword();
-        await call(token, "PUT", "/o/wh/1/webhook", {
+        const webhook = {
           endpointId: ENDPOINT_ID,
           url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/lightspeed-webhook`,
           withBasicAuth: true,
@@ -138,7 +138,16 @@ Deno.serve(async (req) => {
           password,
           provideAccount: false,
           subscribeTo: [{ resource: "order", name: "DELIVERED" }],
-        });
+        };
+        try {
+          await call(token, "PUT", "/o/wh/1/webhook", webhook);
+        } catch (e) {
+          // Lightspeed won't overwrite a webhook it already has ("EndpointId already used"), so saving a second time
+          // removes the old one and registers it again with the new password.
+          if (!(e instanceof LightspeedError && e.status === 409)) throw e;
+          await call(token, "DELETE", `/o/wh/1/webhook/${ENDPOINT_ID}`);
+          await call(token, "PUT", "/o/wh/1/webhook", webhook);
+        }
         await setSecret(db, LIGHTSPEED_ACCOUNT, "lightspeed_webhook_secret", password);
         await update({
           lightspeed_location_id: location,
