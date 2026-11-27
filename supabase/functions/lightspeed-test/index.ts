@@ -6,7 +6,7 @@
 import { adminClient } from "../_shared/yoco.ts";
 import { CORS, reply } from "../_shared/orders.ts";
 import { getLightspeed, LightspeedError, lightspeedFetch, type LightspeedSetup } from "../_shared/lightspeed.ts";
-import { DELIVER_WITHIN_MS, ENDPOINT_ID, toE164 } from "../_shared/lightspeed-order.ts";
+import { DELIVER_WITHIN_MS, ENDPOINT_ID, readReadiness, toE164 } from "../_shared/lightspeed-order.ts";
 import { type CartLine, CartError, parseMenu, priceCart } from "../_shared/lightspeed-menu.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.95.0";
 
@@ -24,6 +24,15 @@ async function loadMenu(db: SupabaseClient, setup: LightspeedSetup, menuId: stri
   const params = new URLSearchParams({ businessLocationId: String(setup.locationId) });
   if (setup.orderProfile) params.set("accountProfile", setup.orderProfile);
   return parseMenu(await lightspeedFetch(db, setup.token, "GET", `/o/op/2/menu/load/${menuId}?${params}`));
+}
+
+// Whether a POS can take orders at the location right now. A failure here only means it couldn't be checked.
+async function readiness(db: SupabaseClient, setup: LightspeedSetup) {
+  try {
+    return readReadiness(await lightspeedFetch(db, setup.token, "GET", `/o/op/1/onlineOrderReadiness?businessLocationId=${setup.locationId}`));
+  } catch (e) {
+    return { ready: false, problems: [`Couldn't check with Lightspeed: ${(e as Error).message}`], updatedAt: null };
+  }
 }
 
 Deno.serve(async (req) => {
@@ -56,11 +65,14 @@ Deno.serve(async (req) => {
 
     switch (body.action) {
       case "menu": {
-        const list = await menus(db, setup);
-        if (!list.length) return reply({ ok: true, setup: about, menus: [], menu: null });
+        const [list, pos] = await Promise.all([menus(db, setup), readiness(db, setup)]);
+        if (!list.length) return reply({ ok: true, setup: about, readiness: pos, menus: [], menu: null });
         const menuId = list.some((m: Row) => m.id === String(body.menuId)) ? String(body.menuId) : list[0].id;
-        return reply({ ok: true, setup: about, menus: list, menuId, menu: await loadMenu(db, setup, menuId) });
+        return reply({ ok: true, setup: about, readiness: pos, menus: list, menuId, menu: await loadMenu(db, setup, menuId) });
       }
+
+      case "readiness":
+        return reply({ ok: true, readiness: await readiness(db, setup) });
 
       case "place": {
         const name = clean(body.name, 80);

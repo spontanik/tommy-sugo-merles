@@ -58,6 +58,10 @@ fieldset { border: 2px solid var(--shade); margin: 12px 0; padding: 8px 12px; }
 legend { font-weight: 700; padding: 0 4px; }
 fieldset label { font-weight: 400; display: flex; gap: 8px; align-items: center; margin: 4px 0; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pos { margin: 12px 0 24px; border-width: 3px; }
+.pos.bad { border-color: #b00020; }
+.pos .head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pos ul { margin: 8px 0 0; padding-left: 20px; }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -103,6 +107,15 @@ fieldset label { font-weight: 400; display: flex; gap: 8px; align-items: center;
       <select class="input" id="menu-pick" style="width:auto" hidden aria-label="Menu"></select>
       <button class="btn ghost small" type="button" id="reload">Reload menu</button>
     </div>
+    <div class="pos card" id="pos" aria-live="polite">
+      <div class="head">
+        <span class="tag" id="pos-tag">Checking</span>
+        <strong id="pos-title" style="flex:1">Checking whether a POS can take orders…</strong>
+        <button class="btn ghost small" type="button" id="pos-check">Check again</button>
+      </div>
+      <ul id="pos-problems" hidden></ul>
+      <p class="hint" id="pos-when"></p>
+    </div>
     <div class="layout">
       <div id="menu"></div>
       <aside class="cart card">
@@ -113,6 +126,7 @@ fieldset label { font-weight: 400; display: flex; gap: 8px; align-items: center;
         <label for="cust-name">Name on the order</label><input class="input" id="cust-name" autocomplete="off" value="Test Order">
         <label for="cust-phone">Phone (optional)</label><input class="input" id="cust-phone" autocomplete="off" inputmode="tel">
         <p><button class="btn" type="button" id="place" disabled>Place test order</button></p>
+        <p class="hint" id="place-warn" hidden>No POS is ready yet, so an order placed now waits for one for up to 15 minutes, then fails.</p>
       </aside>
     </div>
 
@@ -138,7 +152,7 @@ fieldset label { font-weight: 400; display: flex; gap: 8px; align-items: center;
   var conf = window.SITE_SUPABASE || {};
   var db = window.supabase.createClient(conf.url, conf.key);
   var $ = function (id) { return document.getElementById(id); };
-  var state = { menu: null, menuId: null, menus: [], cart: [], ordersTimer: null };
+  var state = { menu: null, menuId: null, menus: [], cart: [], ordersTimer: null, posTimer: null, readiness: null };
 
   function h(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -265,6 +279,7 @@ fieldset label { font-weight: 400; display: flex; gap: 8px; align-items: center;
     pick.hidden = res.menus.length < 2;
     fillSelect(pick, res.menus.map(function (m) { return { value: m.id, name: m.name }; }), res.menuId, function (r) { return r.name; });
     drawMenu();
+    drawReadiness(res.readiness);
   }
   $("menu-pick").addEventListener("change", function () { state.cart = []; drawCart(); loadMenu(this.value); });
   $("reload").addEventListener("click", function () { loadMenu(); });
@@ -335,6 +350,42 @@ fieldset label { font-weight: 400; display: flex; gap: 8px; align-items: center;
     };
     dlg.showModal();
   }
+
+  // ---------- POS readiness ----------
+  // Checked with the menu, then every 30 seconds while this page is on screen, and on "Check again".
+  var when = function (iso) { return new Date(iso).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" }); };
+  function drawReadiness(r) {
+    clearTimeout(state.posTimer);
+    state.readiness = r || null;
+    var ready = !!(r && r.ready);
+    $("pos").className = "pos card" + (r && !ready ? " bad" : "");
+    $("pos-tag").className = r ? (ready ? "tag ok" : "tag bad") : "tag";
+    $("pos-tag").textContent = r ? (ready ? "POS ready" : "POS not ready") : "Unknown";
+    $("pos-title").textContent = !r ? "Couldn't check whether a POS can take orders."
+      : ready ? "A POS is online at this location and taking online orders."
+      : "Orders can't reach a POS at this location yet.";
+    var ul = $("pos-problems");
+    ul.textContent = "";
+    ((r && r.problems) || []).forEach(function (p) { ul.appendChild(h("li", { text: p })); });
+    ul.hidden = !ul.children.length;
+    $("pos-when").textContent = "Checked " + when(new Date().toISOString()) +
+      (r && r.updatedAt ? ". Lightspeed last heard from the POS " + when(r.updatedAt) + "." : ".");
+    $("place-warn").hidden = !r || ready;
+    state.posTimer = setTimeout(checkReadiness, 30000);
+  }
+  async function checkReadiness() {
+    clearTimeout(state.posTimer);
+    if (document.hidden) return; // checked again when the page is back on screen
+    var b = $("pos-check");
+    b.disabled = true;
+    try {
+      var res = await call("lightspeed-test", { action: "readiness" });
+      drawReadiness(res.ok ? res.readiness : null);
+    } catch (e) { drawReadiness(null); }
+    b.disabled = false;
+  }
+  $("pos-check").addEventListener("click", checkReadiness);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && !$("shop").hidden) checkReadiness(); });
 
   // ---------- Cart ----------
   function addToCart(item, modifiers, instructions) {

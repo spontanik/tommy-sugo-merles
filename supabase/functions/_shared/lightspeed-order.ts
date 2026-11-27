@@ -139,3 +139,24 @@ export function readOrderNotification(body: any): NotificationEffect | null {
       return null;
   }
 }
+
+// Whether a location can take online orders right now (GET /o/op/1/onlineOrderReadiness), with what's in the way in
+// plain words. An order sent while it isn't ready waits until DELIVER_WITHIN_MS runs out, then fails.
+export type Readiness = { ready: boolean; problems: string[]; updatedAt: string | null };
+
+// deno-lint-ignore no-explicit-any
+export function readReadiness(raw: any): Readiness {
+  const pos = raw?.posStatus ?? {};
+  const problems: string[] = [];
+  if (raw?.onlineOrderingApiConfiguration?.enabled === false) {
+    problems.push("Online ordering through the API is switched off for this location. TabletPOS can switch it on.");
+  }
+  if (pos.availableDevices === false) {
+    problems.push("No POS device is online. Open the Lightspeed POS app on the iPad, signed in to this business and location.");
+  }
+  if (String(pos.salesPeriod ?? "").toUpperCase() === "CLOSED") problems.push("The sales period is closed. Open the day on the POS.");
+  if (pos.availableDevices !== false && pos.acceptingOnlineOrders === false) problems.push("The POS isn't accepting online orders yet.");
+  const ready = String(raw?.status ?? "").toUpperCase() === "READY";
+  if (!ready && !problems.length) problems.push("Lightspeed says this location isn't ready for online orders.");
+  return { ready, problems: ready ? [] : problems, updatedAt: typeof raw?.lastUpdatedAt === "string" ? raw.lastUpdatedAt : null };
+}
