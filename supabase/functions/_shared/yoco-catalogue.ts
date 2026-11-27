@@ -5,6 +5,9 @@ export type CatalogueRow = {
   yoco_id: string;
   kind: "variant" | "modifier";
   item_id: string | null;
+  // The variant's SKU, which is its Xero item code. Yoco shows the item's SKU on every variant unless stock is tracked
+  // per variant. Modifiers have none: a product modifier's SKU is on the variant it points at.
+  sku: string | null;
   name: string;
   option_label: string | null;
   category: string | null;
@@ -120,6 +123,7 @@ export function catalogueRows(items: Yoco[], brand: string, locationId: string |
         yoco_id: variant.id,
         kind: "variant",
         item_id: item.id,
+        sku: typeof variant.sku === "string" && variant.sku.trim() ? variant.sku.trim() : null,
         name: item.name,
         option_label: options.length ? options.join(" / ") : null,
         category,
@@ -145,6 +149,7 @@ export function catalogueRows(items: Yoco[], brand: string, locationId: string |
           yoco_id: modifier.id,
           kind: "modifier",
           item_id: null,
+          sku: null,
           name: modifier.name,
           option_label: null,
           category: "Modifier: " + group.name,
