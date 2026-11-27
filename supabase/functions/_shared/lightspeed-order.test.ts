@@ -5,6 +5,7 @@ import {
   ENDPOINT_ID,
   MissingSkuError,
   readOrderNotification,
+  readReadiness,
   referenceFor,
   skuKey,
   toE164,
@@ -69,4 +70,26 @@ test("reads Lightspeed's order notifications", () => {
   assert.equal(readOrderNotification({ status: "CANCELLED", thirdPartyReference: "web-1" })?.status, null);
   assert.equal(readOrderNotification({ status: "CHECK_WAS_UPDATED", thirdPartyReference: "web-1" }), null);
   assert.equal(readOrderNotification({ status: "SUCCESS" }), null);
+});
+
+test("explains why a location isn't ready for online orders", () => {
+  const closed = readReadiness({
+    status: "NOT_READY",
+    lastUpdatedAt: "2026-11-26T08:59:10Z",
+    onlineOrderingApiConfiguration: { enabled: true },
+    posStatus: { acceptingOnlineOrders: false, availableDevices: false, salesPeriod: "CLOSED" },
+  });
+  assert.equal(closed.ready, false);
+  assert.equal(closed.updatedAt, "2026-11-26T08:59:10Z");
+  assert.equal(closed.problems.length, 2);
+  assert.match(closed.problems[0], /No POS device is online/);
+  assert.match(closed.problems[1], /sales period is closed/);
+
+  const notAccepting = readReadiness({ status: "NOT_READY", posStatus: { acceptingOnlineOrders: false, availableDevices: true, salesPeriod: "OPEN" } });
+  assert.deepEqual(notAccepting.problems, ["The POS isn't accepting online orders yet."]);
+  assert.match(readReadiness({ status: "NOT_READY", onlineOrderingApiConfiguration: { enabled: false } }).problems[0], /switched off/);
+  assert.match(readReadiness({ status: "NOT_READY" }).problems[0], /isn't ready/);
+
+  const ready = readReadiness({ status: "READY", posStatus: { acceptingOnlineOrders: true, availableDevices: true, salesPeriod: "OPEN" } });
+  assert.deepEqual(ready, { ready: true, problems: [], updatedAt: null });
 });
