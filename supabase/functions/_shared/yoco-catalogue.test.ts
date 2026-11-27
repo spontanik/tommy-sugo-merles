@@ -19,7 +19,7 @@ const pizza = {
     ],
   }],
   variants: [
-    { id: "v-l", is_enabled: true, price: money(12500), selected_options: [{ name: "Size", value: "Large" }] },
+    { id: "v-l", sku: " PZ2001 ", is_enabled: true, price: money(12500), selected_options: [{ name: "Size", value: "Large" }] },
     { id: "v-m", is_enabled: false, price: money(9000), selected_options: [{ name: "Size", value: "Medium" }] },
   ],
 };
@@ -194,4 +194,11 @@ test("builds each variant's groups in Yoco's order, with their selection rules",
   });
   assert.deepEqual(plain.modifier_groups![1].modifiers.map((m) => [m.name, m.price]), [["Avo", 20], ["Bacon", 30]]);
   assert.deepEqual(rows.find((r) => r.yoco_id === "own")!.modifier_groups!.map((g) => g.name), ["Base", "Extra", "Sauce"]);
+});
+
+test("keeps each variant's SKU, which modifiers don't have", () => {
+  const rows = catalogueRows([pizza], "tommy", null);
+  assert.equal(rows.find((r) => r.yoco_id === "v-l")?.sku, "PZ2001");
+  assert.equal(rows.find((r) => r.yoco_id === "v-m")?.sku, null);
+  assert.ok(rows.filter((r) => r.kind === "modifier").every((r) => r.sku === null));
 });

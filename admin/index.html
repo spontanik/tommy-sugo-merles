@@ -234,6 +234,25 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 .check span small { display: block; color: var(--muted); font-size: 13px; }
 
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #000; color: #f2f2f2; border: 2px solid #f2f2f2; padding: 12px 20px; font-weight: 700; z-index: 10; max-width: calc(100vw - 32px); }
+/* Products tab: the Menu check */
+.pc-sources { margin: 16px 0 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
+.pc-empty { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.pc-empty p { margin: 0; }
+.pc-row { grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: start; }
+.pc-issues { list-style: none; margin: 8px 0 0; padding: 0; font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
+.pc-issues li { border-left: 4px solid #000; padding-left: 8px; }
+.pc-issues li.note { border-left-color: var(--shade); color: var(--muted); }
+.pc-systems { display: flex; gap: 6px; flex-wrap: wrap; }
+.pc-sys { display: flex; flex-direction: column; min-width: 84px; padding: 4px 8px; border: 2px solid #000; font-size: 13px; }
+.pc-sys span { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.pc-sys.bad { background: #000; color: #f2f2f2; }
+.pc-sys.off { border-style: dashed; color: var(--muted); }
+.pc-extra { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.pc-extra li { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 6px 10px; background: var(--raised); }
+.pc-extra li .btn { margin-left: auto; min-height: 36px; }
+#panel details { margin-top: 16px; }
+#panel details summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+@media (max-width: 720px) { .pc-row { grid-template-columns: minmax(0, 1fr) auto; } .pc-systems { grid-column: 1 / -1; } }
 </style>
 </head>
 <body class="auth">
@@ -295,6 +314,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       <button class="tab" type="button" role="tab" id="tab-orders" data-view-btn="orders" aria-controls="panel" aria-selected="false">Orders</button>
       <button class="tab" type="button" role="tab" id="tab-menu" data-view-btn="menu" aria-controls="panel" aria-selected="false">Menu</button>
       <button class="tab" type="button" role="tab" id="tab-shop" data-view-btn="shop" aria-controls="panel" aria-selected="false">Shop</button>
+      <button class="tab" type="button" role="tab" id="tab-products" data-view-btn="products" aria-controls="panel" aria-selected="false">Products</button>
       <button class="tab" type="button" role="tab" id="tab-events" data-view-btn="events" aria-controls="panel" aria-selected="false">Events</button>
       <button class="tab" type="button" role="tab" id="tab-gallery" data-view-btn="gallery" aria-controls="panel" aria-selected="false">Gallery</button>
       <button class="tab" type="button" role="tab" id="tab-settings" data-view-btn="settings" aria-controls="panel" aria-selected="false">Settings</button>
@@ -461,6 +481,14 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 
   // Invite and reset emails land here with the link type in the URL hash, so read that before anything else.
   var linkType = (location.hash.match(/type=([a-z]+)/) || [])[1];
+  // Xero sends the admin back here after Connect Xero, with a one-time code (or an error) in the query. Taken off the
+  // address straight away, and finished once the admin is signed in.
+  var xeroReturn = (function () {
+    var q = new URLSearchParams(location.search);
+    if (!q.get("state") || !(q.get("code") || q.get("error"))) return null;
+    history.replaceState(null, "", location.pathname + location.hash);
+    return { code: q.get("code"), state: q.get("state"), error: q.get("error") };
+  })();
   var db = window.supabase.createClient(conf.url, conf.key);
 
   var STORE_KEY = "housemates-admin";
@@ -483,7 +511,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
   var YOCO_COLS = { price: "yoco_id" }; // the website prices that can follow a Yoco item
 
   function parseRoute(hash) {
-    var m = /^#(tommy|merles)\/(orders|menu|shop|events|gallery|settings)$/.exec(hash || "");
+    var m = /^#(tommy|merles)\/(orders|menu|shop|products|events|gallery|settings)$/.exec(hash || "");
     return m ? { brand: m[1], view: m[2] } : null;
   }
 
@@ -611,6 +639,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       return;
     }
     show("app");
+    if (xeroReturn) { state.brand = "tommy"; state.view = "settings"; finishXero(); }
     drawChrome();
     load();
   }
@@ -785,6 +814,11 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
       photosMissing = !!gp.error && (gp.error.code === "42P01" || gp.error.code === "PGRST205");
       if (gp.error && !photosMissing) toast("Couldn't load photos: " + gp.error.message, true);
       drawGallery();
+      return;
+    }
+    if (view === "products") {
+      drawChrome();
+      loadProducts(seq, false);
       return;
     }
     if (view === "settings") {
@@ -1599,9 +1633,386 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
     box.appendChild(yocoSync(st, conn));
     box.appendChild(yocoMatching());
     box.appendChild(lightspeedCard());
+    box.appendChild(xeroCard());
     box.appendChild(payfastPayments(st, conn));
     box.appendChild(yocoPayments(st, conn));
     box.appendChild(yocoEmails(conn));
+  }
+
+  // ---------- Products tab: the product list and the Menu check ----------
+  // One product per SKU, and the SKU is the item code in Xero. The menu-check edge function compares each product with
+  // what Xero, Yoco and Lightspeed hold for that SKU. It only reads them: nothing here changes Xero, Yoco or Lightspeed.
+  var pcState = null; // the last check, as the menu-check function returned it
+  var pcShowAll = false;
+  try { pcShowAll = localStorage.getItem("products-show") === "all"; } catch (e) {}
+  var SYSTEMS = [["xero", "Xero"], ["yoco", "Yoco"], ["lightspeed", "Lightspeed"]];
+  var KINDS = { item: "Sold on its own", extra: "Extra (added to something)", combo: "Combo", part: "Combo part (no charge)" };
+  // Spontanik's Xero sales accounts.
+  var XERO_ACCOUNTS = [["200", "Food - Pizza Sales"], ["201", "Food - Pasta Sales"], ["202", "Food - Shawarma Sales"], ["203", "Food - Other Sales"],
+    ["230", "Beverages - Coffee"], ["231", "Beverages - Soft Drinks"], ["240", "Appro Sales"], ["260", "Other Revenue"]];
+  var SKU_PATTERN = /^[A-Z0-9][A-Z0-9-]{0,24}$/;
+
+  async function menuCheckCall(action, extra) {
+    var res = await db.functions.invoke("menu-check", { body: Object.assign({ action: action }, extra || {}) });
+    if (res.error) {
+      var detail = null;
+      try { detail = await res.error.context.json(); } catch (e) {}
+      throw new Error((detail && detail.error) || "Couldn't reach the Menu check. Try again in a moment.");
+    }
+    if (!res.data || !res.data.ok) throw new Error((res.data && res.data.error) || "The Menu check didn't work. Try again.");
+    return res.data;
+  }
+
+  async function loadProducts(seq, refresh) {
+    try {
+      var data = await menuCheckCall("check", { refresh: !!refresh });
+      if (seq !== loadSeq) return;
+      pcState = data;
+      drawProducts();
+      if (data.problems && data.problems.length) toast(data.problems.join(" "), true);
+    } catch (e) {
+      if (seq !== loadSeq) return;
+      $("panel").textContent = "";
+      $("panel").appendChild(h("p", { class: "notice", text: e.message }));
+    }
+  }
+
+  function rand(n) { return n === null || n === undefined ? "–" : "R" + Number(n).toFixed(2).replace(/\.00$/, ""); }
+  function when(iso) { return iso ? new Date(iso).toLocaleString("en-ZA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "never"; }
+  function needsWork(row) { return row.issues.some(function (i) { return i.level !== "note"; }); }
+  function forBrand(brand) { return brand === null || brand === undefined || brand === state.brand; }
+
+  function systemState(row, sys) {
+    if (!pcState.sources[sys]) return { text: "Not read", cls: "off" };
+    var mine = row.issues.filter(function (i) { return i.system === sys; });
+    if (mine.some(function (i) { return i.level === "missing"; })) return { text: "Missing", cls: "bad" };
+    if (mine.some(function (i) { return i.level === "differs"; })) return { text: "Differs", cls: "bad" };
+    return { text: "Matches", cls: "ok" };
+  }
+
+  function drawProducts() {
+    var box = $("panel");
+    box.textContent = "";
+    var d = pcState;
+    var rows = d.rows.filter(function (r) { return forBrand(r.product.brand); });
+    var attention = rows.filter(needsWork);
+
+    var check = h("button", { class: "btn", type: "button", text: "Check again", onclick: function () {
+      check.disabled = true;
+      check.textContent = "Reading Xero and Lightspeed…";
+      loadProducts(loadSeq, true);
+    } });
+    var add = h("button", { class: "btn ghost", type: "button", text: "+ Add product", onclick: function () { openProduct(null, {}); } });
+    box.appendChild(h("div", { class: "panel-top" }, [
+      h("p", { class: "yoco-status", text: d.products ? rows.length + " products for " + brandInfo(state.brand).label + " (drinks count for both) · " + attention.length + " need attention" : "The product list is empty." }),
+      h("div", { class: "inline" }, [add, check])
+    ]));
+
+    // Where each comparison comes from.
+    var lines = [];
+    lines.push(d.about.xero ? "Xero: " + d.about.xero.name + ", items read " + when(d.about.xero.at) + "." : "Xero: not connected. Connect it in Tommy Sugo's Settings.");
+    lines.push(d.sources.yoco ? "Yoco: kept up to date by itself (last full sync " + when((d.about.yoco[0] || {}).at) + ")." : "Yoco: nothing synced yet.");
+    lines.push(d.about.lightspeed ? "Lightspeed: location " + d.about.lightspeed.location + " (" + (d.about.lightspeed.mode === "live" ? "Live" : "Test") + "), " + d.about.lightspeed.items + " items read " + when(d.about.lightspeed.at) + "." : "Lightspeed: not set up.");
+    box.appendChild(h("ul", { class: "pc-sources" }, lines.map(function (t) { return h("li", { text: t }); })));
+    box.appendChild(h("p", { class: "section-note", text: "Every product's SKU is its Xero item code, and Yoco and Lightspeed should use the same one. This page only reads Xero, Yoco and Lightspeed. Fix what it finds there for now; pushing changes from here comes next." }));
+
+    if (!d.products) {
+      var fill = h("button", { class: "btn save", type: "button", text: "Fill from Xero", disabled: !d.sources.xero, onclick: function () {
+        fill.disabled = true;
+        fill.textContent = "Adding…";
+        menuCheckCall("import").then(function (res) {
+          toast(res.added + " products added from Xero.");
+          loadProducts(loadSeq, false);
+        }).catch(function (e) { toast(e.message, true); fill.disabled = false; fill.textContent = "Fill from Xero"; });
+      } });
+      box.appendChild(h("div", { class: "notice pc-empty" }, [
+        h("p", { text: d.sources.xero
+          ? "Start the list from Xero's items: one product for every item code on a menu (category catch-alls like PZ2000, tips and fees are left out). Where a Yoco variant already has the code as its SKU, its price, size and brand come with it. Nothing changes in Xero or Yoco."
+          : "Connect Xero in Tommy Sugo's Settings first, so the list can start from Xero's item codes." }),
+        fill
+      ]));
+    }
+
+    if (d.products) {
+      var show = h("div", { class: "scope-switch", role: "group", "aria-label": "Which products" }, [
+        h("button", { class: "btn", type: "button", "aria-pressed": String(!pcShowAll), text: "Needs attention (" + attention.length + ")", onclick: function () { setShow(false); } }),
+        h("button", { class: "btn", type: "button", "aria-pressed": String(pcShowAll), text: "All (" + rows.length + ")", onclick: function () { setShow(true); } })
+      ]);
+      box.appendChild(show);
+      var list = pcShowAll ? rows : attention;
+      if (!list.length) box.appendChild(h("p", { class: "empty-row", text: "Everything matches." }));
+      var groups = {};
+      list.forEach(function (r) { var c = r.product.category || "No category"; (groups[c] = groups[c] || []).push(r); });
+      Object.keys(groups).sort().forEach(function (c) {
+        box.appendChild(h("section", { class: "section" }, [
+          h("div", { class: "section-head" }, [h("h2", {}, [c, h("span", { class: "count", text: groups[c].length + "" })])]),
+          h("ul", { class: "rows" }, groups[c].sort(function (a, b) { return a.sku < b.sku ? -1 : 1; }).map(productRow))
+        ]));
+      });
+    }
+    box.appendChild(notInList());
+  }
+
+  function setShow(all) {
+    pcShowAll = all;
+    try { localStorage.setItem("products-show", all ? "all" : "attention"); } catch (e) {}
+    drawProducts();
+  }
+
+  function productRow(r) {
+    var p = r.product;
+    var sub = [p.family ? p.family + " · " + p.option_label : null, KINDS[p.kind] && p.kind !== "item" ? KINDS[p.kind] : null,
+      p.xero_account ? "Account " + p.xero_account : null].filter(Boolean).join(" · ");
+    return h("li", { class: "row pc-row" }, [
+      h("div", { class: "main" }, [
+        h("div", { class: "name" }, [h("span", { class: "tag", text: p.sku }), p.name,
+          p.brand ? null : h("span", { class: "tag", text: "Both brands" })]),
+        sub ? h("p", { class: "sub", text: sub }) : null,
+        r.issues.length ? h("ul", { class: "pc-issues" }, r.issues.map(function (i) {
+          return h("li", { class: i.level }, [h("strong", { text: (i.system === "admin" ? "Here" : SYSTEMS.filter(function (s) { return s[0] === i.system; })[0][1]) + ": " }), i.text]);
+        })) : null
+      ]),
+      h("div", { class: "pc-systems" }, SYSTEMS.map(function (s) {
+        var st = systemState(r, s[0]);
+        return h("div", { class: "pc-sys " + st.cls }, [h("span", { text: s[1] }), h("strong", { text: st.text })]);
+      })),
+      h("div", { class: "prices" }, [h("div", {}, [h("span", { text: "Price" }), h("strong", { text: rand(p.price) })])]),
+      h("div", { class: "actions" }, [h("button", { class: "btn ghost", type: "button", text: "Edit", "aria-label": "Edit " + p.name, onclick: function () { openProduct(p); } })])
+    ]);
+  }
+
+  // What Xero, Yoco and Lightspeed have that the product list doesn't.
+  function notInList() {
+    var d = pcState, e = d.extra;
+    var yoco = e.yoco.filter(function (y) {
+      var merles = /^MERLE'?S\b/i.test(y.category || "");
+      return state.brand === "merles" ? merles : !merles;
+    });
+    var parts = [];
+    if (e.xero.length) {
+      parts.push(h("details", {}, [h("summary", { text: "In Xero, not in the list (" + e.xero.length + ")" }),
+        h("ul", { class: "pc-extra" }, e.xero.map(function (x) {
+          return h("li", {}, [h("span", { class: "tag", text: x.code }), h("span", { text: (x.name || x.description || "Unnamed") + " · " + rand(x.sales_price) + (x.sales_account ? " · account " + x.sales_account : "") }),
+            h("button", { class: "btn ghost", type: "button", text: "Add", onclick: function () {
+              openProduct(null, { sku: x.code, name: (x.name || "").slice(0, 50), price: x.sales_price, xero_account: x.sales_account, description: x.description || "" });
+            } })]);
+        }))]));
+    }
+    if (yoco.length) {
+      parts.push(h("details", {}, [h("summary", { text: "In Yoco, without a product (" + yoco.length + ")" }),
+        h("p", { class: "hint", text: "These have no SKU in Yoco, or a SKU that isn't in the list. Add a product with the item's Xero code, then set that code as the SKU in Yoco." }),
+        h("ul", { class: "pc-extra" }, yoco.map(function (y) {
+          var label = y.name + (y.option_label ? " · " + y.option_label : "");
+          return h("li", {}, [y.sku ? h("span", { class: "tag", text: y.sku }) : h("span", { class: "tag", text: "No SKU" }),
+            h("span", { text: label + " · " + rand(y.price) + (y.category ? " · " + y.category : "") }),
+            h("button", { class: "btn ghost", type: "button", text: "Add", onclick: function () {
+              openProduct(null, { sku: y.sku || "", name: label.slice(0, 50), family: y.option_label ? y.name : null, option_label: y.option_label,
+                price: y.price, category: y.category, brand: /^MERLE'?S\b/i.test(y.category || "") ? "merles" : state.brand });
+            } })]);
+        }))]));
+    }
+    if (e.lightspeed.length || e.lightspeedNoSku) {
+      parts.push(h("details", {}, [h("summary", { text: "In Lightspeed, not in the list (" + (e.lightspeed.length + e.lightspeedNoSku) + ")" }),
+        e.lightspeedNoSku ? h("p", { class: "hint", text: e.lightspeedNoSku + " active Lightspeed items have no SKU at all." }) : null,
+        h("ul", { class: "pc-extra" }, e.lightspeed.slice(0, 300).map(function (l) {
+          return h("li", {}, [h("span", { class: "tag", text: l.sku }), h("span", { text: (l.name || "") + " · " + rand(l.price) + (l.accounting_group ? " · " + l.accounting_group : "") })]);
+        }))]));
+    }
+    if (!parts.length) return h("div");
+    return h("section", { class: "section" }, [h("div", { class: "section-head" }, [h("h2", { text: "Not in the product list" })])].concat(parts));
+  }
+
+  // The product dialog, made once.
+  var prodDlg = null;
+  function openProduct(p, preset) {
+    var isNew = !p;
+    var v = p || Object.assign({ sku: "", brand: state.brand, name: "", family: null, option_label: null, kind: "item", category: null, xero_account: null, price: null, description: "", is_active: true }, preset || {});
+    if (prodDlg) prodDlg.remove();
+    var f = {};
+    function field(id, label, input, hint) {
+      f[id] = input;
+      input.id = "p-" + id;
+      return h("div", { class: "fld" }, [h("label", { for: "p-" + id, text: label }), input, hint ? h("p", { class: "hint", text: hint }) : null]);
+    }
+    var taken = (pcState ? pcState.rows.map(function (r) { return r.sku; }).concat(pcState.extra.xero.map(function (x) { return x.code; })) : []);
+    function nextCode(prefix) {
+      var top = Number(prefix[2]) * 1000;
+      taken.forEach(function (c) { if (c.indexOf(prefix) === 0 && /^[A-Z]{2}\d{4}$/.test(c)) top = Math.max(top, Number(c.slice(2))); });
+      return prefix.slice(0, 2) + (top + 1);
+    }
+    var suggest = h("p", { class: "hint" });
+    function drawSuggest() {
+      suggest.textContent = "";
+      var typed = f.sku.value.trim().toUpperCase();
+      var m = /^([A-Z]{2}\d)/.exec(typed);
+      if (m) {
+        var code = nextCode(m[1]);
+        suggest.appendChild(document.createTextNode("Next free code in " + m[1] + "…: "));
+        suggest.appendChild(h("button", { class: "linkish", type: "button", text: code, onclick: function () { f.sku.value = code; drawSuggest(); } }));
+      } else {
+        suggest.textContent = "Use the item's Xero code. For a new code, type the category's letters and first number (PZ2, PS3, SH4, HD5, CD6, BK7, OT8) to see the next free one. Merle's has no category in Xero yet.";
+      }
+    }
+    var accounts = h("datalist", { id: "p-accounts" }, XERO_ACCOUNTS.map(function (a) { return h("option", { value: a[0], label: a[0] + " " + a[1] }); }));
+    var body = h("div", { class: "body" }, [
+      field("sku", "SKU (Xero item code)", h("input", { class: "input", value: v.sku || "", disabled: !isNew, autocapitalize: "characters", spellcheck: "false", maxlength: "25", oninput: drawSuggest })),
+      isNew ? suggest : h("p", { class: "hint", text: "The SKU can't change once a product exists: Xero, Yoco and Lightspeed are matched on it." }),
+      field("name", "Name", h("input", { class: "input", value: v.name || "", maxlength: "50" }), "As it should read in Xero and Lightspeed, up to 50 characters, e.g. “Pizza - Margarita Large”."),
+      h("div", { class: "brand-fields" }, [
+        field("family", "Sold in sizes or types: item", h("input", { class: "input", value: v.family || "", placeholder: "e.g. Pizza Margherita" })),
+        field("option", "This size or type", h("input", { class: "input", value: v.option_label || "", placeholder: "e.g. Large" }))
+      ]),
+      h("p", { class: "hint", text: "Leave both blank when there's only one. In Yoco the sizes are variants of one item; in Lightspeed each size is its own item." }),
+      h("div", { class: "brand-fields" }, [
+        field("brand", "Brand", h("select", { class: "input" }, [["tommy", "Tommy Sugo"], ["merles", "Merle's"], ["", "Both (drinks)"]].map(function (b) {
+          return h("option", { value: b[0], text: b[1], selected: (v.brand || "") === b[0] });
+        }))),
+        field("kind", "Kind", h("select", { class: "input" }, Object.keys(KINDS).map(function (k) { return h("option", { value: k, text: KINDS[k], selected: v.kind === k }); })))
+      ]),
+      h("div", { class: "brand-fields" }, [
+        field("category", "Category", h("input", { class: "input", value: v.category || "", placeholder: "e.g. PIZZA" })),
+        field("account", "Xero sales account", h("input", { class: "input", value: v.xero_account || "", list: "p-accounts", inputmode: "numeric" }), "200 pizza, 201 pasta, 202 shawarma, 203 other food, 230 coffee, 231 cold drinks."),
+        accounts
+      ]),
+      h("div", { class: "fld" }, [h("label", { for: "p-price", text: "Price (VAT included)" }), h("div", { class: "money" }, [(f.price = h("input", { class: "input", id: "p-price", type: "number", inputmode: "decimal", min: "0", step: "0.01", value: v.price == null ? "" : Number(v.price) }))])]),
+      field("desc", "Description on Xero invoices", h("input", { class: "input", value: v.description || "" })),
+      h("label", { class: "check" }, [(f.active = h("input", { type: "checkbox", checked: v.is_active !== false })), h("span", {}, ["In use", h("small", { text: "Untick for something no longer sold. It stays in the list, but isn't checked." })])]),
+      (f.err = h("p", { class: "msg err", role: "alert", hidden: true }))
+    ]);
+    var save = h("button", { class: "btn save", type: "submit", text: "Save" });
+    var del = isNew ? null : h("button", { class: "btn ghost", type: "button", text: "Delete", onclick: async function () {
+      if (!confirm("Delete " + v.sku + " from the product list? Nothing changes in Xero, Yoco or Lightspeed.")) return;
+      var res = await db.from("products").delete().eq("sku", v.sku);
+      if (res.error) { toast("Couldn't delete: " + res.error.message, true); return; }
+      prodDlg.close();
+      toast(v.sku + " deleted from the list.");
+      loadProducts(loadSeq, false);
+    } });
+    var form = h("form", { class: "dlg", method: "dialog", novalidate: true, onsubmit: async function (e) {
+      e.preventDefault();
+      function fail(t) { f.err.textContent = t; f.err.hidden = false; }
+      var sku = f.sku.value.trim().toUpperCase();
+      var fam = f.family.value.trim(), opt = f.option.value.trim();
+      var price = f.price.value.trim();
+      var account = f.account.value.trim();
+      if (!SKU_PATTERN.test(sku)) return fail("The SKU should be letters, numbers or dashes, up to 25 characters, like PZ2001.");
+      if (!f.name.value.trim()) return fail("Give the product a name.");
+      if (!fam !== !opt) return fail("Fill in both the item and its size or type, or neither.");
+      if (price && !(Number(price) >= 0)) return fail("The price should be a number.");
+      if (account && !/^[0-9][0-9 -]{0,9}$/.test(account)) return fail("The Xero sales account is its code, like 200.");
+      var data = {
+        brand: f.brand.value || null, name: f.name.value.trim(), family: fam || null, option_label: opt || null, kind: f.kind.value,
+        category: f.category.value.trim() || null, xero_account: account || null, price: price === "" ? null : Number(price),
+        description: f.desc.value.trim(), is_active: f.active.checked
+      };
+      save.disabled = true;
+      var res = isNew ? await db.from("products").insert(Object.assign({ sku: sku }, data)) : await db.from("products").update(data).eq("sku", v.sku);
+      save.disabled = false;
+      if (res.error) return fail(res.error.code === "23505" ? sku + " is already in the list." : "Couldn't save: " + res.error.message);
+      prodDlg.close();
+      toast((isNew ? "Added " : "Saved ") + sku + ".");
+      loadProducts(loadSeq, false);
+    } }, [
+      h("header", {}, [h("h2", { text: isNew ? "New product" : "Edit " + v.sku }), h("button", { class: "btn ghost", type: "button", text: "Close", onclick: function () { prodDlg.close(); } })]),
+      body,
+      h("footer", {}, [del, h("div", { class: "right" }, [h("button", { class: "btn ghost", type: "button", text: "Cancel", onclick: function () { prodDlg.close(); } }), save])])
+    ]);
+    prodDlg = h("dialog", {}, [form]);
+    document.body.appendChild(prodDlg);
+    if (isNew) drawSuggest();
+    prodDlg.showModal();
+    (isNew ? f.sku : f.name).focus();
+  }
+
+  // ---------- Settings: Xero ----------
+  // The backend reads Spontanik's Xero items for the Menu check, through the business's own Xero app. The app's secret
+  // and the sign-in go to the xero-admin edge function and are never sent back. Set up on Tommy Sugo, like Lightspeed.
+  var xeroState = null;
+
+  async function xero(action, extra) {
+    var res = await db.functions.invoke("xero-admin", { body: Object.assign({ action: action }, extra || {}) });
+    if (res.error) {
+      var detail = null;
+      try { detail = await res.error.context.json(); } catch (e) {}
+      throw new Error((detail && detail.error) || "Couldn't reach the Xero connection. Try again in a moment.");
+    }
+    if (!res.data || !res.data.ok) throw new Error((res.data && res.data.error) || "Something went wrong talking to Xero.");
+    return res.data;
+  }
+
+  async function loadXero() {
+    var seq = loadSeq, next;
+    try { next = { status: await xero("status") }; } catch (e) { next = { error: e.message }; }
+    if (seq !== loadSeq) return;
+    xeroState = next;
+    drawYoco();
+  }
+
+  async function finishXero() {
+    var back = xeroReturn;
+    xeroReturn = null;
+    if (back.error) { toast(back.error === "access_denied" ? "Xero wasn't connected: access wasn't allowed." : "Xero said: " + back.error, true); return; }
+    try {
+      var res = await xero("finish", { code: back.code, state: back.state });
+      toast("Connected to " + res.tenantName + "." + (res.items != null ? " " + res.items + " items read." : "") + (res.problem ? " " + res.problem : ""), !!res.problem);
+    } catch (e) {
+      toast(e.message, true);
+    }
+    xeroState = null;
+    drawYoco();
+  }
+
+  function xeroCard() {
+    if (state.brand !== "tommy") {
+      return yocoCard("Xero", [h("p", { class: "yoco-status", text: "Xero is connected once for both brands, in Tommy Sugo's Settings." })]);
+    }
+    if (!xeroState) {
+      loadXero();
+      return yocoCard("Xero", [h("p", { text: "Loading…" })]);
+    }
+    if (xeroState.error) return yocoCard("Xero", [h("p", { class: "notice", text: xeroState.error })]);
+    var st = xeroState.status;
+    var kids = [];
+    kids.push(h("p", { class: "yoco-status", text: st.tenantName
+      ? "Connected to " + st.tenantName + ", read-only. " + (st.lastSyncAt ? "Items last read " + when(st.lastSyncAt) + ": " + (st.lastSyncMessage || "") : "")
+      : st.clientId ? "App saved. Press Connect Xero to sign in." : "Not connected." }));
+    if (st.tenantName && st.lastSyncOk === false) kids.push(h("p", { class: "msg err", text: st.lastSyncMessage || "The last read failed." }));
+    kids.push(h("p", { class: "hint", text: "The Products tab compares the product list with Xero's items, so every SKU matches its Xero item code. This connection can only read Xero. Xero ends a sign-in that isn't used for 60 days; pressing Check again on the Products tab keeps it alive." }));
+
+    var setup = h("details", { open: !st.clientId }, [h("summary", { text: "Setting up the Xero app" }), h("ul", {}, [
+      h("li", { text: "Signed in to Xero, open developer.xero.com, My Apps, and add a new app: a Web app named “Spontanik website”." }),
+      h("li", {}, ["Set the redirect URI to exactly ", h("strong", { text: st.redirectUri }), "."]),
+      h("li", { text: "Copy the client ID, and generate a client secret. Paste both below. The secret is stored encrypted and can't be read back." })
+    ])]);
+    kids.push(setup);
+    var id = h("input", { class: "input", id: "xero-id", value: st.clientId || "", spellcheck: "false", autocomplete: "off", placeholder: "Client ID" });
+    var secret = h("input", { class: "input", id: "xero-secret", type: "password", autocomplete: "new-password", spellcheck: "false", placeholder: st.hasSecret ? "Saved. Paste a new one to replace it" : "Client secret" });
+    var saveApp = h("button", { class: "btn", type: "button", text: "Save app", onclick: function () {
+      saveApp.disabled = true;
+      xero("save_app", { clientId: id.value.trim(), clientSecret: secret.value.trim() }).then(function () {
+        toast("Xero app saved.");
+        xeroState = null;
+        drawYoco();
+      }).catch(function (e) { toast(e.message, true); saveApp.disabled = false; });
+    } });
+    kids.push(h("div", { class: "brand-fields" }, [
+      h("div", { class: "fld" }, [h("label", { for: "xero-id", text: "Client ID" }), id]),
+      h("div", { class: "fld" }, [h("label", { for: "xero-secret", text: "Client secret" }), secret])
+    ]));
+    var connect = h("button", { class: "btn save", type: "button", text: st.tenantName ? "Connect again" : "Connect Xero", disabled: !st.clientId || !st.hasSecret, onclick: function () {
+      connect.disabled = true;
+      connect.textContent = "Opening Xero…";
+      xero("start").then(function (res) { location.href = res.url; })
+        .catch(function (e) { toast(e.message, true); connect.disabled = false; connect.textContent = "Connect Xero"; });
+    } });
+    var off = st.tenantName ? h("button", { class: "btn ghost", type: "button", text: "Disconnect", onclick: function () {
+      if (!confirm("Disconnect Xero? The Products tab stops checking against Xero until it's connected again.")) return;
+      off.disabled = true;
+      xero("disconnect").then(function () { toast("Xero disconnected."); xeroState = null; drawYoco(); })
+        .catch(function (e) { toast(e.message, true); off.disabled = false; });
+    } }) : null;
+    kids.push(h("div", { class: "inline" }, [saveApp, connect, off]));
+    return yocoCard("Xero", kids);
   }
 
   // ---------- Settings: the kitchen's Lightspeed K-Series POS ----------

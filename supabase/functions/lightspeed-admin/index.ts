@@ -4,6 +4,7 @@ import { adminClient, getSecret, setSecret } from "../_shared/yoco.ts";
 import { CORS, reply } from "../_shared/orders.ts";
 import { getLightspeed, LIGHTSPEED_ACCOUNT, LightspeedError, lightspeedFetch } from "../_shared/lightspeed.ts";
 import { ENDPOINT_ID, WEBHOOK_USER } from "../_shared/lightspeed-order.ts";
+import { findList } from "../_shared/menu-check.ts";
 
 // deno-lint-ignore no-explicit-any
 type Row = any;
@@ -106,7 +107,7 @@ Deno.serve(async (req) => {
             ["orderProfiles", `/o/op/data/account-profiles?businessLocationId=${location}`,
               (j) => listOf(j, "accountProfileList").map((p: Row) => ({ code: p.code, name: p.name, mode: p.deliveryMode }))],
             ["items", `/items/v1/items?businessLocationId=${location}&amount=1000`,
-              (j) => listOf(j, "items", "data", "_embedded.itemList").filter((i: Row) => i.sku)
+              (j) => findList(j).filter((i: Row) => i.sku)
                 .map((i: Row) => ({ sku: String(i.sku), name: i.name, active: i.active !== false && !i.disabled }))],
             ["readiness", `/o/op/1/onlineOrderReadiness?businessLocationId=${location}`, (j) => j],
           ];

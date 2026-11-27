@@ -11,6 +11,7 @@ import {
   type Settings,
   skuKey,
 } from "./lightspeed-order.ts";
+import { findList, type LightspeedItem, lightspeedItemRow } from "./menu-check.ts";
 
 // Lightspeed's demo businesses run on the production API too, so there is one base URL.
 export const LIGHTSPEED_API = "https://api.lsk.lightspeed.app";
@@ -96,6 +97,32 @@ export async function lightspeedFetch(
     });
     if (error) console.error(JSON.stringify({ lightspeed: "couldn't log the call", reason: error.message }));
   }
+}
+
+// Copies the saved location's items into lightspeed_items (1000 a page), replacing the last copy. Returns how many, or
+// null when Lightspeed isn't set up.
+export async function refreshLightspeedItems(db: SupabaseClient): Promise<number | null> {
+  const setup = await getLightspeed(db);
+  if (!setup) return null;
+  const byId = new Map<number, LightspeedItem>();
+  for (let offset = 0; offset < 20000; offset += 1000) {
+    const page = findList(await lightspeedFetch(db, setup.token, "GET",
+      `/items/v1/items?businessLocationId=${setup.locationId}&offset=${offset}&amount=1000`));
+    for (const raw of page) {
+      const row = lightspeedItemRow(raw);
+      if (row) byId.set(row.id, row);
+    }
+    if (page.length < 1000) break;
+  }
+  const syncedAt = new Date().toISOString();
+  const rows = [...byId.values()].map((r) => ({ ...r, synced_at: syncedAt }));
+  for (let i = 0; i < rows.length; i += 500) {
+    const { error } = await db.from("lightspeed_items").upsert(rows.slice(i, i + 500), { onConflict: "id" });
+    if (error) throw new Error("Couldn't save Lightspeed's items: " + error.message);
+  }
+  const { error } = await db.from("lightspeed_items").delete().lt("synced_at", syncedAt);
+  if (error) throw new Error("Couldn't clear Lightspeed's old items: " + error.message);
+  return rows.length;
 }
 
 async function skusFor(db: SupabaseClient, lines: LineForLightspeed[]) {
